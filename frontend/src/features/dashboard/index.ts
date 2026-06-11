@@ -1,0 +1,10 @@
+export { DashboardShell } from "@/features/dashboard/components/shell/dashboard-shell";
+export { DashboardRouteGuard } from "@/features/dashboard/components/shell/dashboard-route-guard";
+export { DashboardSidebar } from "@/features/dashboard/components/shell/dashboard-sidebar";
+export { DashboardTopbar } from "@/features/dashboard/components/shell/dashboard-topbar";
+export { DashboardBreadcrumbs } from "@/features/dashboard/components/shell/dashboard-breadcrumbs";
+export { NotificationDropdown } from "@/features/dashboard/components/shell/notification-dropdown";
+export { UserProfileDropdown } from "@/features/dashboard/components/shell/user-profile-dropdown";
+export { MobileDashboardNav } from "@/features/dashboard/components/shell/mobile-dashboard-nav";
+export { DashboardHomePlaceholder } from "@/features/dashboard/components/shell/dashboard-home-placeholder";
+export { useDashboardNavigation } from "@/features/dashboard/hooks/use-dashboard-navigation";

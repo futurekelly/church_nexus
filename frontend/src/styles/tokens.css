@@ -1,0 +1,32 @@
+:root {
+  --background: 222 47% 5%;
+  --surface: 222 35% 9%;
+  /* #12161F per UI_GUIDELINES.md */
+  --card: 222 30% 13%;
+  --primary: 258 90% 66%;
+  --primary-foreground: 210 20% 96%;
+  --secondary: 217 91% 60%;
+  --secondary-foreground: 210 20% 96%;
+  --success: 173 80% 40%;
+  --warning: 38 92% 50%;
+  --muted: 220 9% 46%;
+  --muted-foreground: 220 9% 65%;
+  --border: 222 30% 18%;
+  --ring: 258 90% 66%;
+}
+
+.dark {
+  --background: 222 47% 5%;
+  --surface: 222 35% 9%;
+  --card: 222 30% 13%;
+  --primary: 258 90% 66%;
+  --primary-foreground: 210 20% 96%;
+  --secondary: 217 91% 60%;
+  --secondary-foreground: 210 20% 96%;
+  --success: 173 80% 40%;
+  --warning: 38 92% 50%;
+  --muted: 220 9% 46%;
+  --muted-foreground: 220 9% 65%;
+  --border: 222 30% 18%;
+  --ring: 258 90% 66%;
+}
