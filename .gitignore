@@ -1,3 +1,6 @@
+# AI Context — local only, never push to GitHub
+AI_CONTEXT/
+
 # OS
 .DS_Store
 Thumbs.db
