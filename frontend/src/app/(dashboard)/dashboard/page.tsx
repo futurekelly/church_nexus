@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DashboardHomePlaceholder } from "@/features/dashboard/components/shell/dashboard-home-placeholder";
+import { DashboardHome } from "@/features/dashboard/components/home/dashboard-home";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardPage() {
-  return <DashboardHomePlaceholder />;
+  return <DashboardHome />;
 }
