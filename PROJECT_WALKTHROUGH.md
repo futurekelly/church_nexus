@@ -17,7 +17,8 @@
 | Frontend — Feature Modules | Prayer Requests | ✅ Complete |
 | Frontend — Feature Modules | Attendance | ✅ Complete |
 | Frontend — Feature Modules | Visitor Follow-up | ✅ Complete |
-| Frontend — Feature Modules | Donations | 🔄 Active Module |
+| Frontend — Feature Modules | Donations | ✅ Complete |
+| Frontend — Feature Modules | Livestream | 🔄 Active Module |
 | Backend — Django API | All services | ⬜ Not Started |
 | Database | PostgreSQL schema | ⬜ Not Started |
 | CI/CD | GitHub Actions | ⬜ Not Started |
@@ -166,17 +167,18 @@
 
 ---
 
-## 🔄 IN PROGRESS
-
 ### 💰 Donations (`features/donations/`)
-- [ ] Giving flow (one-time & recurring)
-- [ ] Donation history for members
-- [ ] Treasurer reports & charts
-- [ ] Receipt generation
+- [x] Public online giving form (`/give`) supporting card and M-Pesa push triggers, anonymous checking, and automated member linking.
+- [x] Financial Ledger lists with search and category filters in Tanzanian Shillings (TZS).
+- [x] Printable receipt invoices with browser dialog triggers.
+- [x] Area and Pie graphs demonstrating contribution trend lines.
+
+> [!NOTE]
+> **Backend Upgrade Candidate**: Donation ledger records, pledge campaigns, and issued receipt IDs are saved locally via `localStorage` (keys: `church-mock-donations`, `church-mock-pledges`, `church-mock-receipts`).
 
 ---
 
-## ⬜ TODO — FRONTEND
+## 🔄 IN PROGRESS
 
 ### 📡 Livestream (`features/livestream/`)
 - [ ] Livestream viewer dashboard integration
@@ -245,7 +247,7 @@
 1. Complete public landing page (Completed)
 2. Implement auth flows (Completed)
 3. Build dashboard shell (Completed)
-4. Implement core modules: members, sermons, events, prayer (Completed), attendance (In Progress), donations
+4. Implement core modules: members, sermons, events, prayer, attendance, visitor follow-up, donations (Completed)
 5. Launch Django backend with all Phase 1 APIs
 6. Deploy to Vercel + Railway
 

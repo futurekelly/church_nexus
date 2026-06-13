@@ -6,6 +6,7 @@ export const PUBLIC_ROUTES = {
   ABOUT: "/about",
   CONTACT: "/contact",
   MINISTRIES: "/ministries",
+  GIVE: "/give",
 } as const;
 
 export const AUTH_ROUTES = {
