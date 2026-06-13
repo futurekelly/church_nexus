@@ -16,7 +16,8 @@
 | Frontend — Feature Modules | Members, Events, Sermons | ✅ Complete |
 | Frontend — Feature Modules | Prayer Requests | ✅ Complete |
 | Frontend — Feature Modules | Attendance | ✅ Complete |
-| Frontend — Feature Modules | Visitor Follow-up | 🔄 Active Module |
+| Frontend — Feature Modules | Visitor Follow-up | ✅ Complete |
+| Frontend — Feature Modules | Donations | 🔄 Active Module |
 | Backend — Django API | All services | ⬜ Not Started |
 | Database | PostgreSQL schema | ⬜ Not Started |
 | CI/CD | GitHub Actions | ⬜ Not Started |
@@ -135,13 +136,22 @@
 
 ---
 
+### 👁️ Visitor Follow-Up (`features/follow-up/`)
+- [x] Visitor registration and directory tracking with custom guest backgrounds
+- [x] Kanban Pipeline Dashboard with status progression click-to-move tools
+- [x] Contact Touchpoint History logs with details logging modals
+- [x] Attendance Absentee log ticket auto-ingestion bridges
+- [x] Confirmation dialog active member transitions auto-registering members
+
+---
+
 ## 🔄 IN PROGRESS
 
-### 👁️ Visitor Follow-Up (`features/follow-up/`)
-- [ ] Visitor registration form
-- [ ] Follow-up tracking list
-- [ ] Contact history log
-- [ ] Status pipeline (New → Contacted → Scheduled → Member)
+### 💰 Donations (`features/donations/`)
+- [ ] Giving flow (one-time & recurring)
+- [ ] Donation history for members
+- [ ] Treasurer reports & charts
+- [ ] Receipt generation
 
 ---
 
@@ -152,12 +162,6 @@
 - [ ] Live chat panel (WebSocket)
 - [ ] Moderation controls
 - [ ] Stream analytics
-
-### 💰 Donations (`features/donations/`)
-- [ ] Giving flow (one-time & recurring)
-- [ ] Donation history for members
-- [ ] Treasurer reports & charts
-- [ ] Receipt generation
 
 ### 📢 Testimonies (`features/testimonies/`)
 - [ ] Testimony wall

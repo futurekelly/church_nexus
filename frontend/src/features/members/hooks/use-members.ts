@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { MOCK_MEMBERS } from "@/features/members/data/mock-members";
 import type {
   Member,
@@ -53,6 +53,7 @@ function applySort(members: Member[], sort: MemberSortConfig): Member[] {
 }
 
 export function useMembers() {
+  const [membersList, setMembersList] = useState<Member[]>([]);
   const [filters, setFilters] = useState<MemberFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<MemberSortConfig>({
     field: "date_joined",
@@ -60,9 +61,37 @@ export function useMembers() {
   });
   const [page, setPage] = useState(1);
 
+  const reloadMembers = useCallback(() => {
+    if (typeof window === "undefined") {
+      setMembersList(MOCK_MEMBERS);
+      return;
+    }
+    const stored = localStorage.getItem("church-mock-members");
+    if (stored) {
+      try {
+        setMembersList(JSON.parse(stored));
+      } catch {
+        setMembersList(MOCK_MEMBERS);
+      }
+    } else {
+      localStorage.setItem("church-mock-members", JSON.stringify(MOCK_MEMBERS));
+      setMembersList(MOCK_MEMBERS);
+    }
+  }, []);
+
+  useEffect(() => {
+    reloadMembers();
+    if (typeof window !== "undefined") {
+      window.addEventListener("church-members-update", reloadMembers);
+      return () => {
+        window.removeEventListener("church-members-update", reloadMembers);
+      };
+    }
+  }, [reloadMembers]);
+
   const filtered = useMemo(
-    () => applyFilters(MOCK_MEMBERS, filters),
-    [filters],
+    () => applyFilters(membersList, filters),
+    [membersList, filters],
   );
 
   const sorted = useMemo(() => applySort(filtered, sort), [filtered, sort]);
@@ -101,15 +130,15 @@ export function useMembers() {
   }, []);
 
   const getMemberById = useCallback(
-    (id: string) => MOCK_MEMBERS.find((m) => m.id === id) ?? null,
-    [],
+    (id: string) => membersList.find((m) => m.id === id) ?? null,
+    [membersList],
   );
 
   return {
     // data
     members: paginated,
     totalMembers: sorted.length,
-    allMembers: MOCK_MEMBERS,
+    allMembers: membersList,
     // pagination
     page: safePage,
     totalPages,
