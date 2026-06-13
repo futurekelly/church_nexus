@@ -75,6 +75,9 @@
 - [x] Forgot password and reset password views (`/forgot-password`, `/reset-password`)
 - [x] Middleware route protection guard (`src/middleware.ts`)
 
+> [!NOTE]
+> **Backend Upgrade Candidate**: Auth session state is stored client-side in `localStorage` under the key `church-auth-storage`. Requires integration with backend JWT endpoints.
+
 ---
 
 ### 📊 Dashboard Shell & Navigation (`features/dashboard/`)
@@ -91,6 +94,9 @@
 - [x] Member profile overview sheet with activity history log
 - [x] Create and Edit member sheets built with `react-hook-form` and validation powered by `zod`
 
+> [!NOTE]
+> **Backend Upgrade Candidate**: Member catalog lists and updates are simulated in client state using `localStorage` (key: `church-mock-members`).
+
 ---
 
 ### 📅 Events Module (`features/events/`)
@@ -99,6 +105,9 @@
 - [x] Confirm RSVP registration dialogs gated to members only (visitors blocked)
 - [x] Create and Edit forms generating deterministic vector covers
 
+> [!NOTE]
+> **Backend Upgrade Candidate**: Event records and RSVP lists are persisted locally via `localStorage` (keys: `church-mock-events`, `church-event-registrations`).
+
 ---
 
 ### 🎙️ Sermons Module (`features/sermons/`)
@@ -106,6 +115,9 @@
 - [x] Audio/Video multi-tab player with active equalizer graphics
 - [x] Study guide notes viewer with copy, outline markdown formatting, and PDF download loading animations
 - [x] Create and Edit form inputs managing featured status exclusions and gradient covers
+
+> [!NOTE]
+> **Backend Upgrade Candidate**: Sermons list is persisted locally via `localStorage` (key: `church-mock-sermons`).
 
 ---
 
@@ -127,12 +139,18 @@
 - [x] Build submit requests form supporting anonymous toggles
 - [x] Add Pastor status management controls (Approve, Archive, pray count)
 
+> [!NOTE]
+> **Backend Upgrade Candidate**: Prayer center requests, intercession counts, and response updates are persisted locally via `localStorage` (key: `church-mock-prayers`).
+
 ---
 
 ### 📊 Attendance Module (`features/attendance/`)
 - [x] Create Attendance Session builder (for events or Sunday services)
 - [x] Implement simulated QR/Barcode check-in panel and manual search checklist
 - [x] Develop dashboard widgets, stats aggregates, and member detail logs
+
+> [!NOTE]
+> **Backend Upgrade Candidate**: Check-in logs, sessions, and follow-up tickets are saved locally via `localStorage` (keys: `church-mock-attendance-sessions`, `church-mock-attendance-records`, `church-attendance-follow-up-tickets`).
 
 ---
 
@@ -142,6 +160,9 @@
 - [x] Contact Touchpoint History logs with details logging modals
 - [x] Attendance Absentee log ticket auto-ingestion bridges
 - [x] Confirmation dialog active member transitions auto-registering members
+
+> [!NOTE]
+> **Backend Upgrade Candidate**: Follow-up pipeline queues, log histories, and visitor records are persisted locally via `localStorage` (keys: `church-mock-visitors`, `church-follow-up-tickets`, `church-visitor-contact-logs`).
 
 ---
 
