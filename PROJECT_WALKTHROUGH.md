@@ -15,7 +15,8 @@
 | Frontend — Dashboard Shell | Layout, sidebar, topbar, RBAC | ✅ Complete |
 | Frontend — Feature Modules | Members, Events, Sermons | ✅ Complete |
 | Frontend — Feature Modules | Prayer Requests | ✅ Complete |
-| Frontend — Feature Modules | Attendance | 🔄 Active Module |
+| Frontend — Feature Modules | Attendance | ✅ Complete |
+| Frontend — Feature Modules | Visitor Follow-up | 🔄 Active Module |
 | Backend — Django API | All services | ⬜ Not Started |
 | Database | PostgreSQL schema | ⬜ Not Started |
 | CI/CD | GitHub Actions | ⬜ Not Started |
@@ -127,12 +128,20 @@
 
 ---
 
+### 📊 Attendance Module (`features/attendance/`)
+- [x] Create Attendance Session builder (for events or Sunday services)
+- [x] Implement simulated QR/Barcode check-in panel and manual search checklist
+- [x] Develop dashboard widgets, stats aggregates, and member detail logs
+
+---
+
 ## 🔄 IN PROGRESS
 
-### 📊 Attendance Module (`features/attendance/`)
-- [ ] Create Attendance Session builder (for events or Sunday services)
-- [ ] Implement simulated QR/Barcode check-in panel and manual search checklist
-- [ ] Develop dashboard widgets, stats aggregates, and member detail logs
+### 👁️ Visitor Follow-Up (`features/follow-up/`)
+- [ ] Visitor registration form
+- [ ] Follow-up tracking list
+- [ ] Contact history log
+- [ ] Status pipeline (New → Contacted → Scheduled → Member)
 
 ---
 
@@ -176,12 +185,6 @@
 - [ ] Birthdays widget
 - [ ] Anniversaries widget
 - [ ] Membership milestones
-
-### 👁️ Visitor Follow-Up (`features/follow-up/`)
-- [ ] Visitor registration form
-- [ ] Follow-up tracking list
-- [ ] Contact history log
-- [ ] Status pipeline (New → Contacted → Scheduled → Member)
 
 ### 🖼️ Media Center (`features/media/`)
 - [ ] Media library (video, image, audio, docs)

@@ -24,6 +24,7 @@ export const DASHBOARD_ROUTES = {
   EVENTS: "/dashboard/events",
   LIVESTREAM: "/dashboard/livestream",
   PRAYER: "/dashboard/prayer",
+  ATTENDANCE: "/dashboard/attendance",
   DONATIONS: "/dashboard/donations",
   TESTIMONIES: "/dashboard/testimonies",
   MEDIA: "/dashboard/media",

@@ -6,6 +6,7 @@ import {
   Bell,
   BookOpen,
   Calendar,
+  CheckSquare,
   DollarSign,
   Heart,
   LayoutDashboard,
@@ -102,6 +103,13 @@ export const SIDEBAR_NAV_ITEMS: NavItem[] = [
     href: DASHBOARD_ROUTES.TESTIMONIES,
     icon: MessageSquare,
     permission: PERMISSIONS.TESTIMONIES_VIEW,
+    group: "community",
+  },
+  {
+    label: "Attendance",
+    href: DASHBOARD_ROUTES.ATTENDANCE,
+    icon: CheckSquare,
+    permission: PERMISSIONS.ATTENDANCE_VIEW,
     group: "community",
   },
   {
