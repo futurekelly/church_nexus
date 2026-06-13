@@ -3,7 +3,7 @@
 import { Quote } from "lucide-react";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { MotionWrapper } from "@/features/landing/components/motion-wrapper";
-import { SectionHeader } from "@/features/landing/components/section-header";
+import { LandingSectionHeader } from "@/features/landing/components/landing-section-header";
 import type { Testimonial } from "@/features/landing/types/landing.types";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +19,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
       className="px-4 py-16 lg:px-8"
     >
       <div className="mx-auto max-w-7xl">
-        <SectionHeader
+        <LandingSectionHeader
           headingId="testimonials-heading"
           title="Stories of Transformation"
           subtitle="Hear from members whose lives have been touched through faith and community."

@@ -5,9 +5,9 @@ import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 
 const FOOTER_LINKS = {
   explore: [
-    { label: "Sermons", href: `#${LANDING_SECTIONS.SERMONS}` },
-    { label: "Events", href: `#${LANDING_SECTIONS.EVENTS}` },
-    { label: "Ministries", href: `#${LANDING_SECTIONS.MINISTRIES}` },
+    { label: "Sermons", href: PUBLIC_ROUTES.SERMONS },
+    { label: "Events", href: PUBLIC_ROUTES.EVENTS },
+    { label: "Ministries", href: `/#${LANDING_SECTIONS.MINISTRIES}` },
     { label: "Livestream", href: PUBLIC_ROUTES.LIVESTREAM },
   ],
   connect: [

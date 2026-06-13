@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-interface SectionHeaderProps {
+interface LandingSectionHeaderProps {
   title: string;
   subtitle?: string;
   align?: "left" | "center";
@@ -8,13 +8,13 @@ interface SectionHeaderProps {
   headingId?: string;
 }
 
-export function SectionHeader({
+export function LandingSectionHeader({
   title,
   subtitle,
   align = "center",
   className,
   headingId,
-}: SectionHeaderProps) {
+}: LandingSectionHeaderProps) {
   return (
     <div
       className={cn(

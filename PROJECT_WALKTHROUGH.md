@@ -1,6 +1,6 @@
 # 📋 Project Walkthrough — Church Nexus
 > **Living Document** — Updated as the project progresses.
-> Last Updated: 2026-06-11
+> Last Updated: 2026-06-13
 
 ---
 
@@ -10,10 +10,11 @@
 |---|---|---|
 | Architecture & Planning | Documentation | ✅ Complete |
 | Frontend Scaffold | Next.js App Router | ✅ Complete |
-| Frontend — Public Routes | Landing page, About, Contact | ✅ In Progress |
-| Frontend — Auth Routes | Login, Register, Password flows | 🔄 Scaffold only |
-| Frontend — Dashboard Shell | Layout, sidebar, topbar | 🔄 Scaffold only |
-| Frontend — Feature Modules | All Phase 1 modules | ⬜ Not Started |
+| Frontend — Public Routes | Landing, About, Contact, Sermons, Events | ✅ Complete |
+| Frontend — Auth Flows | Login, Register, Password flows | ✅ Complete |
+| Frontend — Dashboard Shell | Layout, sidebar, topbar, RBAC | ✅ Complete |
+| Frontend — Feature Modules | Members, Events, Sermons | ✅ Complete |
+| Frontend — Next Module | Prayer Requests | 🔄 Next Module |
 | Backend — Django API | All services | ⬜ Not Started |
 | Database | PostgreSQL schema | ⬜ Not Started |
 | CI/CD | GitHub Actions | ⬜ Not Started |
@@ -42,10 +43,11 @@
 - [x] `DEPLOYMENT_MASTER_PROMPT.md` — Deployment strategy
 - [x] `BACKEND_MASTER_PROMPT.md` — Django backend standards
 - [x] `FRONTEND_MASTER_PROMPT.md` — Next.js frontend standards
+- [x] `PROJECT_STRUCTURE_AUDIT.md` — Code structure, naming collision, and visitor gating audit
 
 ---
 
-### 🖥️ Frontend — Project Bootstrap
+### 🖥️ Frontend — Project Bootstrap & Core Layouts
 - [x] Next.js 15 initialized with TypeScript and App Router
 - [x] Tailwind CSS configured with design tokens
 - [x] ShadCN UI installed and configured
@@ -55,101 +57,77 @@
 - [x] `app/not-found.tsx` — 404 page
 - [x] `app/error.tsx` — Global error boundary
 - [x] `app/loading.tsx` — Global loading state
-
-### 🗂️ Route Groups & Layouts
 - [x] `(public)/layout.tsx` → wraps `PublicLayout`
 - [x] `(auth)/layout.tsx` → wraps `AuthLayout`
 - [x] `(dashboard)/layout.tsx` → wraps `DashboardLayout`
-- [x] **Route conflict resolved:** `(dashboard)/page.tsx` was conflicting with `(public)/page.tsx` (both resolved to `/`). Fixed by moving dashboard home to `(dashboard)/dashboard/page.tsx` → `/dashboard`
 
-### 🌐 Public Routes (`(public)/`)
-- [x] `/` — Landing page (`(public)/page.tsx`) → `LandingPage` component
-- [x] `/about` — About page (`(public)/about/page.tsx`)
-- [x] `/contact` — Contact page (`(public)/contact/page.tsx`)
-- [x] `/livestream` — Public livestream viewer (`(public)/livestream/page.tsx`)
+---
 
-### 🔐 Auth Routes (`(auth)/`)
-- [x] `/login` — Login page scaffold
-- [x] `/register` — Registration page scaffold
-- [x] `/forgot-password` — Password recovery scaffold
-- [x] `/reset-password` — Password reset scaffold
+### 🔐 Auth Flows & Security (`features/auth/`)
+- [x] Centered glassmorphic auth cards for credentials forms
+- [x] Zustand `auth-store.ts` — persistent reactive user role state
+- [x] `use-auth.ts` hook gating auth sessions
+- [x] Credentials login page (`/login`)
+- [x] Credentials registration page (`/register`)
+- [x] Forgot password and reset password views (`/forgot-password`, `/reset-password`)
+- [x] Middleware route protection guard (`src/middleware.ts`)
 
-### 📊 Dashboard Routes (`(dashboard)/dashboard/`)
-- [x] `/dashboard` — Dashboard home scaffold (`DashboardHomePlaceholder`)
+---
 
-### 🏗️ Feature Module Scaffolds
-- [x] `features/landing/` — Landing page feature module (active)
-- [x] `features/auth/` — Auth feature module (scaffold)
-- [x] `features/dashboard/` — Dashboard feature module (shell placeholder)
+### 📊 Dashboard Shell & Navigation (`features/dashboard/`)
+- [x] Responsive layout with collapsible sidebar and headers
+- [x] Custom topbar with notification drop-downs and user profiles
+- [x] Mobile bottom navigators
+- [x] Role-scoped dashboard homes (`SuperAdminHome`, `PastorHome`, `ChurchAdminHome`, etc.)
+- [x] `use-permissions.ts` + `lib/permissions.ts` role-based access controllers (RBAC)
 
-### ⚙️ Infrastructure
-- [x] `src/middleware.ts` — Route protection middleware
-- [x] `src/providers/` — App providers scaffold
-- [x] `src/layouts/` — Layout components (`PublicLayout`, `AuthLayout`, `DashboardLayout`)
-- [x] Directory scaffolds: `hooks/`, `services/`, `store/`, `lib/`, `types/`, `constants/`, `utils/`, `styles/`
+---
+
+### 👥 Members Module (`features/members/`)
+- [x] Paginated grid/list directory of members with search & filtering
+- [x] Member profile overview sheet with activity history log
+- [x] Create and Edit member sheets built with `react-hook-form` and validation powered by `zod`
+
+---
+
+### 📅 Events Module (`features/events/`)
+- [x] Monthly calendar dashboard grid view with responsive day listings
+- [x] Detailed event layout sheets showing host, venue logistics, occupancy progress bars, and attendee logs
+- [x] Confirm RSVP registration dialogs gated to members only (visitors blocked)
+- [x] Create and Edit forms generating deterministic vector covers
+
+---
+
+### 🎙️ Sermons Module (`features/sermons/`)
+- [x] Spotlight Hero banner displaying the latest featured message
+- [x] Audio/Video multi-tab player with active equalizer graphics
+- [x] Study guide notes viewer with copy, outline markdown formatting, and PDF download loading animations
+- [x] Create and Edit form inputs managing featured status exclusions and gradient covers
+
+---
+
+### 🌐 Public Route Archiving (`(public)/`)
+- [x] `/` — Landing page with section headers updated to resolve naming collisions
+- [x] `/about` & `/contact` — Public informational pages
+- [x] `/livestream` — Public broadcast broadcast viewer
+- [x] `/sermons` & `/sermons/[id]` — Public messages catalog displaying only Published sermons, hiding status dropdowns
+- [x] `/events` & `/events/[id]` — Public events listing showing Published schedules, locking RSVPs behind login notices
 
 ---
 
 ## 🔄 IN PROGRESS
 
-### 🌐 Public Landing Page
-- [x] Page route resolves correctly to `/`
-- [ ] All 11 wireframe sections fully implemented
-- [ ] Hero section with scripture integration
-- [ ] Unsplash image references replaced with self-hosted or generated assets
-- [ ] Mobile responsiveness polished
+### 🙏 Prayer Center Module (`features/prayer/`)
+- [ ] Implement the public prayer wall and requests catalog
+- [ ] Build submit requests form supporting anonymous toggles
+- [ ] Add Pastor status management controls (Approve, Archive, pray count)
 
 ---
 
 ## ⬜ TODO — FRONTEND
 
-### 🔐 Auth Feature (`features/auth/`)
-- [ ] `AuthLayout` — Glass card centered wrapper (full implementation)
-- [ ] Login form — JWT authentication flow
-- [ ] Multi-step registration form
-- [ ] Password reset request form
-- [ ] Password reset confirmation form
-- [ ] Auth guards integrated with `src/middleware.ts`
-- [ ] Zustand `auth-store.ts` — user, tokens, role state
-- [ ] `use-auth.ts` hook
-- [ ] `api-client.ts` — Axios instance with token refresh interceptors
-
-### 📊 Dashboard Shell (`features/dashboard/`)
-- [ ] Sidebar navigation (collapsible, role-aware)
-- [ ] Topbar (user avatar, notifications bell, search)
-- [ ] Mobile bottom navigation
-- [ ] Role-based redirect on `/dashboard` entry
-- [ ] `use-permissions.ts` + `lib/permissions.ts` RBAC guards
-- [ ] `ui-store.ts` — sidebar collapse, mobile state
-
-### 👥 Members Module (`features/members/`)
-- [ ] Member list page with search & filters
-- [ ] Member profile detail page
-- [ ] Create member form
-- [ ] Edit member form
-- [ ] Family grouping UI
-
-### 🙏 Prayer Center (`features/prayer/`)
-- [ ] Prayer wall (public requests)
-- [ ] Submit prayer request form
-- [ ] Anonymous request toggle
-- [ ] Prayer status management (Pastor)
-
-### 🎙️ Sermons (`features/sermons/`)
-- [ ] Sermon library grid/list view
-- [ ] Sermon detail player (video/audio)
-- [ ] Create/upload sermon form
-- [ ] Edit sermon
-- [ ] Scripture reference tagging
-
-### 📅 Events (`features/events/`)
-- [ ] Event list and calendar view
-- [ ] Event detail & RSVP
-- [ ] Create event form
-- [ ] Attendance tracking
-
 ### 📡 Livestream (`features/livestream/`)
-- [ ] Livestream viewer (public + dashboard)
+- [ ] Livestream viewer dashboard integration
 - [ ] Live chat panel (WebSocket)
 - [ ] Moderation controls
 - [ ] Stream analytics
@@ -170,7 +148,6 @@
 - [ ] Notification center page
 - [ ] Unread badge (topbar)
 - [ ] Real-time delivery (Django Channels)
-- [ ] `notification-store.ts` Zustand store
 
 ### 📈 Analytics (`features/analytics/`)
 - [ ] Member growth chart
@@ -182,7 +159,6 @@
 - [ ] Daily verse display
 - [ ] Scripture reflection
 - [ ] Archive page
-- [ ] Landing page integration
 
 ### 🎉 Celebrations (`features/celebrations/`)
 - [ ] Birthdays widget
@@ -206,74 +182,18 @@
 - [ ] Role assignment UI
 - [ ] System configuration
 
-### 🧩 Shared Components (`src/components/`)
-- [ ] `ui/` — ShadCN primitive wrappers
-- [ ] `forms/` — Multi-step form shell
-- [ ] `tables/` — TanStack Table data grid
-- [ ] `charts/` — Recharts wrappers
-- [ ] `cards/` — Glass stat cards
-- [ ] `dialogs/` — Confirm & form dialogs
-- [ ] `navigation/` — Sidebar, topbar, breadcrumbs, bottom nav
-- [ ] `feedback/` — Toast, alert banners, status badges
-- [ ] `empty-states/` — Empty list & no-permission states
-- [ ] `loading/` — Skeleton loaders & spinners
-
 ---
 
-## ⬜ TODO — BACKEND (Django)
+## ⚠️ Technical Debt & Future Improvements
 
-- [ ] Django project initialization
-- [ ] `apps/authentication/` — JWT login, register, password reset
-- [ ] `apps/members/` — Member CRUD
-- [ ] `apps/visitors/` — Visitor registration & tracking
-- [ ] `apps/sermons/` — Sermon library API
-- [ ] `apps/events/` — Event management API
-- [ ] `apps/livestream/` — Livestream scheduling API
-- [ ] `apps/donations/` — Donation processing API
-- [ ] `apps/prayer/` — Prayer requests API
-- [ ] `apps/notifications/` — Notification engine
-- [ ] `apps/analytics/` — Aggregated analytics API
-- [ ] `apps/daily_scripture/` — Scripture management
-- [ ] `apps/celebrations/` — Birthday & anniversary triggers
-- [ ] `apps/audit_logs/` — Audit trail
-- [ ] `apps/roles/` — RBAC role management
-- [ ] `apps/settings/` — System configuration
-- [ ] Django Channels setup for real-time features
-- [ ] Celery + Redis task queue setup
-- [ ] Swagger/OpenAPI documentation
-- [ ] Unit & integration tests for all apps
-
----
-
-## ⬜ TODO — INFRASTRUCTURE & DEPLOYMENT
-
-- [ ] `frontend/.env.local` — API base URL, NextAuth config
-- [ ] `backend/.env` — DB, Redis, JWT secrets
-- [ ] Docker Compose for local full-stack dev
-- [ ] `Dockerfile` — Frontend (Node)
-- [ ] `Dockerfile` — Backend (Python)
-- [ ] Nginx reverse proxy config
-- [ ] GitHub Actions — Frontend CI (lint, type-check, build)
-- [ ] GitHub Actions — Backend CI (pytest, lint)
-- [ ] GitHub Actions — Deploy frontend to Vercel
-- [ ] GitHub Actions — Deploy backend to Railway
-- [ ] Production PostgreSQL provisioning
-- [ ] Production Redis provisioning
-- [ ] Custom domain setup
-
----
-
-## 🧪 TODO — TESTING
-
-- [ ] Unit tests — custom hooks
-- [ ] Unit tests — utility functions
-- [ ] Unit tests — Zod schemas
-- [ ] Integration tests — feature services
-- [ ] E2E tests — auth flows (Playwright)
-- [ ] E2E tests — donation flow
-- [ ] E2E tests — livestream
-- [ ] Django unit tests — all apps
-- [ ] Django API tests — all endpoints
+- **Equalizer Render Calculation Mismatch**:
+  `sermon-media-player.tsx` calculates randomized height styles and animation delays inline using `Math.random()`. This can cause React hydration warnings during Server-Side Rendering (SSR). In the future, this should be moved inside a `useEffect` hook to execute solely on the client, or handled entirely using CSS keyframe rules.
+- **Lazy Local Storage State Initialization**:
+  The core hook managers `useEvents` and `useSermons` parse JSON from Local Storage synchronously on initial mount. For larger datasets, this can block the main thread. State initialization should be converted to use lazy initializers:
+  ```typescript
+  const [sermons, setSermons] = useState(() => getInitialSermons());
+  ```
+  Persisted changes should also utilize debounced write cycles to improve react render efficiency.
 
 ---
 
@@ -282,25 +202,21 @@
 ### Phase 1 — MVP (Current Focus)
 > Goal: Working full-stack church management system for a single church.
 
-1. Complete public landing page
-2. Implement auth flows (login, register, JWT)
-3. Build dashboard shell (sidebar, topbar, RBAC guards)
-4. Implement core modules: members, sermons, events, prayer, donations
+1. Complete public landing page (Completed)
+2. Implement auth flows (Completed)
+3. Build dashboard shell (Completed)
+4. Implement core modules: members, sermons, events, prayer (In Progress), donations
 5. Launch Django backend with all Phase 1 APIs
 6. Deploy to Vercel + Railway
 
 ### Phase 2 — Enrichment
-> Goal: Expand engagement features.
-
 - Kids Kingdom
 - Bible Study Groups
 - Achievement Badges
-- AI Assistant (attendance insights, sermon suggestions)
+- AI Assistant
 - Ministries Management
 
 ### Phase 3 — Scale
-> Goal: Multi-church and mobile.
-
 - Multi-church support
 - Mobile applications (React Native)
 - WhatsApp integration

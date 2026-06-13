@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { label: "Home", href: PUBLIC_ROUTES.HOME },
-  { label: "Sermons", href: `#${LANDING_SECTIONS.SERMONS}` },
-  { label: "Events", href: `#${LANDING_SECTIONS.EVENTS}` },
-  { label: "Ministries", href: `#${LANDING_SECTIONS.MINISTRIES}` },
+  { label: "Sermons", href: PUBLIC_ROUTES.SERMONS },
+  { label: "Events", href: PUBLIC_ROUTES.EVENTS },
+  { label: "Ministries", href: `/#${LANDING_SECTIONS.MINISTRIES}` },
   { label: "Livestream", href: PUBLIC_ROUTES.LIVESTREAM },
   { label: "About", href: PUBLIC_ROUTES.ABOUT },
   { label: "Contact", href: PUBLIC_ROUTES.CONTACT },

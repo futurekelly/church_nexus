@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { MotionWrapper } from "@/features/landing/components/motion-wrapper";
-import { SectionHeader } from "@/features/landing/components/section-header";
+import { LandingSectionHeader } from "@/features/landing/components/landing-section-header";
 import type { Ministry } from "@/features/landing/types/landing.types";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ export function MinistriesSection({ ministries }: MinistriesSectionProps) {
       className="px-4 py-16 lg:px-8"
     >
       <div className="mx-auto max-w-7xl">
-        <SectionHeader
+        <LandingSectionHeader
           headingId="ministries-heading"
           title="Our Ministries"
           subtitle="Find your place to serve, grow, and build meaningful relationships."

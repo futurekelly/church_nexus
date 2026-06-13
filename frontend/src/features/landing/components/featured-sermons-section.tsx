@@ -7,7 +7,7 @@ import Link from "next/link";
 import { PUBLIC_ROUTES } from "@/constants/routes";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { MotionWrapper } from "@/features/landing/components/motion-wrapper";
-import { SectionHeader } from "@/features/landing/components/section-header";
+import { LandingSectionHeader } from "@/features/landing/components/landing-section-header";
 import type { FeaturedSermon } from "@/features/landing/types/landing.types";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +23,7 @@ export function FeaturedSermonsSection({ sermons }: FeaturedSermonsSectionProps)
       className="px-4 py-16 lg:px-8"
     >
       <div className="mx-auto max-w-7xl">
-        <SectionHeader
+        <LandingSectionHeader
           headingId="sermons-heading"
           title="Featured Sermons"
           subtitle="Explore recent messages to strengthen your faith and deepen your walk with God."

@@ -3,7 +3,7 @@
 import { Calendar, Eye, Users, Layers } from "lucide-react";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { MotionWrapper } from "@/features/landing/components/motion-wrapper";
-import { SectionHeader } from "@/features/landing/components/section-header";
+import { LandingSectionHeader } from "@/features/landing/components/landing-section-header";
 import type { LandingStatistic } from "@/features/landing/types/landing.types";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +33,7 @@ export function StatisticsSection({ statistics }: StatisticsSectionProps) {
       className="px-4 py-16 lg:px-8"
     >
       <div className="mx-auto max-w-7xl">
-        <SectionHeader
+        <LandingSectionHeader
           headingId="statistics-heading"
           title="Our Growing Community"
           subtitle="God is building something beautiful through faithful people and purposeful ministry."
