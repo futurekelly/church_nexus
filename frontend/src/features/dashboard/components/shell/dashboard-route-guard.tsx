@@ -26,7 +26,7 @@ export function DashboardRouteGuard({ children }: DashboardRouteGuardProps) {
       return;
     }
 
-    if (role === ROLES.VISITOR) {
+    if (role === ROLES.VISITOR && !pathname.startsWith("/dashboard/prayer")) {
       router.replace(PUBLIC_ROUTES.HOME);
       return;
     }
@@ -46,8 +46,9 @@ export function DashboardRouteGuard({ children }: DashboardRouteGuardProps) {
   const isBlocked =
     isLoading ||
     !isAuthenticated ||
-    role === ROLES.VISITOR ||
+    (role === ROLES.VISITOR && !pathname.startsWith("/dashboard/prayer")) ||
     !canAccessCurrentRoute;
+
 
   if (isBlocked) {
     return (

@@ -2,22 +2,21 @@
 
 import { SearchInput } from "@/components/ui/search-input";
 
-interface MemberSearchProps {
+interface PrayerSearchProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
 }
 
-export function MemberSearch({ value, onChange, className }: MemberSearchProps) {
+export function PrayerSearch({ value, onChange, className }: PrayerSearchProps) {
   return (
     <SearchInput
       value={value}
       onChange={onChange}
-      placeholder="Search by name, email, or member number… (Ctrl+K)"
-      id="member-search"
+      placeholder="Search by title, description, or submitter... (Ctrl+K)"
+      id="prayer-search"
       className={className}
-      ariaLabel="Search members"
+      ariaLabel="Search prayer requests"
     />
   );
 }
-

@@ -14,7 +14,8 @@
 | Frontend — Auth Flows | Login, Register, Password flows | ✅ Complete |
 | Frontend — Dashboard Shell | Layout, sidebar, topbar, RBAC | ✅ Complete |
 | Frontend — Feature Modules | Members, Events, Sermons | ✅ Complete |
-| Frontend — Next Module | Prayer Requests | 🔄 Next Module |
+| Frontend — Feature Modules | Prayer Requests | ✅ Complete |
+| Frontend — Feature Modules | Attendance | 🔄 Active Module |
 | Backend — Django API | All services | ⬜ Not Started |
 | Database | PostgreSQL schema | ⬜ Not Started |
 | CI/CD | GitHub Actions | ⬜ Not Started |
@@ -112,15 +113,26 @@
 - [x] `/livestream` — Public broadcast broadcast viewer
 - [x] `/sermons` & `/sermons/[id]` — Public messages catalog displaying only Published sermons, hiding status dropdowns
 - [x] `/events` & `/events/[id]` — Public events listing showing Published schedules, locking RSVPs behind login notices
+- [x] `/dashboard/prayer` — Main library catalog of prayer requests with stats indicators, search, filtering, and sort controls
+- [x] `/dashboard/prayer/create` — Form to submit a new prayer request with options for anonymous posting
+- [x] `/dashboard/prayer/[id]` — Detail view with dynamic intercessory prayer logs, heart buttons, and pastor update panels
+- [x] `/dashboard/prayer/[id]/edit` — Form to edit a prayer request
+
+---
+
+### 🙏 Prayer Center Module (`features/prayer/`)
+- [x] Implement the public prayer wall and requests catalog
+- [x] Build submit requests form supporting anonymous toggles
+- [x] Add Pastor status management controls (Approve, Archive, pray count)
 
 ---
 
 ## 🔄 IN PROGRESS
 
-### 🙏 Prayer Center Module (`features/prayer/`)
-- [ ] Implement the public prayer wall and requests catalog
-- [ ] Build submit requests form supporting anonymous toggles
-- [ ] Add Pastor status management controls (Approve, Archive, pray count)
+### 📊 Attendance Module (`features/attendance/`)
+- [ ] Create Attendance Session builder (for events or Sunday services)
+- [ ] Implement simulated QR/Barcode check-in panel and manual search checklist
+- [ ] Develop dashboard widgets, stats aggregates, and member detail logs
 
 ---
 
@@ -205,7 +217,7 @@
 1. Complete public landing page (Completed)
 2. Implement auth flows (Completed)
 3. Build dashboard shell (Completed)
-4. Implement core modules: members, sermons, events, prayer (In Progress), donations
+4. Implement core modules: members, sermons, events, prayer (Completed), attendance (In Progress), donations
 5. Launch Django backend with all Phase 1 APIs
 6. Deploy to Vercel + Railway
 

@@ -1,27 +1,32 @@
 "use client";
 
-import type { SermonStatus } from "../types/sermon.types";
+import type { PrayerStatus } from "../types/prayer.types";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-interface SermonStatusBadgeProps {
-  status: SermonStatus;
+interface PrayerStatusBadgeProps {
+  status: PrayerStatus;
   size?: "sm" | "md";
   className?: string;
 }
 
 const STATUS_COLORS: Record<
-  SermonStatus,
+  PrayerStatus,
   { bg: string; text: string; dot: string }
 > = {
-  Draft: {
-    bg: "bg-amber-500/10 border border-amber-500/20",
-    text: "text-amber-400",
-    dot: "bg-amber-400 shadow-[0_0_8px_#f59e0b]",
+  New: {
+    bg: "bg-cyan-500/10 border border-cyan-500/20",
+    text: "text-cyan-400",
+    dot: "bg-cyan-400 shadow-[0_0_8px_#22d3ee]",
   },
-  Published: {
+  "In Progress": {
+    bg: "bg-purple-500/10 border border-purple-500/20",
+    text: "text-purple-400",
+    dot: "bg-purple-400 shadow-[0_0_8px_#c084fc]",
+  },
+  Answered: {
     bg: "bg-emerald-500/10 border border-emerald-500/20",
     text: "text-emerald-400",
-    dot: "bg-emerald-400 shadow-[0_0_8px_#10b981]",
+    dot: "bg-emerald-400 shadow-[0_0_8px_#34d399]",
   },
   Archived: {
     bg: "bg-slate-500/10 border border-slate-500/20",
@@ -30,12 +35,12 @@ const STATUS_COLORS: Record<
   },
 };
 
-export function SermonStatusBadge({
+export function PrayerStatusBadge({
   status,
   size = "md",
   className,
-}: SermonStatusBadgeProps) {
-  const colors = STATUS_COLORS[status] || STATUS_COLORS.Draft;
+}: PrayerStatusBadgeProps) {
+  const colors = STATUS_COLORS[status] || STATUS_COLORS.New;
 
   return (
     <StatusBadge
@@ -45,8 +50,7 @@ export function SermonStatusBadge({
       dotClass={colors.dot}
       size={size}
       className={className}
-      ariaLabel={`Sermon status: ${status}`}
+      ariaLabel={`Prayer status: ${status}`}
     />
   );
 }
-

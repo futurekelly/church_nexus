@@ -2,7 +2,7 @@
 
 import { Pagination } from "@/components/ui/pagination";
 
-interface SermonPaginationProps {
+interface PrayerPaginationProps {
   page: number;
   totalPages: number;
   totalItems: number;
@@ -10,13 +10,13 @@ interface SermonPaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export function SermonPagination({
+export function PrayerPagination({
   page,
   totalPages,
   totalItems,
   pageSize,
   onPageChange,
-}: SermonPaginationProps) {
+}: PrayerPaginationProps) {
   return (
     <Pagination
       page={page}
@@ -24,9 +24,8 @@ export function SermonPagination({
       totalItems={totalItems}
       pageSize={pageSize}
       onPageChange={onPageChange}
-      itemName="sermons"
+      itemName="prayer requests"
       variant="indigo"
     />
   );
 }
-

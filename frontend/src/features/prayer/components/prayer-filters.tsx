@@ -2,34 +2,37 @@
 
 import { Filter, X } from "lucide-react";
 import {
-  EVENT_TYPES,
-  EVENT_STATUSES,
-  EVENT_TYPE_LABELS,
-  EVENT_STATUS_LABELS,
-  type EventFilters,
-} from "../types/event.types";
+  PRAYER_CATEGORIES,
+  PRAYER_STATUSES,
+  PRAYER_CATEGORY_LABELS,
+  STATUS_LABELS,
+  type PrayerFilters,
+} from "../types/prayer.types";
 import { FilterSelect } from "@/components/ui/filter-select";
 
-interface EventFiltersProps {
-  filters: EventFilters;
-  onUpdate: <K extends keyof EventFilters>(key: K, value: EventFilters[K]) => void;
+interface PrayerFiltersProps {
+  filters: PrayerFilters;
+  onUpdate: <K extends keyof PrayerFilters>(
+    key: K,
+    value: PrayerFilters[K]
+  ) => void;
   onReset: () => void;
   hasActive: boolean;
   className?: string;
 }
 
-export function EventFiltersBar({
+export function PrayerFiltersBar({
   filters,
   onUpdate,
   onReset,
   hasActive,
   className,
-}: EventFiltersProps) {
+}: PrayerFiltersProps) {
   return (
     <div
       className={className}
       role="group"
-      aria-label="Event filters"
+      aria-label="Prayer filters"
     >
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -37,54 +40,38 @@ export function EventFiltersBar({
           <span className="font-medium">Filters</span>
         </div>
 
-        {/* Event Type */}
+        {/* Category Select */}
         <FilterSelect
-          value={filters.type}
+          value={filters.category}
           onChange={(e) =>
-            onUpdate("type", e.target.value as EventFilters["type"])
+            onUpdate("category", e.target.value as PrayerFilters["category"])
           }
-          aria-label="Filter by event type"
+          aria-label="Filter by category"
           className="min-w-[140px]"
         >
-          <option value="all">All Types</option>
-          {EVENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {EVENT_TYPE_LABELS[t]}
+          <option value="all">All Categories</option>
+          {PRAYER_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {PRAYER_CATEGORY_LABELS[c]}
             </option>
           ))}
         </FilterSelect>
 
-        {/* Event Status */}
+        {/* Status Select */}
         <FilterSelect
           value={filters.status}
           onChange={(e) =>
-            onUpdate("status", e.target.value as EventFilters["status"])
+            onUpdate("status", e.target.value as PrayerFilters["status"])
           }
           aria-label="Filter by status"
           className="min-w-[140px]"
         >
-          <option value="all">All Statuses</option>
-          {EVENT_STATUSES.map((s) => (
+          <option value="all">Active (Exclude Archived)</option>
+          {PRAYER_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {EVENT_STATUS_LABELS[s]}
+              {STATUS_LABELS[s]}
             </option>
           ))}
-        </FilterSelect>
-
-        {/* Date Range */}
-        <FilterSelect
-          value={filters.dateRange}
-          onChange={(e) =>
-            onUpdate("dateRange", e.target.value as EventFilters["dateRange"])
-          }
-          aria-label="Filter by date range"
-          className="min-w-[140px]"
-        >
-          <option value="all">Any Date</option>
-          <option value="upcoming">Upcoming</option>
-          <option value="today">Today</option>
-          <option value="this-week">This Week</option>
-          <option value="past">Past / Completed</option>
         </FilterSelect>
 
         {/* Clear filters */}
@@ -103,4 +90,3 @@ export function EventFiltersBar({
     </div>
   );
 }
-

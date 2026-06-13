@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import type { EventStatus } from "../types/event.types";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 interface EventStatusBadgeProps {
   status: EventStatus;
@@ -43,18 +43,15 @@ export function EventStatusBadge({
   const colors = STATUS_COLORS[status] || STATUS_COLORS.Draft;
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full font-medium backdrop-blur-sm",
-        size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs",
-        colors.bg,
-        colors.text,
-        className
-      )}
-      aria-label={`Event status: ${status}`}
-    >
-      <span className={cn("h-1.5 w-1.5 rounded-full", colors.dot)} aria-hidden="true" />
-      {status}
-    </span>
+    <StatusBadge
+      label={status}
+      bgClass={colors.bg}
+      textClass={colors.text}
+      dotClass={colors.dot}
+      size={size}
+      className={className}
+      ariaLabel={`Event status: ${status}`}
+    />
   );
 }
+
