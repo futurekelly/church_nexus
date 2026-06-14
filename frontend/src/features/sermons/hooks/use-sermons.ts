@@ -1,100 +1,78 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { MOCK_SERMONS } from "../data/mock-sermons";
 import type { Sermon, SermonFilters, SermonSortConfig } from "../types/sermon.types";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 
 const LOCAL_STORAGE_KEY = "church-mock-sermons";
 
-const getInitialSermons = (): Sermon[] => {
-  if (typeof window === "undefined") return MOCK_SERMONS;
-  const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return MOCK_SERMONS;
-    }
-  }
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(MOCK_SERMONS));
-  return MOCK_SERMONS;
-};
-
-const notifyStorageChange = () => {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("church-sermons-update"));
-  }
-};
-
 /**
  * Singleton state hook for Sermons data using localstorage.
- * Syncs reactive changes across all instances without Zustand.
+ * Syncs reactive changes across all instances using the shared useLocalStorageState.
  */
 export function useSermons() {
-  const [sermons, setSermons] = useState<Sermon[]>([]);
+  const [sermons, setSermons] = useLocalStorageState<Sermon[]>(
+    LOCAL_STORAGE_KEY,
+    MOCK_SERMONS
+  );
 
-  const reloadData = useCallback(() => {
-    setSermons(getInitialSermons());
-  }, []);
-
-  useEffect(() => {
-    reloadData();
-    if (typeof window !== "undefined") {
-      window.addEventListener("church-sermons-update", reloadData);
-      return () => {
-        window.removeEventListener("church-sermons-update", reloadData);
+  const addSermon = useCallback(
+    (newSermon: Omit<Sermon, "id" | "created_at" | "updated_at">) => {
+      const sermon: Sermon = {
+        ...newSermon,
+        id: `se-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
-    }
-  }, [reloadData]);
 
-  const addSermon = useCallback((newSermon: Omit<Sermon, "id" | "created_at" | "updated_at">) => {
-    const list = getInitialSermons();
-    
-    // If new sermon is marked as featured, unfeature others
-    let updatedList = [...list];
-    if (newSermon.featured) {
-      updatedList = updatedList.map(s => s.featured ? { ...s, featured: false } : s);
-    }
+      setSermons((prev) => {
+        let updatedList = [...prev];
+        if (newSermon.featured) {
+          updatedList = updatedList.map((s) =>
+            s.featured ? { ...s, featured: false } : s
+          );
+        }
+        return [sermon, ...updatedList];
+      });
 
-    const sermon: Sermon = {
-      ...newSermon,
-      id: `se-${Date.now()}`,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+      return sermon;
+    },
+    [setSermons]
+  );
 
-    updatedList = [sermon, ...updatedList];
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
-    notifyStorageChange();
-    return sermon;
-  }, []);
+  const updateSermon = useCallback(
+    (id: string, updatedFields: Partial<Sermon>) => {
+      setSermons((prev) => {
+        let updatedList = [...prev];
+        if (updatedFields.featured) {
+          // Unfeature others
+          updatedList = updatedList.map((s) =>
+            s.featured ? { ...s, featured: false } : s
+          );
+        }
 
-  const updateSermon = useCallback((id: string, updatedFields: Partial<Sermon>) => {
-    const list = getInitialSermons();
-    
-    let updatedList = [...list];
-    if (updatedFields.featured) {
-      // Unfeature others
-      updatedList = updatedList.map(s => s.featured ? { ...s, featured: false } : s);
-    }
+        return updatedList.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                ...updatedFields,
+                updated_at: new Date().toISOString(),
+              }
+            : s
+        );
+      });
+    },
+    [setSermons]
+  );
 
-    updatedList = updatedList.map((s) =>
-      s.id === id
-        ? {
-            ...s,
-            ...updatedFields,
-            updated_at: new Date().toISOString(),
-          }
-        : s
-    );
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
-    notifyStorageChange();
-  }, []);
-
-  const deleteSermon = useCallback((id: string) => {
-    // Soft-delete: change status to Archived
-    updateSermon(id, { status: "Archived", featured: false });
-  }, [updateSermon]);
+  const deleteSermon = useCallback(
+    (id: string) => {
+      // Soft-delete: change status to Archived
+      updateSermon(id, { status: "Archived", featured: false });
+    },
+    [updateSermon]
+  );
 
   const getSermonById = useCallback(
     (id: string) => {

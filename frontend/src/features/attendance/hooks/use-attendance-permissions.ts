@@ -1,3 +1,4 @@
+// MIGRATION CANDIDATE: Deprecated in favor of global useAppPermissions
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";

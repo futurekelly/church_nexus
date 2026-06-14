@@ -131,24 +131,65 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 };
 
 const ROUTE_PERMISSIONS: Record<string, Permission> = {
-  [DASHBOARD_ROUTES.ROOT]: PERMISSIONS.DASHBOARD_VIEW,
-  [DASHBOARD_ROUTES.MEMBERS]: PERMISSIONS.MEMBERS_VIEW,
-  [DASHBOARD_ROUTES.VISITORS]: PERMISSIONS.VISITORS_VIEW,
-  [DASHBOARD_ROUTES.FOLLOW_UP]: PERMISSIONS.FOLLOW_UP_MANAGE,
-  [DASHBOARD_ROUTES.SERMONS]: PERMISSIONS.SERMONS_VIEW,
-  [DASHBOARD_ROUTES.EVENTS]: PERMISSIONS.EVENTS_VIEW,
-  [DASHBOARD_ROUTES.LIVESTREAM]: PERMISSIONS.LIVESTREAM_VIEW,
-  [DASHBOARD_ROUTES.PRAYER]: PERMISSIONS.PRAYER_VIEW,
-  [DASHBOARD_ROUTES.ATTENDANCE]: PERMISSIONS.ATTENDANCE_VIEW,
-  [DASHBOARD_ROUTES.DONATIONS]: PERMISSIONS.DONATIONS_VIEW,
-  [DASHBOARD_ROUTES.TESTIMONIES]: PERMISSIONS.TESTIMONIES_VIEW,
-  [DASHBOARD_ROUTES.MEDIA]: PERMISSIONS.MEDIA_VIEW,
-  [DASHBOARD_ROUTES.SCRIPTURE]: PERMISSIONS.SCRIPTURE_VIEW,
-  [DASHBOARD_ROUTES.CELEBRATIONS]: PERMISSIONS.CELEBRATIONS_VIEW,
-  [DASHBOARD_ROUTES.NOTIFICATIONS]: PERMISSIONS.NOTIFICATIONS_VIEW,
-  [DASHBOARD_ROUTES.ANALYTICS]: PERMISSIONS.ANALYTICS_VIEW,
-  [DASHBOARD_ROUTES.SETTINGS]: PERMISSIONS.SETTINGS_MANAGE,
-  [DASHBOARD_ROUTES.USERS]: PERMISSIONS.USERS_MANAGE,
+  // Dashboard Root
+  "/dashboard": PERMISSIONS.DASHBOARD_VIEW,
+
+  // Members
+  "/dashboard/members": PERMISSIONS.MEMBERS_VIEW,
+  "/dashboard/members/create": PERMISSIONS.MEMBERS_MANAGE,
+  "/dashboard/members/[id]": PERMISSIONS.MEMBERS_VIEW,
+  "/dashboard/members/[id]/edit": PERMISSIONS.MEMBERS_MANAGE,
+
+  // Visitors
+  "/dashboard/visitors": PERMISSIONS.VISITORS_VIEW,
+
+  // Follow-Up
+  "/dashboard/follow-up": PERMISSIONS.FOLLOW_UP_MANAGE,
+  "/dashboard/follow-up/create": PERMISSIONS.FOLLOW_UP_MANAGE,
+  "/dashboard/follow-up/[id]": PERMISSIONS.FOLLOW_UP_MANAGE,
+
+  // Sermons
+  "/dashboard/sermons": PERMISSIONS.SERMONS_VIEW,
+  "/dashboard/sermons/create": PERMISSIONS.SERMONS_MANAGE,
+  "/dashboard/sermons/[id]": PERMISSIONS.SERMONS_VIEW,
+  "/dashboard/sermons/[id]/edit": PERMISSIONS.SERMONS_MANAGE,
+
+  // Events
+  "/dashboard/events": PERMISSIONS.EVENTS_VIEW,
+  "/dashboard/events/create": PERMISSIONS.EVENTS_MANAGE,
+  "/dashboard/events/[id]": PERMISSIONS.EVENTS_VIEW,
+  "/dashboard/events/[id]/edit": PERMISSIONS.EVENTS_MANAGE,
+
+  // Livestream
+  "/dashboard/livestream": PERMISSIONS.LIVESTREAM_VIEW,
+
+  // Prayer Requests
+  "/dashboard/prayer": PERMISSIONS.PRAYER_VIEW,
+  "/dashboard/prayer/create": PERMISSIONS.PRAYER_VIEW,
+  "/dashboard/prayer/[id]": PERMISSIONS.PRAYER_VIEW,
+  "/dashboard/prayer/[id]/edit": PERMISSIONS.PRAYER_MANAGE,
+
+  // Attendance
+  "/dashboard/attendance": PERMISSIONS.ATTENDANCE_VIEW,
+  "/dashboard/attendance/create": PERMISSIONS.ATTENDANCE_MANAGE,
+  "/dashboard/attendance/[id]": PERMISSIONS.ATTENDANCE_MANAGE,
+  "/dashboard/attendance/[id]/report": PERMISSIONS.ATTENDANCE_VIEW,
+
+  // Donations
+  "/dashboard/donations": PERMISSIONS.DONATIONS_VIEW,
+  "/dashboard/donations/create": PERMISSIONS.DONATIONS_MANAGE,
+  "/dashboard/donations/[id]": PERMISSIONS.DONATIONS_VIEW,
+  "/dashboard/donations/reports": PERMISSIONS.DONATIONS_REPORT,
+
+  // Placeholders for future modules
+  "/dashboard/testimonies": PERMISSIONS.TESTIMONIES_VIEW,
+  "/dashboard/media": PERMISSIONS.MEDIA_VIEW,
+  "/dashboard/scripture": PERMISSIONS.SCRIPTURE_VIEW,
+  "/dashboard/celebrations": PERMISSIONS.CELEBRATIONS_VIEW,
+  "/dashboard/notifications": PERMISSIONS.NOTIFICATIONS_VIEW,
+  "/dashboard/analytics": PERMISSIONS.ANALYTICS_VIEW,
+  "/dashboard/settings": PERMISSIONS.SETTINGS_MANAGE,
+  "/dashboard/users": PERMISSIONS.USERS_MANAGE,
 };
 
 export function hasPermission(role: Role, permission: Permission): boolean {
@@ -165,16 +206,27 @@ export function hasAnyPermission(
 export function canAccessRoute(role: Role, pathname: string): boolean {
   const normalizedPath = pathname.replace(/\/$/, "") || "/dashboard";
 
-  const matchedRoute = Object.keys(ROUTE_PERMISSIONS)
+  // Find all keys that match the normalized path
+  const matchedRouteKey = Object.keys(ROUTE_PERMISSIONS)
+    // Sort by descending specificity (length)
     .sort((a, b) => b.length - a.length)
-    .find((route) => normalizedPath.startsWith(route));
+    .find((pattern) => {
+      // Escape regex characters except [id]
+      const escaped = pattern
+        .replace(/[.+*?^${}()|[\]\\]/g, "\\$&")
+        .replace(/\\\[id\\\]/g, "([^/]+)");
+      const regex = new RegExp(`^${escaped}$`);
+      return regex.test(normalizedPath);
+    });
 
-  if (!matchedRoute) {
-    return hasPermission(role, PERMISSIONS.DASHBOARD_VIEW);
+  if (!matchedRouteKey) {
+    // Fail closed by default (deny access if no explicit permission mapping exists)
+    return false;
   }
 
-  return hasPermission(role, ROUTE_PERMISSIONS[matchedRoute]);
+  return hasPermission(role, ROUTE_PERMISSIONS[matchedRouteKey]);
 }
+
 
 export function getRolePermissions(role: Role): Permission[] {
   return ROLE_PERMISSIONS[role] ?? [];
