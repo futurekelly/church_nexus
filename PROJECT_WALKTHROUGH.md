@@ -18,7 +18,8 @@
 | Frontend — Feature Modules | Attendance | ✅ Complete |
 | Frontend — Feature Modules | Visitor Follow-up | ✅ Complete |
 | Frontend — Feature Modules | Donations | ✅ Complete |
-| Frontend — Feature Modules | Livestream | 🔄 Active Module |
+| Frontend — Feature Modules | Livestream | ✅ Complete |
+| Frontend — Feature Modules | Testimonies | 🔄 Active Module |
 | Backend — Django API | All services | ⬜ Not Started |
 | Database | PostgreSQL schema | ⬜ Not Started |
 | CI/CD | GitHub Actions | ⬜ Not Started |
@@ -178,13 +179,18 @@
 
 ---
 
-## 🔄 IN PROGRESS
-
 ### 📡 Livestream (`features/livestream/`)
-- [ ] Livestream viewer dashboard integration
-- [ ] Live chat panel (WebSocket)
-- [ ] Moderation controls
-- [ ] Stream analytics
+- [x] Public livestream page (`/livestream`) enabling anonymous visitors to view the video stream and prompt to log in for chat.
+- [x] Live Chat panel (`livestream-chat.tsx`) with role-colored badges, inline moderator controls, and simulated active congregation chat traffic.
+- [x] Moderator Control Console (`moderator-controls.tsx`) allowing start/end stream controls, muting users, and clearing chat logs.
+- [x] Archive Sermon dialog (`archive-dialog.tsx`) to convert ended streams into Sermon library records automatically.
+
+> [!NOTE]
+> **Backend Upgrade Candidate**: Livestream stream status configurations and chat messages history logs are simulated client-side in `localStorage` (keys: `church-mock-livestream`, `church-mock-livestream-chat`, `church-mock-livestream-muted`).
+
+---
+
+## 🔄 IN PROGRESS
 
 ### 📢 Testimonies (`features/testimonies/`)
 - [ ] Testimony wall
@@ -247,7 +253,7 @@
 1. Complete public landing page (Completed)
 2. Implement auth flows (Completed)
 3. Build dashboard shell (Completed)
-4. Implement core modules: members, sermons, events, prayer, attendance, visitor follow-up, donations (Completed)
+4. Implement core modules: members, sermons, events, prayer, attendance, visitor follow-up, donations, livestream (Completed)
 5. Launch Django backend with all Phase 1 APIs
 6. Deploy to Vercel + Railway
 
