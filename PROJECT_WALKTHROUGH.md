@@ -267,6 +267,53 @@
 
 ---
 
+## 🚀 Production Readiness Backlog & Upgrades
+
+### 1. Production Readiness Backlog
+To transition from the current simulated frontend to a production-ready application, the following tasks must be completed:
+- [ ] **Unit & Integration Testing**: Implement Jest/React Testing Library tests for core state hooks (`useAuth`, `useMembers`, `useDonations`) and form validations.
+- [ ] **E2E Testing**: Add Playwright test suites for critical user journeys (Auth logins, member check-in flows, donation checkouts).
+- [ ] **Security Hardening**: Implement input sanitization (DOMPurify), helmet headers (via Next.js headers config), and CSP (Content Security Policy).
+- [ ] **Containerization**: Create a multi-stage `Dockerfile` and `docker-compose.yml` for local production-simulation runs.
+- [ ] **Continuous Integration (CI/CD)**: Configure GitHub Actions pipelines to run linting, type checks, testing, and automated Vercel preview deployments.
+
+### 2. Backend Upgrade Candidates (LocalStorage Migrations)
+The following tables map simulated `localStorage` schemas to their future Django REST API endpoints:
+
+| Feature / Module | Simulated LocalStorage Keys | Target REST API Endpoints | Migration Notes |
+| :--- | :--- | :--- | :--- |
+| **Authentication** | `church-auth-storage` | `POST /api/v1/auth/token/`<br>`POST /api/v1/auth/token/refresh/` | Switch Zustand store from local persistence to memory, reading JWT cookies. |
+| **Members** | `church-mock-members` | `GET /api/v1/members/`<br>`POST /api/v1/members/` | Paginate responses on server-side. Map fields to Django PostgreSQL backend. |
+| **Events** | `church-mock-events`, `church-event-registrations` | `GET /api/v1/events/`<br>`POST /api/v1/events/<id>/rsvp/` | Restrict RSVPs based on database token-verified membership status. |
+| **Sermons** | `church-mock-sermons` | `GET /api/v1/sermons/`<br>`POST /api/v1/sermons/` | Integrate media file hosting paths (AWS S3) and CDN streaming distribution. |
+| **Prayer Center** | `church-mock-prayers` | `GET /api/v1/prayers/`<br>`POST /api/v1/prayers/` | Implement backend approving logic. Rate limit public prayer requests submits. |
+| **Attendance** | `church-mock-attendance-sessions`, `church-mock-attendance-records` | `POST /api/v1/attendance/checkin/` | Generate secure single-use QR payload hashes on the backend. |
+| **Visitor Follow-Up** | `church-mock-visitors`, `church-follow-up-tickets`, `church-visitor-contact-logs` | `GET /api/v1/followups/`<br>`POST /api/v1/followups/logs/` | Integrate email/SMS microservices (Twilio/SendGrid) for automated contact triggers. |
+| **Donations** | `church-mock-donations`, `church-mock-pledges`, `church-mock-receipts` | `POST /api/v1/donations/charge/`<br>`GET /api/v1/donations/receipts/<id>/` | Integrate Stripe/M-Pesa payment gateways. Generate cryptographically signed receipts. |
+
+### 3. Future Document Generation & Automation
+Roadmap for PDF generation and automated badge issuance:
+- [ ] **Membership Cards**: ID card with member photo, membership number, and join date.
+- [ ] **Visitor Welcome Cards**: Automated personalized welcome postcards printable for follow-up team distributions.
+- [ ] **Event Badges**: Thermal-printable labels with attendee names and event barcodes for entry checkpoints.
+- [ ] **Donation Receipts PDF**: Formal PDF printable receipts generated server-side with digital signatures and tax-exemption metadata.
+- [ ] **Certificates**: Automatically generated Baptism, Wedding, Child Dedication, and Membership milestones certificates.
+- [ ] **QR-based IDs**: Static and dynamic QR credentials displayed in member profiles for rapid check-ins.
+
+### 4. Schema Localisation & Branch Extensions
+Proposed strategy for integrating localization, internationalization, and multi-tenant branches with minimal refactoring:
+- **Tenant / Branch Support**:
+  - Add `branch_id: string (UUID)` attribute to core schemas: `User`, `Member`, `DonationRecord`, `AttendanceSession`, and `Event`.
+  - Filter all queries on the client or server wrapper by default based on the authenticated user's current `branch_id`.
+- **Localization Profile (Country, Currency, Language)**:
+  - Extend settings models with `country_code` (e.g. `TZ`), `currency` (e.g. `TZS`), and `preferred_language` (e.g. `sw` or `en`).
+  - Centralize display helpers (like `formatTZS` and date formatting) to read from a unified `useLocalization` hook rather than hardcoded locales.
+- **International Phone Standard**:
+  - Update all input forms to enforce strict E.164 formats (`+` followed by country code and numbers, e.g. `+255754000000`).
+  - Validate values using standard zod validators `z.string().regex(/^\+[1-9]\d{1,14}$/)`.
+
+---
+
 ## 🧑‍💻 Dev Team
 
 | Name | Role | Email |
