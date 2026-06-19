@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
+import { useInView } from "framer-motion";
 import { Calendar, Eye, Users, Layers } from "lucide-react";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { MotionWrapper } from "@/features/landing/components/motion-wrapper";
@@ -23,6 +25,39 @@ function formatStatValue(value: number): string {
     return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`;
   }
   return value.toLocaleString();
+}
+
+function CountUp({ value, duration = 1500 }: { value: number; duration?: number }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    let start = 0;
+    const end = value;
+    const startTime = performance.now();
+
+    const updateCount = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      const easeProgress = progress * (2 - progress);
+      const currentCount = Math.floor(easeProgress * (end - start) + start);
+      setCount(currentCount);
+
+      if (progress < 1) {
+        requestAnimationFrame(updateCount);
+      } else {
+        setCount(end);
+      }
+    };
+
+    requestAnimationFrame(updateCount);
+  }, [value, duration, isInView]);
+
+  return <span ref={ref}>{formatStatValue(count)}</span>;
 }
 
 export function StatisticsSection({ statistics }: StatisticsSectionProps) {
@@ -55,7 +90,7 @@ export function StatisticsSection({ statistics }: StatisticsSectionProps) {
                     <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <p className="font-mono text-3xl font-bold text-primary-foreground md:text-4xl">
-                    {formatStatValue(stat.value)}
+                    <CountUp value={stat.value} />
                     {stat.suffix}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">

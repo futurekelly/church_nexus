@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Trash2, ShieldAlert, LogIn, MessageSquare } from "lucide-react";
-import { useLivestreamPermissions } from "../hooks/use-livestream-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import type { ChatMessage } from "../types/livestream.types";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,7 +32,8 @@ export function LivestreamChat({
   isStreamLive = true,
 }: LivestreamChatProps) {
   const router = useRouter();
-  const { canChat, canModerate, userName, userRole } = useLivestreamPermissions();
+  const { livestream: livestreamPermissions } = useAppPermissions();
+  const { canChat, canModerate, userName, userRole } = livestreamPermissions;
   const [inputText, setInputText] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
 

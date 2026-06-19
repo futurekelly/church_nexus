@@ -3,14 +3,16 @@
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Lock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import { useSermons, useSermonPermissions, SermonForm } from "@/features/sermons";
+import { useSermons, SermonForm } from "@/features/sermons";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
 
 export default function EditSermonPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { getSermonById, updateSermon } = useSermons();
-  const { canEdit } = useSermonPermissions();
+  const { sermons: sermonPermissions } = useAppPermissions();
+  const canEdit = sermonPermissions.canEdit;
 
   const sermon = getSermonById(id);
 

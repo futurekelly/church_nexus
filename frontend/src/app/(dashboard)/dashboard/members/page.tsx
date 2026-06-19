@@ -11,7 +11,7 @@ import { MemberTable } from "@/features/members/components/member-table";
 import { MemberPagination } from "@/features/members/components/member-pagination";
 import { MemberEmptyState } from "@/features/members/components/member-empty-state";
 import { useMembers } from "@/features/members/hooks/use-members";
-import { useMemberPermissions } from "@/features/members/hooks/use-member-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { MEMBERS_PER_PAGE } from "@/features/members/types/member.types";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
 import type { Member } from "@/features/members/types/member.types";
@@ -96,7 +96,8 @@ export default function MembersListPage() {
     toggleSort,
   } = useMembers();
 
-  const { canCreate, canDelete } = useMemberPermissions();
+  const { members: memberPermissions } = useAppPermissions();
+  const { canCreate, canDelete } = memberPermissions;
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
 
   const handleDelete = (member: Member) => setMemberToDelete(member);

@@ -3,9 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { AUTH_ROUTES } from "@/constants/routes";
+import { apiGet } from "@/services/api-client";
 import { AuthButton } from "@/features/auth/components/auth-button";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { AuthFormField } from "@/features/auth/components/auth-form-field";
@@ -19,11 +20,48 @@ import {
 } from "@/features/auth/schemas/auth-schemas";
 import { cn } from "@/lib/utils";
 
-const STEP_LABELS = ["Basic Info", "Contact", "Credentials", "Confirm"];
+const STEP_LABELS = ["Basic Info", "Contact & Branch", "Credentials", "Confirm"];
 
 export function RegisterForm() {
   const [step, setStep] = useState(1);
   const { register: submitRegistration, isLoading, error } = useRegister();
+
+  interface BranchInfo {
+    id: string;
+    branch_name: string;
+    branch_code: string;
+  }
+  const [branches, setBranches] = useState<BranchInfo[]>([
+    { id: "hq-branch", branch_name: "Headquarters Branch", branch_code: "HQ001" },
+    { id: "branch-001", branch_name: "Branch 001", branch_code: "BR001" }
+  ]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadBranches() {
+      try {
+        const response = await apiGet<any>("/api/branches/");
+        if (response.success) {
+          const list = response.data;
+          let branchList: BranchInfo[] = [];
+          if (Array.isArray(list)) {
+            branchList = list;
+          } else if (list && Array.isArray(list.results)) {
+            branchList = list.results;
+          }
+          if (active) {
+            setBranches(branchList);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load branches:", err);
+      }
+    }
+    loadBranches();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -31,6 +69,7 @@ export function RegisterForm() {
       first_name: "",
       last_name: "",
       email: "",
+      branch: "hq-branch",
       password: "",
       confirm_password: "",
     },
@@ -140,6 +179,7 @@ export function RegisterForm() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -12 }}
               transition={{ duration: 0.25 }}
+              className="space-y-4"
             >
               <AuthFormField
                 label="Email Address"
@@ -154,6 +194,29 @@ export function RegisterForm() {
                   placeholder="you@example.com"
                   {...register("email")}
                 />
+              </AuthFormField>
+
+              <AuthFormField
+                label="Local Branch"
+                htmlFor="branch"
+                error={errors.branch?.message as string | undefined}
+              >
+                <select
+                  id="branch"
+                  className={cn(
+                    inputClass(Boolean(errors.branch)),
+                    "text-primary-foreground bg-card"
+                  )}
+                  defaultValue={values.branch || "hq-branch"}
+                  {...register("branch")}
+                >
+                  <option value="" disabled>Select your local branch</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id} className="bg-slate-900 text-white">
+                      {b.branch_name} ({b.branch_code})
+                    </option>
+                  ))}
+                </select>
               </AuthFormField>
             </motion.div>
           )}
@@ -210,6 +273,7 @@ export function RegisterForm() {
             >
               <ReviewRow label="Name" value={`${values.first_name} ${values.last_name}`} />
               <ReviewRow label="Email" value={values.email} />
+              <ReviewRow label="Local Branch" value={branches.find((b) => b.id === values.branch)?.branch_name ?? "Not selected"} />
               <ReviewRow label="Role" value="Visitor (assigned on registration)" />
               <p className="pt-2 text-xs text-muted-foreground">
                 By creating an account, you agree to join as a Visitor. A Super

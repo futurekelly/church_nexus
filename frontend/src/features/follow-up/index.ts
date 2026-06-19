@@ -5,7 +5,6 @@ export { ContactHistoryTimeline } from "./components/contact-history-timeline";
 export { LogInteractionModal } from "./components/log-interaction-modal";
 
 export { useFollowUp } from "./hooks/use-follow-up";
-export { useFollowUpPermissions } from "./hooks/use-follow-up-permissions";
 
 export * from "./types/follow-up.types";
 export * from "./data/mock-visitors";

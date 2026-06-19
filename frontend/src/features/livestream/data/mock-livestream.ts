@@ -31,7 +31,7 @@ export const MOCK_CHAT_MESSAGES: ChatMessage[] = [
   },
   {
     id: "msg-3",
-    sender_name: "John Doe",
+    sender_name: "Kelvin Mbise",
     sender_role: "Member",
     sender_id: "mem-2",
     message: "Good morning family! Blessed to be tuning in online today.",

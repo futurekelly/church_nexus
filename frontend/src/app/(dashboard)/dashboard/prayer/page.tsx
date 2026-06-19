@@ -8,7 +8,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { FilterSelect } from "@/components/ui/filter-select";
 import {
   useFilteredPrayers,
-  usePrayerPermissions,
   PrayerCard,
   PrayerFiltersBar,
   PrayerSearch,
@@ -21,10 +20,12 @@ import {
   type PrayerSortConfig,
   type PrayerRequest,
 } from "@/features/prayer";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 
 export default function PrayerDashboardPage() {
   const { user } = useAuth();
-  const { canSubmit, canSeeAnonymousNames } = usePrayerPermissions();
+  const { prayer: prayerPermissions } = useAppPermissions();
+  const { canSubmit, canSeeAnonymousNames } = prayerPermissions;
 
   const [filters, setFilters] = useState<PrayerFilters>(DEFAULT_FILTERS);
   const [sortConfig, setSortConfig] = useState<PrayerSortConfig>({

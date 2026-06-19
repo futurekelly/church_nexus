@@ -6,25 +6,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "hsl(var(--background))",
-        surface: "hsl(var(--surface))",
-        card: "hsl(var(--card))",
+        background: "hsl(var(--background) / <alpha-value>)",
+        surface: "hsl(var(--surface) / <alpha-value>)",
+        card: "hsl(var(--card) / <alpha-value>)",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "hsl(var(--primary) / <alpha-value>)",
+          foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "hsl(var(--secondary) / <alpha-value>)",
+          foreground: "hsl(var(--secondary-foreground) / <alpha-value>)",
         },
-        success: "hsl(var(--success))",
-        warning: "hsl(var(--warning))",
+        success: "hsl(var(--success) / <alpha-value>)",
+        warning: "hsl(var(--warning) / <alpha-value>)",
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "hsl(var(--muted) / <alpha-value>)",
+          foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
         },
-        border: "hsl(var(--border))",
-        ring: "hsl(var(--ring))",
+        border: "hsl(var(--border) / <alpha-value>)",
+        ring: "hsl(var(--ring) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
@@ -41,6 +41,7 @@ const config: Config = {
       animation: {
         "fade-in": "fadeIn 0.3s ease-out",
         "slide-up": "slideUp 0.3s ease-out",
+        "audio-wave": "audioWave 1.2s ease-in-out infinite alternate",
       },
       keyframes: {
         fadeIn: {
@@ -50,6 +51,10 @@ const config: Config = {
         slideUp: {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        audioWave: {
+          "0%": { height: "4px" },
+          "100%": { height: "48px" },
         },
       },
     },

@@ -9,6 +9,5 @@ export { SermonForm } from "./components/sermon-form";
 export { SermonPagination } from "./components/sermon-pagination";
 
 export { useSermons, useFilteredSermons } from "./hooks/use-sermons";
-export { useSermonPermissions } from "./hooks/use-sermon-permissions";
 
 export * from "./types/sermon.types";

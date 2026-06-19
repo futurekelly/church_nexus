@@ -12,10 +12,10 @@ import {
   EventCalendarView,
   EventPagination,
   useFilteredEvents,
-  useEventPermissions,
   type EventFilters,
   type EventSortConfig,
 } from "@/features/events";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,8 @@ export default function EventsListPage() {
     stats,
   } = useFilteredEvents(filters, sortConfig, page, EVENTS_PER_PAGE);
 
-  const { canCreate, canEdit } = useEventPermissions();
+  const { events: eventPermissions } = useAppPermissions();
+  const { canCreate, canEdit } = eventPermissions;
 
   const handleFilterUpdate = <K extends keyof EventFilters>(
     key: K,

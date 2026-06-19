@@ -2,8 +2,16 @@
 
 import { useState } from "react";
 import { Users, Search } from "lucide-react";
-import { MOCK_ATTENDEES } from "../data/mock-events";
 import { cn } from "@/lib/utils";
+import { MOCK_ATTENDEES } from "../data/mock-events";
+
+interface Attendee {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  registerDate: string;
+}
 
 interface EventAttendeePreviewProps {
   registeredCount: number;
@@ -16,7 +24,7 @@ export function EventAttendeePreview({
 }: EventAttendeePreviewProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredAttendees = MOCK_ATTENDEES.filter((a) =>
+  const filteredAttendees = (MOCK_ATTENDEES as Attendee[]).filter((a) =>
     a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -80,7 +88,7 @@ export function EventAttendeePreview({
       {/* Avatar Stacking Group */}
       <div className="flex items-center gap-3 py-2">
         <div className="flex -space-x-3 overflow-hidden">
-          {MOCK_ATTENDEES.slice(0, 5).map((att, index) => (
+          {(MOCK_ATTENDEES as Attendee[]).slice(0, 5).map((att, index) => (
             <div
               key={att.id}
               className={cn(

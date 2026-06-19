@@ -7,14 +7,15 @@ import { cn } from "@/lib/utils";
 import type { AttendanceSession } from "../types/attendance.types";
 import { SESSION_TYPE_LABELS } from "../types/attendance.types";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { useAttendancePermissions } from "../hooks/use-attendance-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 
 interface SessionCardProps {
   session: AttendanceSession;
 }
 
 export function SessionCard({ session }: SessionCardProps) {
-  const { canManage, canViewReports } = useAttendancePermissions();
+  const { attendance: attendancePermissions } = useAppPermissions();
+  const { canManage, canViewReports } = attendancePermissions;
 
   const total = session.present_count + session.absent_count + session.excused_count;
   const progressPercent = total > 0 ? Math.round((session.present_count / total) * 100) : 0;

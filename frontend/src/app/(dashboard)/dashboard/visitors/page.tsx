@@ -6,11 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, UserCheck, Lock, Activity, Eye, Trash2, Calendar, FileDown, PlusCircle, X } from "lucide-react";
 import {
   useFollowUp,
-  useFollowUpPermissions,
   VisitorForm,
   type VisitorProfile,
   FOLLOW_UP_STATUS_COLORS,
 } from "@/features/follow-up";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterSelect } from "@/components/ui/filter-select";
 import { Pagination } from "@/components/ui/pagination";
@@ -21,7 +21,8 @@ const VISITORS_PER_PAGE = 8;
 
 export default function VisitorsListPage() {
   const { visitors, tickets, addVisitor } = useFollowUp();
-  const { canManage, canViewFollowUp } = useFollowUpPermissions();
+  const { followUp: followUpPermissions } = useAppPermissions();
+  const { canManage, canViewFollowUp } = followUpPermissions;
   
   const [page, setPage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);

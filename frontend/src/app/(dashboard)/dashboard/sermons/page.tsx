@@ -11,10 +11,10 @@ import {
   SermonCard,
   SermonPagination,
   useFilteredSermons,
-  useSermonPermissions,
   type SermonFilters,
   type SermonSortConfig,
 } from "@/features/sermons";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +22,8 @@ const SERMONS_PER_PAGE = 6;
 
 export default function SermonsListPage() {
   const [page, setPage] = useState(1);
-  const { canCreate, canEdit, canViewLibrary } = useSermonPermissions();
+  const { sermons: sermonPermissions } = useAppPermissions();
+  const { canCreate, canEdit, canViewLibrary } = sermonPermissions;
 
   const [filters, setFilters] = useState<SermonFilters>({
     search: "",

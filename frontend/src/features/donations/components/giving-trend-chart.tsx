@@ -2,11 +2,11 @@
 
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import type { DonationRecord } from "../types/donations.types";
-import { formatTZS } from "../utils/format";
+import type { Donation } from "../types/donations.types";
+import { formatCurrency } from "@/lib/localization";
 
 interface GivingTrendChartProps {
-  donations: DonationRecord[];
+  donations: Donation[];
 }
 
 export function GivingTrendChart({ donations }: GivingTrendChartProps) {
@@ -26,13 +26,14 @@ export function GivingTrendChart({ donations }: GivingTrendChartProps) {
       // Sum all donations in this month and year
       const totalAmount = completed
         .filter((item) => {
-          const itemDate = new Date(item.created_at);
+          const dateStr = item.donation_date || item.created_at;
+          const itemDate = new Date(dateStr);
           return (
             itemDate.getMonth() === d.getMonth() &&
             itemDate.getFullYear() === d.getFullYear()
           );
         })
-        .reduce((sum, item) => sum + item.amount, 0);
+        .reduce((sum, item) => sum + item.amount * item.exchange_rate_to_base, 0);
 
       data.push({
         name,
@@ -94,7 +95,7 @@ export function GivingTrendChart({ donations }: GivingTrendChartProps) {
                     return (
                       <div className="rounded-lg border border-border/60 bg-card/90 px-3 py-2 text-xs shadow-glass backdrop-blur-[16px] text-primary-foreground">
                         <p className="font-semibold text-indigo-400">{dataObj.name}</p>
-                        <p className="font-medium mt-1">Total: {formatTZS(dataObj.value as number)}</p>
+                        <p className="font-medium mt-1">Total: {formatCurrency(dataObj.value as number)}</p>
                       </div>
                     );
                   }

@@ -11,7 +11,6 @@ import {
   CreateSessionModal,
   useAttendance,
   useFilteredSessions,
-  useAttendancePermissions,
   SESSION_TYPES,
   SESSION_STATUSES,
   type SessionType,
@@ -20,6 +19,7 @@ import {
   type AttendanceSortConfig,
   type AttendanceSession,
 } from "@/features/attendance";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { MOCK_MEMBERS } from "@/features/members/data/mock-members";
 import { useAuth } from "@/hooks/use-auth";
 import { SearchInput } from "@/components/ui/search-input";
@@ -33,7 +33,8 @@ const SESSIONS_PER_PAGE = 6;
 export default function AttendanceDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { canManage, canViewReports, canViewAttendance, isMember } = useAttendancePermissions();
+  const { attendance: attendancePermissions } = useAppPermissions();
+  const { canManage, canViewReports, canViewAttendance, isMember } = attendancePermissions;
   
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);

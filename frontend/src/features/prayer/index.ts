@@ -1,6 +1,5 @@
 export * from "./types/prayer.types";
 export * from "./hooks/use-prayers";
-export * from "./hooks/use-prayer-permissions";
 export * from "./components/prayer-card";
 export * from "./components/prayer-form";
 export * from "./components/prayer-stats";

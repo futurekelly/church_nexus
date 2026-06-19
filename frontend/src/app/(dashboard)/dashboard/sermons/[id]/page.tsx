@@ -16,12 +16,12 @@ import {
 } from "lucide-react";
 import {
   useSermons,
-  useSermonPermissions,
   SermonMediaPlayer,
   SermonNotesViewer,
   SermonStatusBadge,
   SERMON_CATEGORY_LABELS,
 } from "@/features/sermons";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { cn } from "@/lib/utils";
 
 export default function SermonDetailPage() {
@@ -31,7 +31,8 @@ export default function SermonDetailPage() {
   const tabParam = searchParams.get("tab");
   
   const { getSermonById } = useSermons();
-  const { canEdit, canViewLibrary } = useSermonPermissions();
+  const { sermons: sermonPermissions } = useAppPermissions();
+  const { canEdit, canViewLibrary } = sermonPermissions;
 
   const sermon = getSermonById(id);
 

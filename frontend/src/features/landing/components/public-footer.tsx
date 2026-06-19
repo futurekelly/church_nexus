@@ -81,21 +81,21 @@ export function PublicFooter() {
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                123 Faith Avenue, Community City
+                Dar es Salaam, Tanzania
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                <a href="tel:+1234567890" className="transition-colors hover:text-primary">
-                  (123) 456-7890
+                <a href="tel:+255678302135" className="transition-colors hover:text-primary">
+                  +255 678 302 135
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                 <a
-                  href="mailto:hello@churchnexus.org"
+                  href="mailto:futurekelly360@gmail.com"
                   className="transition-colors hover:text-primary"
                 >
-                  hello@churchnexus.org
+                  futurekelly360@gmail.com
                 </a>
               </li>
             </ul>

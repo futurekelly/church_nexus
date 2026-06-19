@@ -1,0 +1,6207 @@
+openapi: 3.0.3
+info:
+  title: Church Nexus API
+  version: 1.0.0
+  description: API documentation for Church Nexus SaaS backend
+paths:
+  /api/accounts/:
+    get:
+      operationId: api_accounts_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+          description: ''
+    post:
+      operationId: api_accounts_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Account'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+  /api/accounts/{id}/:
+    get:
+      operationId: api_accounts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this account.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+    put:
+      operationId: api_accounts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this account.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Account'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+    patch:
+      operationId: api_accounts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this account.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAccount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAccount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAccount'
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+    delete:
+      operationId: api_accounts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this account.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/auth/login/:
+    post:
+      operationId: api_auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: api_auth_logout_create
+      description: Blacklists the provided refresh token, logging the user out.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Logout'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '205':
+          description: Successfully logged out and token blacklisted.
+        '400':
+          description: Refresh token is missing or invalid.
+  /api/auth/profile/:
+    get:
+      operationId: api_auth_profile_retrieve
+      description: Returns the authenticated user's profile information, including
+        their role and branch.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/refresh/:
+    post:
+      operationId: api_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/branches/:
+    get:
+      operationId: api_branches_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Branch'
+          description: ''
+    post:
+      operationId: api_branches_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Branch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Branch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Branch'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branch'
+          description: ''
+  /api/branches/{id}/:
+    get:
+      operationId: api_branches_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this Branch.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branch'
+          description: ''
+    put:
+      operationId: api_branches_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this Branch.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Branch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Branch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Branch'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branch'
+          description: ''
+    patch:
+      operationId: api_branches_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this Branch.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBranch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBranch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBranch'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branch'
+          description: ''
+    delete:
+      operationId: api_branches_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this Branch.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/event-checkins/:
+    get:
+      operationId: api_event_checkins_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventCheckIn'
+          description: ''
+    post:
+      operationId: api_event_checkins_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCheckIn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventCheckIn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventCheckIn'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCheckIn'
+          description: ''
+  /api/event-checkins/{id}/:
+    get:
+      operationId: api_event_checkins_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event check in.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCheckIn'
+          description: ''
+    put:
+      operationId: api_event_checkins_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event check in.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCheckIn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventCheckIn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventCheckIn'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCheckIn'
+          description: ''
+    patch:
+      operationId: api_event_checkins_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event check in.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEventCheckIn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEventCheckIn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEventCheckIn'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCheckIn'
+          description: ''
+    delete:
+      operationId: api_event_checkins_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event check in.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/event-registrations/:
+    get:
+      operationId: api_event_registrations_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventRegistration'
+          description: ''
+    post:
+      operationId: api_event_registrations_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistration'
+          description: ''
+  /api/event-registrations/{id}/:
+    get:
+      operationId: api_event_registrations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event registration.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistration'
+          description: ''
+    put:
+      operationId: api_event_registrations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event registration.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistration'
+          description: ''
+    patch:
+      operationId: api_event_registrations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event registration.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEventRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEventRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEventRegistration'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistration'
+          description: ''
+    delete:
+      operationId: api_event_registrations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event registration.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/event-registrations/{id}/archive/:
+    post:
+      operationId: api_event_registrations_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event registration.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistration'
+          description: ''
+  /api/event-registrations/{id}/check-in/:
+    post:
+      operationId: api_event_registrations_check_in_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event registration.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistration'
+          description: ''
+  /api/event-registrations/{id}/restore/:
+    post:
+      operationId: api_event_registrations_restore_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event registration.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistration'
+          description: ''
+  /api/event-resources/:
+    get:
+      operationId: api_event_resources_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventResource'
+          description: ''
+    post:
+      operationId: api_event_resources_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventResource'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventResource'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventResource'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResource'
+          description: ''
+  /api/event-resources/{id}/:
+    get:
+      operationId: api_event_resources_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event resource.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResource'
+          description: ''
+    put:
+      operationId: api_event_resources_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event resource.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventResource'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventResource'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventResource'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResource'
+          description: ''
+    patch:
+      operationId: api_event_resources_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event resource.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEventResource'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEventResource'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEventResource'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResource'
+          description: ''
+    delete:
+      operationId: api_event_resources_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event resource.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/events/:
+    get:
+      operationId: api_events_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventList'
+          description: ''
+    post:
+      operationId: api_events_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+  /api/events/{id}/:
+    get:
+      operationId: api_events_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+    put:
+      operationId: api_events_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+    patch:
+      operationId: api_events_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+    delete:
+      operationId: api_events_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/events/{id}/archive/:
+    post:
+      operationId: api_events_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+  /api/events/{id}/restore/:
+    post:
+      operationId: api_events_restore_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+  /api/families/:
+    get:
+      operationId: api_families_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Family'
+          description: ''
+    post:
+      operationId: api_families_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Family'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Family'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Family'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Family'
+          description: ''
+  /api/families/{id}/:
+    get:
+      operationId: api_families_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this family.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Family'
+          description: ''
+    put:
+      operationId: api_families_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this family.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Family'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Family'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Family'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Family'
+          description: ''
+    patch:
+      operationId: api_families_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this family.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFamily'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFamily'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFamily'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Family'
+          description: ''
+    delete:
+      operationId: api_families_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this family.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/family-relationships/:
+    get:
+      operationId: api_family_relationships_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FamilyRelationship'
+          description: ''
+    post:
+      operationId: api_family_relationships_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FamilyRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FamilyRelationship'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyRelationship'
+          description: ''
+  /api/family-relationships/{id}/:
+    get:
+      operationId: api_family_relationships_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this family relationship.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyRelationship'
+          description: ''
+    put:
+      operationId: api_family_relationships_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this family relationship.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FamilyRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FamilyRelationship'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyRelationship'
+          description: ''
+    patch:
+      operationId: api_family_relationships_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this family relationship.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFamilyRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFamilyRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFamilyRelationship'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyRelationship'
+          description: ''
+    delete:
+      operationId: api_family_relationships_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this family relationship.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/financial-periods/:
+    get:
+      operationId: api_financial_periods_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FinancialPeriod'
+          description: ''
+    post:
+      operationId: api_financial_periods_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinancialPeriod'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinancialPeriod'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinancialPeriod'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialPeriod'
+          description: ''
+  /api/financial-periods/{id}/:
+    get:
+      operationId: api_financial_periods_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial period.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialPeriod'
+          description: ''
+    put:
+      operationId: api_financial_periods_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial period.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinancialPeriod'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinancialPeriod'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinancialPeriod'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialPeriod'
+          description: ''
+    patch:
+      operationId: api_financial_periods_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial period.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFinancialPeriod'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFinancialPeriod'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFinancialPeriod'
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialPeriod'
+          description: ''
+    delete:
+      operationId: api_financial_periods_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial period.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/financial-transactions/:
+    get:
+      operationId: api_financial_transactions_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FinancialTransaction'
+          description: ''
+    post:
+      operationId: api_financial_transactions_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialTransaction'
+          description: ''
+  /api/financial-transactions/{id}/:
+    get:
+      operationId: api_financial_transactions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial transaction.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialTransaction'
+          description: ''
+    put:
+      operationId: api_financial_transactions_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial transaction.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialTransaction'
+          description: ''
+    patch:
+      operationId: api_financial_transactions_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial transaction.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFinancialTransaction'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFinancialTransaction'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFinancialTransaction'
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialTransaction'
+          description: ''
+    delete:
+      operationId: api_financial_transactions_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial transaction.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/financial-transactions/{id}/void/:
+    post:
+      operationId: api_financial_transactions_void_create
+      description: Custom action to void a posted transaction and insert reversing
+        ledger entries.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this financial transaction.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinancialTransaction'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialTransaction'
+          description: ''
+  /api/group-attendance/:
+    get:
+      operationId: api_group_attendance_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupAttendance'
+          description: ''
+    post:
+      operationId: api_group_attendance_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupAttendance'
+          description: ''
+  /api/group-attendance/{id}/:
+    get:
+      operationId: api_group_attendance_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group attendance.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupAttendance'
+          description: ''
+    put:
+      operationId: api_group_attendance_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group attendance.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupAttendance'
+          description: ''
+    patch:
+      operationId: api_group_attendance_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group attendance.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupAttendance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupAttendance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupAttendance'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupAttendance'
+          description: ''
+    delete:
+      operationId: api_group_attendance_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group attendance.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/group-attendance/{id}/archive/:
+    post:
+      operationId: api_group_attendance_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group attendance.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupAttendance'
+          description: ''
+  /api/group-attendance/{id}/restore/:
+    post:
+      operationId: api_group_attendance_restore_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group attendance.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupAttendance'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupAttendance'
+          description: ''
+  /api/group-members/:
+    get:
+      operationId: api_group_members_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupMember'
+          description: ''
+    post:
+      operationId: api_group_members_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+          description: ''
+  /api/group-members/{id}/:
+    get:
+      operationId: api_group_members_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group member.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+          description: ''
+    put:
+      operationId: api_group_members_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group member.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+          description: ''
+    patch:
+      operationId: api_group_members_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group member.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupMember'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupMember'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupMember'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+          description: ''
+    delete:
+      operationId: api_group_members_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group member.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/group-members/{id}/archive/:
+    post:
+      operationId: api_group_members_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group member.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+          description: ''
+  /api/group-members/{id}/restore/:
+    post:
+      operationId: api_group_members_restore_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group member.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+          description: ''
+  /api/group-prayer-requests/:
+    get:
+      operationId: api_group_prayer_requests_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupPrayerRequest'
+          description: ''
+    post:
+      operationId: api_group_prayer_requests_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPrayerRequest'
+          description: ''
+  /api/group-prayer-requests/{id}/:
+    get:
+      operationId: api_group_prayer_requests_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group prayer request.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPrayerRequest'
+          description: ''
+    put:
+      operationId: api_group_prayer_requests_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group prayer request.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPrayerRequest'
+          description: ''
+    patch:
+      operationId: api_group_prayer_requests_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group prayer request.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupPrayerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupPrayerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupPrayerRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPrayerRequest'
+          description: ''
+    delete:
+      operationId: api_group_prayer_requests_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group prayer request.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/group-prayer-requests/{id}/archive/:
+    post:
+      operationId: api_group_prayer_requests_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group prayer request.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPrayerRequest'
+          description: ''
+  /api/group-prayer-requests/{id}/restore/:
+    post:
+      operationId: api_group_prayer_requests_restore_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this group prayer request.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupPrayerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPrayerRequest'
+          description: ''
+  /api/groups/:
+    get:
+      operationId: api_groups_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConnectGroup'
+          description: ''
+    post:
+      operationId: api_groups_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConnectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConnectGroup'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectGroup'
+          description: ''
+  /api/groups/{id}/:
+    get:
+      operationId: api_groups_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this connect group.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectGroup'
+          description: ''
+    put:
+      operationId: api_groups_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this connect group.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConnectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConnectGroup'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectGroup'
+          description: ''
+    patch:
+      operationId: api_groups_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this connect group.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedConnectGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedConnectGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedConnectGroup'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectGroup'
+          description: ''
+    delete:
+      operationId: api_groups_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this connect group.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/lifecycle-timeline/:
+    get:
+      operationId: api_lifecycle_timeline_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberLifecycleTimeline'
+          description: ''
+  /api/lifecycle-timeline/{id}/:
+    get:
+      operationId: api_lifecycle_timeline_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this member lifecycle timeline.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberLifecycleTimeline'
+          description: ''
+  /api/members/:
+    get:
+      operationId: api_members_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMemberList'
+          description: ''
+    post:
+      operationId: api_members_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Member'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Member'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Member'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/members/{id}/:
+    get:
+      operationId: api_members_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this member.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+    put:
+      operationId: api_members_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this member.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Member'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Member'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Member'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+    patch:
+      operationId: api_members_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this member.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMember'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMember'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMember'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+    delete:
+      operationId: api_members_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this member.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/members/{id}/archive/:
+    post:
+      operationId: api_members_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this member.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Member'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Member'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Member'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/members/{id}/relationships/:
+    get:
+      operationId: api_members_relationships_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this member.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/members/{id}/restore/:
+    post:
+      operationId: api_members_restore_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this member.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Member'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Member'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Member'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/resource-bookings/:
+    get:
+      operationId: api_resource_bookings_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourceBooking'
+          description: ''
+    post:
+      operationId: api_resource_bookings_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceBooking'
+          description: ''
+  /api/resource-bookings/{id}/:
+    get:
+      operationId: api_resource_bookings_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this resource booking.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceBooking'
+          description: ''
+    put:
+      operationId: api_resource_bookings_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this resource booking.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceBooking'
+          description: ''
+    patch:
+      operationId: api_resource_bookings_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this resource booking.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedResourceBooking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedResourceBooking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedResourceBooking'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceBooking'
+          description: ''
+    delete:
+      operationId: api_resource_bookings_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this resource booking.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/resource-bookings/{id}/approve/:
+    post:
+      operationId: api_resource_bookings_approve_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this resource booking.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceBooking'
+          description: ''
+  /api/resource-bookings/{id}/reject/:
+    post:
+      operationId: api_resource_bookings_reject_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this resource booking.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResourceBooking'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceBooking'
+          description: ''
+  /api/study-outlines/:
+    get:
+      operationId: api_study_outlines_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudyOutline'
+          description: ''
+    post:
+      operationId: api_study_outlines_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyOutline'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StudyOutline'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StudyOutline'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyOutline'
+          description: ''
+  /api/study-outlines/{id}/:
+    get:
+      operationId: api_study_outlines_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this study outline.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyOutline'
+          description: ''
+    put:
+      operationId: api_study_outlines_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this study outline.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyOutline'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StudyOutline'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StudyOutline'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyOutline'
+          description: ''
+    patch:
+      operationId: api_study_outlines_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this study outline.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStudyOutline'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStudyOutline'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStudyOutline'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyOutline'
+          description: ''
+    delete:
+      operationId: api_study_outlines_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this study outline.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/transaction-attachments/:
+    get:
+      operationId: api_transaction_attachments_list
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionAttachment'
+          description: ''
+    post:
+      operationId: api_transaction_attachments_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionAttachment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransactionAttachment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransactionAttachment'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionAttachment'
+          description: ''
+  /api/transaction-attachments/{id}/:
+    get:
+      operationId: api_transaction_attachments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this transaction attachment.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionAttachment'
+          description: ''
+    put:
+      operationId: api_transaction_attachments_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this transaction attachment.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionAttachment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransactionAttachment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransactionAttachment'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionAttachment'
+          description: ''
+    patch:
+      operationId: api_transaction_attachments_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this transaction attachment.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionAttachment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionAttachment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionAttachment'
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionAttachment'
+          description: ''
+    delete:
+      operationId: api_transaction_attachments_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this transaction attachment.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch:
+          type: string
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 255
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        cached_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        reconstructed_balance:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - branch
+      - cached_balance
+      - code
+      - created_at
+      - id
+      - name
+      - reconstructed_balance
+      - type
+      - updated_at
+    AttendanceSourceEnum:
+      enum:
+      - GROUP
+      - EVENT_SYNC
+      - IMPORT
+      type: string
+      description: |-
+        * `GROUP` - Group Session
+        * `EVENT_SYNC` - Event Synchronization
+        * `IMPORT` - Import
+    AttendanceStatusEnum:
+      enum:
+      - registered
+      - checked_in
+      - absent
+      type: string
+      description: |-
+        * `registered` - Registered
+        * `checked_in` - Checked In
+        * `absent` - Absent
+    BaptismStatusEnum:
+      enum:
+      - Not Baptized
+      - Water Baptized
+      - Holy Spirit Baptized
+      type: string
+      description: |-
+        * `Not Baptized` - Not Baptized
+        * `Water Baptized` - Water Baptized
+        * `Holy Spirit Baptized` - Holy Spirit Baptized
+    BlankEnum:
+      enum:
+      - ''
+    Branch:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        branch_code:
+          type: string
+          maxLength: 50
+        branch_name:
+          type: string
+          maxLength: 255
+        branch_type:
+          $ref: '#/components/schemas/BranchTypeEnum'
+        email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          maxLength: 50
+        address:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - branch_code
+      - branch_name
+      - created_at
+      - id
+      - updated_at
+    BranchTypeEnum:
+      enum:
+      - headquarters
+      - satellite
+      type: string
+      description: |-
+        * `headquarters` - Headquarters
+        * `satellite` - Satellite
+    CategoryEnum:
+      enum:
+      - Home Fellowship
+      - Connect Group
+      - Bible Study
+      - Ministry Cell
+      type: string
+      description: |-
+        * `Home Fellowship` - Home Fellowship
+        * `Connect Group` - Connect Group
+        * `Bible Study` - Bible Study
+        * `Ministry Cell` - Ministry Cell
+    CheckInMethodEnum:
+      enum:
+      - MANUAL
+      - QR_CODE
+      - SELF_SERVICE
+      - IMPORT
+      type: string
+      description: |-
+        * `MANUAL` - Manual
+        * `QR_CODE` - QR Code
+        * `SELF_SERVICE` - Self Service
+        * `IMPORT` - Import
+    ConnectGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch_id:
+          type: string
+        leader_id:
+          type: string
+          format: uuid
+          nullable: true
+        assistant_leader_id:
+          type: string
+          format: uuid
+          nullable: true
+        branch_details:
+          allOf:
+          - $ref: '#/components/schemas/Branch'
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        location_name:
+          type: string
+          maxLength: 255
+        location_address:
+          type: string
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        frequency:
+          $ref: '#/components/schemas/FrequencyEnum'
+        status:
+          $ref: '#/components/schemas/Status2d9Enum'
+        max_members:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+          readOnly: true
+        leader:
+          type: string
+          format: uuid
+          nullable: true
+        assistant_leader:
+          type: string
+          format: uuid
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - branch
+      - branch_details
+      - category
+      - created_at
+      - created_by
+      - frequency
+      - id
+      - location_name
+      - name
+      - updated_at
+      - updated_by
+    DonorStatusEnum:
+      enum:
+      - Active
+      - Inactive
+      - Guest
+      - Non-Donor
+      type: string
+      description: |-
+        * `Active` - Active
+        * `Inactive` - Inactive
+        * `Guest` - Guest
+        * `Non-Donor` - Non-Donor
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch_id:
+          type: string
+        branch_details:
+          allOf:
+          - $ref: '#/components/schemas/Branch'
+          readOnly: true
+        registered_count:
+          type: integer
+          readOnly: true
+        group_id:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        event_type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        location:
+          type: string
+          maxLength: 255
+        organizer:
+          type: string
+          maxLength: 255
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        waitlist_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/EventStatusEnum'
+        cover_image:
+          type: string
+          maxLength: 500
+        is_recurring:
+          type: boolean
+        recurrence_pattern:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RecurrencePatternEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        attendance_snapshot:
+          readOnly: true
+          nullable: true
+        snapshot_generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        snapshot_version:
+          type: integer
+          readOnly: true
+        is_archived:
+          type: boolean
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+          readOnly: true
+        parent_event:
+          type: string
+          format: uuid
+          nullable: true
+        archived_by:
+          type: integer
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - attendance_snapshot
+      - branch
+      - branch_details
+      - created_at
+      - created_by
+      - end_date
+      - event_type
+      - id
+      - location
+      - organizer
+      - registered_count
+      - snapshot_generated_at
+      - snapshot_version
+      - start_date
+      - title
+      - updated_at
+      - updated_by
+    EventCheckIn:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        registration_id:
+          type: string
+          format: uuid
+        checked_in_by_email:
+          type: string
+          format: email
+          readOnly: true
+        checked_in_at:
+          type: string
+          format: date-time
+        check_in_method:
+          $ref: '#/components/schemas/CheckInMethodEnum'
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        registration:
+          type: string
+          format: uuid
+          readOnly: true
+        checked_in_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - archived_at
+      - archived_by
+      - checked_in_by
+      - checked_in_by_email
+      - created_at
+      - created_by
+      - id
+      - is_archived
+      - registration
+      - registration_id
+      - updated_at
+      - updated_by
+    EventRegistration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: integer
+          nullable: true
+        member_id:
+          type: string
+          format: uuid
+          nullable: true
+        visitor_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        visitor_email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 254
+        visitor_phone:
+          type: string
+          nullable: true
+          maxLength: 50
+        status:
+          $ref: '#/components/schemas/EventRegistrationStatusEnum'
+        registration_date:
+          type: string
+          format: date-time
+        attendance_status:
+          $ref: '#/components/schemas/AttendanceStatusEnum'
+        notes:
+          type: string
+          nullable: true
+        registration_token:
+          type: string
+          format: uuid
+          readOnly: true
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event:
+          type: string
+          format: uuid
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+          nullable: true
+        member:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - archived_at
+      - archived_by
+      - created_at
+      - created_by
+      - event
+      - event_id
+      - id
+      - is_archived
+      - member
+      - registration_token
+      - updated_at
+      - updated_by
+      - user
+    EventRegistrationStatusEnum:
+      enum:
+      - REGISTERED
+      - WAITLISTED
+      - PROMOTED
+      - CANCELLED
+      - ATTENDED
+      - NO_SHOW
+      type: string
+      description: |-
+        * `REGISTERED` - Registered
+        * `WAITLISTED` - Waitlisted
+        * `PROMOTED` - Promoted
+        * `CANCELLED` - Cancelled
+        * `ATTENDED` - Attended
+        * `NO_SHOW` - No Show
+    EventResource:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch_id:
+          type: string
+        name:
+          type: string
+          maxLength: 255
+        resource_type:
+          $ref: '#/components/schemas/ResourceTypeEnum'
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        status:
+          $ref: '#/components/schemas/EventResourceStatusEnum'
+        branch:
+          type: string
+          readOnly: true
+      required:
+      - branch
+      - branch_id
+      - id
+      - name
+      - resource_type
+    EventResourceStatusEnum:
+      enum:
+      - Available
+      - Maintenance
+      - Reserved
+      type: string
+      description: |-
+        * `Available` - Available
+        * `Maintenance` - Maintenance
+        * `Reserved` - Reserved
+    EventStatusEnum:
+      enum:
+      - Draft
+      - Scheduled
+      - Published
+      - Open
+      - In Progress
+      - Closed
+      - Completed
+      - Cancelled
+      - Archived
+      type: string
+      description: |-
+        * `Draft` - Draft
+        * `Scheduled` - Scheduled
+        * `Published` - Published
+        * `Open` - Open
+        * `In Progress` - In Progress
+        * `Closed` - Closed
+        * `Completed` - Completed
+        * `Cancelled` - Cancelled
+        * `Archived` - Archived
+    EventTypeEnum:
+      enum:
+      - Sunday Service
+      - Bible Study
+      - Prayer Meeting
+      - Youth Meeting
+      - Conference
+      - Seminar
+      - Outreach
+      - Livestream Event
+      - Special Event
+      type: string
+      description: |-
+        * `Sunday Service` - Sunday Service
+        * `Bible Study` - Bible Study
+        * `Prayer Meeting` - Prayer Meeting
+        * `Youth Meeting` - Youth Meeting
+        * `Conference` - Conference
+        * `Seminar` - Seminar
+        * `Outreach` - Outreach
+        * `Livestream Event` - Livestream Event
+        * `Special Event` - Special Event
+    Family:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+        head_of_household:
+          type: string
+          format: uuid
+          nullable: true
+        created_by:
+          type: integer
+          nullable: true
+      required:
+      - branch
+      - created_at
+      - id
+      - name
+      - updated_at
+    FamilyRelationship:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        relationship_type:
+          $ref: '#/components/schemas/RelationshipTypeEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        from_member:
+          type: string
+          format: uuid
+        to_member:
+          type: string
+          format: uuid
+        created_by:
+          type: integer
+          nullable: true
+      required:
+      - created_at
+      - from_member
+      - id
+      - relationship_type
+      - to_member
+    FinancialPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/FinancialPeriodStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - branch
+      - created_at
+      - created_by
+      - end_date
+      - id
+      - name
+      - start_date
+      - updated_at
+      - updated_by
+    FinancialPeriodStatusEnum:
+      enum:
+      - OPEN
+      - CLOSED
+      - LOCKED
+      type: string
+      description: |-
+        * `OPEN` - Open
+        * `CLOSED` - Closed
+        * `LOCKED` - Locked
+    FinancialTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch:
+          type: string
+        period:
+          type: string
+          format: uuid
+        reference_number:
+          type: string
+          readOnly: true
+        transaction_type:
+          type: string
+          maxLength: 20
+        date:
+          type: string
+          format: date-time
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/FinancialTransactionStatusEnum'
+        transaction_currency:
+          type: string
+          maxLength: 10
+        exchange_rate_applied:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,6})?$
+        base_currency_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        reversed_by:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionAttachment'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - attachments
+      - base_currency_amount
+      - branch
+      - created_at
+      - date
+      - entries
+      - id
+      - reference_number
+      - reversed_by
+      - transaction_type
+      - updated_at
+    FinancialTransactionStatusEnum:
+      enum:
+      - DRAFT
+      - POSTED
+      - VOIDED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `POSTED` - Posted
+        * `VOIDED` - Voided
+    FrequencyEnum:
+      enum:
+      - Weekly
+      - Bi-Weekly
+      - Monthly
+      type: string
+      description: |-
+        * `Weekly` - Weekly
+        * `Bi-Weekly` - Bi-Weekly
+        * `Monthly` - Monthly
+    GenderEnum:
+      enum:
+      - male
+      - female
+      type: string
+      description: |-
+        * `male` - Male
+        * `female` - Female
+    GroupAttendance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        group_id:
+          type: string
+          format: uuid
+        attendees:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupAttendanceAttendee'
+        meeting_date:
+          type: string
+          format: date
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        visitor_count:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        study_topic:
+          type: string
+          nullable: true
+          maxLength: 255
+        offering_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+          maxLength: 10
+        linked_event_id:
+          type: string
+          format: uuid
+          nullable: true
+        attendance_source:
+          $ref: '#/components/schemas/AttendanceSourceEnum'
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        group:
+          type: string
+          format: uuid
+          readOnly: true
+        submitted_by:
+          type: integer
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - archived_at
+      - archived_by
+      - attendees
+      - created_at
+      - created_by
+      - group
+      - group_id
+      - id
+      - is_archived
+      - meeting_date
+      - submitted_at
+      - updated_at
+      - updated_by
+    GroupAttendanceAttendee:
+      type: object
+      properties:
+        member_id:
+          type: string
+          format: uuid
+        attended:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/GroupAttendanceAttendeeStatusEnum'
+        notes:
+          type: string
+          nullable: true
+      required:
+      - member_id
+      - status
+    GroupAttendanceAttendeeStatusEnum:
+      enum:
+      - Present
+      - Absent
+      - Excused
+      type: string
+      description: |-
+        * `Present` - Present
+        * `Absent` - Absent
+        * `Excused` - Excused
+    GroupMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        group_id:
+          type: string
+          format: uuid
+        member_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 254
+        role:
+          $ref: '#/components/schemas/GroupMemberRoleEnum'
+        joined_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/Status2d9Enum'
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        group:
+          type: string
+          format: uuid
+          readOnly: true
+        member:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - archived_at
+      - archived_by
+      - created_at
+      - created_by
+      - group
+      - group_id
+      - id
+      - is_archived
+      - member
+      - name
+      - phone
+      - updated_at
+      - updated_by
+    GroupMemberRoleEnum:
+      enum:
+      - Leader
+      - Assistant
+      - Host
+      - Member
+      - Visitor
+      type: string
+      description: |-
+        * `Leader` - Leader
+        * `Assistant` - Assistant
+        * `Host` - Host
+        * `Member` - Member
+        * `Visitor` - Visitor
+    GroupPrayerRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        group_id:
+          type: string
+          format: uuid
+        shared_with_branch:
+          type: boolean
+          default: false
+        submitted_by_name:
+          type: string
+          maxLength: 255
+        request_text:
+          type: string
+        is_anonymous:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/GroupPrayerRequestStatusEnum'
+        visibility_level:
+          $ref: '#/components/schemas/VisibilityLevelEnum'
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        group:
+          type: string
+          format: uuid
+          readOnly: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - archived_at
+      - archived_by
+      - created_at
+      - created_by
+      - group
+      - group_id
+      - id
+      - is_archived
+      - request_text
+      - submitted_by_name
+      - updated_at
+      - updated_by
+    GroupPrayerRequestStatusEnum:
+      enum:
+      - Active
+      - Answered
+      - Archived
+      type: string
+      description: |-
+        * `Active` - Active
+        * `Answered` - Answered
+        * `Archived` - Archived
+    LedgerEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        account:
+          type: string
+          format: uuid
+        account_code:
+          type: string
+          readOnly: true
+        account_name:
+          type: string
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        entry_sequence:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - account
+      - account_code
+      - account_name
+      - amount
+      - id
+    Logout:
+      type: object
+      properties:
+        refresh:
+          type: string
+          description: The refresh token to blacklist
+      required:
+      - refresh
+    MaritalStatusEnum:
+      enum:
+      - Single
+      - Married
+      - Widowed
+      - Divorced
+      type: string
+      description: |-
+        * `Single` - Single
+        * `Married` - Married
+        * `Widowed` - Widowed
+        * `Divorced` - Divorced
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        age_group:
+          type: string
+          readOnly: true
+        membership_duration:
+          type: string
+          readOnly: true
+        relationships:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        branch_details:
+          allOf:
+          - $ref: '#/components/schemas/Branch'
+          readOnly: true
+        membership_number:
+          type: string
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        profile_photo:
+          type: string
+          format: uri
+          nullable: true
+        gender:
+          $ref: '#/components/schemas/GenderEnum'
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        marriage_anniversary_date:
+          type: string
+          format: date
+          nullable: true
+        marital_status:
+          $ref: '#/components/schemas/MaritalStatusEnum'
+        occupation:
+          type: string
+          nullable: true
+          maxLength: 255
+        education_level:
+          type: string
+          nullable: true
+          maxLength: 255
+        national_id_passport:
+          type: string
+          nullable: true
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone_number:
+          type: string
+          maxLength: 50
+        address:
+          type: string
+        status:
+          $ref: '#/components/schemas/MemberStatusEnum'
+        member_type:
+          $ref: '#/components/schemas/MemberTypeEnum'
+        baptism_status:
+          $ref: '#/components/schemas/BaptismStatusEnum'
+        baptism_date:
+          type: string
+          format: date
+          nullable: true
+        baptism_place:
+          type: string
+          nullable: true
+          maxLength: 255
+        baptism_officiant:
+          type: string
+          nullable: true
+          maxLength: 255
+        salvation_status:
+          $ref: '#/components/schemas/SalvationStatusEnum'
+        salvation_date:
+          type: string
+          format: date
+          nullable: true
+        join_date:
+          type: string
+          format: date
+        emergency_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        emergency_relationship:
+          type: string
+          nullable: true
+          maxLength: 100
+        emergency_phone:
+          type: string
+          nullable: true
+          maxLength: 50
+        pastoral_notes:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+          maxLength: 50
+        ministries: {}
+        custom_fields: {}
+        communication_preferences: {}
+        donor_status:
+          $ref: '#/components/schemas/DonorStatusEnum'
+        recurring_giving_opt_in:
+          type: boolean
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+          readOnly: true
+        family:
+          type: string
+          format: uuid
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - age_group
+      - archived_at
+      - archived_by
+      - branch
+      - branch_details
+      - created_at
+      - created_by
+      - email
+      - first_name
+      - gender
+      - id
+      - is_archived
+      - last_name
+      - membership_duration
+      - membership_number
+      - phone_number
+      - relationships
+      - updated_at
+      - updated_by
+    MemberLifecycleTimeline:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        changed_by_email:
+          type: string
+          format: email
+          readOnly: true
+        previous_status:
+          type: string
+          maxLength: 20
+        new_status:
+          type: string
+          maxLength: 20
+        changed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        notes:
+          type: string
+          nullable: true
+        member:
+          type: string
+          format: uuid
+        changed_by:
+          type: integer
+          nullable: true
+      required:
+      - changed_at
+      - changed_by_email
+      - id
+      - member
+      - new_status
+      - previous_status
+    MemberStatusEnum:
+      enum:
+      - Visitor
+      - New Convert
+      - Member
+      - Active
+      - Inactive
+      - Transferred
+      - Deceased
+      type: string
+      description: |-
+        * `Visitor` - Visitor
+        * `New Convert` - New Convert
+        * `Member` - Member
+        * `Active` - Active
+        * `Inactive` - Inactive
+        * `Transferred` - Transferred
+        * `Deceased` - Deceased
+    MemberTypeEnum:
+      enum:
+      - Regular
+      - Leader
+      - Clergy
+      type: string
+      description: |-
+        * `Regular` - Regular
+        * `Leader` - Leader
+        * `Clergy` - Clergy
+    NullEnum:
+      enum:
+      - null
+    PaginatedEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+    PaginatedMemberList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+    PatchedAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch:
+          type: string
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 255
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        cached_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        reconstructed_balance:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedBranch:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        branch_code:
+          type: string
+          maxLength: 50
+        branch_name:
+          type: string
+          maxLength: 255
+        branch_type:
+          $ref: '#/components/schemas/BranchTypeEnum'
+        email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          maxLength: 50
+        address:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedConnectGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch_id:
+          type: string
+        leader_id:
+          type: string
+          format: uuid
+          nullable: true
+        assistant_leader_id:
+          type: string
+          format: uuid
+          nullable: true
+        branch_details:
+          allOf:
+          - $ref: '#/components/schemas/Branch'
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        location_name:
+          type: string
+          maxLength: 255
+        location_address:
+          type: string
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        frequency:
+          $ref: '#/components/schemas/FrequencyEnum'
+        status:
+          $ref: '#/components/schemas/Status2d9Enum'
+        max_members:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+          readOnly: true
+        leader:
+          type: string
+          format: uuid
+          nullable: true
+        assistant_leader:
+          type: string
+          format: uuid
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch_id:
+          type: string
+        branch_details:
+          allOf:
+          - $ref: '#/components/schemas/Branch'
+          readOnly: true
+        registered_count:
+          type: integer
+          readOnly: true
+        group_id:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        event_type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        location:
+          type: string
+          maxLength: 255
+        organizer:
+          type: string
+          maxLength: 255
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        waitlist_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/EventStatusEnum'
+        cover_image:
+          type: string
+          maxLength: 500
+        is_recurring:
+          type: boolean
+        recurrence_pattern:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RecurrencePatternEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        attendance_snapshot:
+          readOnly: true
+          nullable: true
+        snapshot_generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        snapshot_version:
+          type: integer
+          readOnly: true
+        is_archived:
+          type: boolean
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+          readOnly: true
+        parent_event:
+          type: string
+          format: uuid
+          nullable: true
+        archived_by:
+          type: integer
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedEventCheckIn:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        registration_id:
+          type: string
+          format: uuid
+        checked_in_by_email:
+          type: string
+          format: email
+          readOnly: true
+        checked_in_at:
+          type: string
+          format: date-time
+        check_in_method:
+          $ref: '#/components/schemas/CheckInMethodEnum'
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        registration:
+          type: string
+          format: uuid
+          readOnly: true
+        checked_in_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedEventRegistration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: integer
+          nullable: true
+        member_id:
+          type: string
+          format: uuid
+          nullable: true
+        visitor_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        visitor_email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 254
+        visitor_phone:
+          type: string
+          nullable: true
+          maxLength: 50
+        status:
+          $ref: '#/components/schemas/EventRegistrationStatusEnum'
+        registration_date:
+          type: string
+          format: date-time
+        attendance_status:
+          $ref: '#/components/schemas/AttendanceStatusEnum'
+        notes:
+          type: string
+          nullable: true
+        registration_token:
+          type: string
+          format: uuid
+          readOnly: true
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event:
+          type: string
+          format: uuid
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+          nullable: true
+        member:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedEventResource:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch_id:
+          type: string
+        name:
+          type: string
+          maxLength: 255
+        resource_type:
+          $ref: '#/components/schemas/ResourceTypeEnum'
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        status:
+          $ref: '#/components/schemas/EventResourceStatusEnum'
+        branch:
+          type: string
+          readOnly: true
+    PatchedFamily:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+        head_of_household:
+          type: string
+          format: uuid
+          nullable: true
+        created_by:
+          type: integer
+          nullable: true
+    PatchedFamilyRelationship:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        relationship_type:
+          $ref: '#/components/schemas/RelationshipTypeEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        from_member:
+          type: string
+          format: uuid
+        to_member:
+          type: string
+          format: uuid
+        created_by:
+          type: integer
+          nullable: true
+    PatchedFinancialPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/FinancialPeriodStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedFinancialTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        branch:
+          type: string
+        period:
+          type: string
+          format: uuid
+        reference_number:
+          type: string
+          readOnly: true
+        transaction_type:
+          type: string
+          maxLength: 20
+        date:
+          type: string
+          format: date-time
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/FinancialTransactionStatusEnum'
+        transaction_currency:
+          type: string
+          maxLength: 10
+        exchange_rate_applied:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,6})?$
+        base_currency_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        reversed_by:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionAttachment'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedGroupAttendance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        group_id:
+          type: string
+          format: uuid
+        attendees:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupAttendanceAttendee'
+        meeting_date:
+          type: string
+          format: date
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        visitor_count:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        study_topic:
+          type: string
+          nullable: true
+          maxLength: 255
+        offering_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+          maxLength: 10
+        linked_event_id:
+          type: string
+          format: uuid
+          nullable: true
+        attendance_source:
+          $ref: '#/components/schemas/AttendanceSourceEnum'
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        group:
+          type: string
+          format: uuid
+          readOnly: true
+        submitted_by:
+          type: integer
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedGroupMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        group_id:
+          type: string
+          format: uuid
+        member_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 254
+        role:
+          $ref: '#/components/schemas/GroupMemberRoleEnum'
+        joined_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/Status2d9Enum'
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        group:
+          type: string
+          format: uuid
+          readOnly: true
+        member:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedGroupPrayerRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        group_id:
+          type: string
+          format: uuid
+        shared_with_branch:
+          type: boolean
+          default: false
+        submitted_by_name:
+          type: string
+          maxLength: 255
+        request_text:
+          type: string
+        is_anonymous:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/GroupPrayerRequestStatusEnum'
+        visibility_level:
+          $ref: '#/components/schemas/VisibilityLevelEnum'
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        group:
+          type: string
+          format: uuid
+          readOnly: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        age_group:
+          type: string
+          readOnly: true
+        membership_duration:
+          type: string
+          readOnly: true
+        relationships:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        branch_details:
+          allOf:
+          - $ref: '#/components/schemas/Branch'
+          readOnly: true
+        membership_number:
+          type: string
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        profile_photo:
+          type: string
+          format: uri
+          nullable: true
+        gender:
+          $ref: '#/components/schemas/GenderEnum'
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        marriage_anniversary_date:
+          type: string
+          format: date
+          nullable: true
+        marital_status:
+          $ref: '#/components/schemas/MaritalStatusEnum'
+        occupation:
+          type: string
+          nullable: true
+          maxLength: 255
+        education_level:
+          type: string
+          nullable: true
+          maxLength: 255
+        national_id_passport:
+          type: string
+          nullable: true
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone_number:
+          type: string
+          maxLength: 50
+        address:
+          type: string
+        status:
+          $ref: '#/components/schemas/MemberStatusEnum'
+        member_type:
+          $ref: '#/components/schemas/MemberTypeEnum'
+        baptism_status:
+          $ref: '#/components/schemas/BaptismStatusEnum'
+        baptism_date:
+          type: string
+          format: date
+          nullable: true
+        baptism_place:
+          type: string
+          nullable: true
+          maxLength: 255
+        baptism_officiant:
+          type: string
+          nullable: true
+          maxLength: 255
+        salvation_status:
+          $ref: '#/components/schemas/SalvationStatusEnum'
+        salvation_date:
+          type: string
+          format: date
+          nullable: true
+        join_date:
+          type: string
+          format: date
+        emergency_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        emergency_relationship:
+          type: string
+          nullable: true
+          maxLength: 100
+        emergency_phone:
+          type: string
+          nullable: true
+          maxLength: 50
+        pastoral_notes:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+          maxLength: 50
+        ministries: {}
+        custom_fields: {}
+        communication_preferences: {}
+        donor_status:
+          $ref: '#/components/schemas/DonorStatusEnum'
+        recurring_giving_opt_in:
+          type: boolean
+        is_archived:
+          type: boolean
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        branch:
+          type: string
+          readOnly: true
+        family:
+          type: string
+          format: uuid
+          nullable: true
+        archived_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedResourceBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        event_id:
+          type: string
+          format: uuid
+        resource_id:
+          type: string
+          format: uuid
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ResourceBookingStatusEnum'
+        approved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event:
+          type: string
+          format: uuid
+          readOnly: true
+        resource:
+          type: string
+          format: uuid
+          readOnly: true
+        approved_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedStudyOutline:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        theme:
+          type: string
+          maxLength: 255
+        scripture_references: {}
+        introduction:
+          type: string
+        discussion_questions: {}
+        application:
+          type: string
+        version:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+        previous_version:
+          type: string
+          format: uuid
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedTransactionAttachment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        file_name:
+          type: string
+          maxLength: 255
+        file_type:
+          type: string
+          maxLength: 100
+        file_size:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        storage_provider:
+          type: string
+          maxLength: 50
+        storage_key:
+          type: string
+          maxLength: 500
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+        transaction:
+          type: string
+          format: uuid
+    RecurrencePatternEnum:
+      enum:
+      - Daily
+      - Weekly
+      - Monthly
+      type: string
+      description: |-
+        * `Daily` - Daily
+        * `Weekly` - Weekly
+        * `Monthly` - Monthly
+    RelationshipTypeEnum:
+      enum:
+      - Spouse
+      - Parent
+      - Child
+      - Sibling
+      - Guardian
+      type: string
+      description: |-
+        * `Spouse` - Spouse
+        * `Parent` - Parent
+        * `Child` - Child
+        * `Sibling` - Sibling
+        * `Guardian` - Guardian
+    ResourceBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        event_id:
+          type: string
+          format: uuid
+        resource_id:
+          type: string
+          format: uuid
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ResourceBookingStatusEnum'
+        approved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event:
+          type: string
+          format: uuid
+          readOnly: true
+        resource:
+          type: string
+          format: uuid
+          readOnly: true
+        approved_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - approved_at
+      - approved_by
+      - created_at
+      - end_time
+      - event
+      - event_id
+      - id
+      - resource
+      - resource_id
+      - start_time
+    ResourceBookingStatusEnum:
+      enum:
+      - Pending
+      - Approved
+      - Rejected
+      type: string
+      description: |-
+        * `Pending` - Pending
+        * `Approved` - Approved
+        * `Rejected` - Rejected
+    ResourceTypeEnum:
+      enum:
+      - Venue
+      - Equipment
+      type: string
+      description: |-
+        * `Venue` - Venue
+        * `Equipment` - Equipment
+    SalvationStatusEnum:
+      enum:
+      - Born Again
+      - Seeking
+      type: string
+      description: |-
+        * `Born Again` - Born Again
+        * `Seeking` - Seeking
+    Status2d9Enum:
+      enum:
+      - Active
+      - Inactive
+      type: string
+      description: |-
+        * `Active` - Active
+        * `Inactive` - Inactive
+    StudyOutline:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        theme:
+          type: string
+          maxLength: 255
+        scripture_references: {}
+        introduction:
+          type: string
+        discussion_questions: {}
+        application:
+          type: string
+        version:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+        previous_version:
+          type: string
+          format: uuid
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - application
+      - created_at
+      - created_by
+      - id
+      - introduction
+      - published_at
+      - theme
+      - title
+      - updated_at
+      - updated_by
+    TokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - email
+      - password
+      - refresh
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TransactionAttachment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        file_name:
+          type: string
+          maxLength: 255
+        file_type:
+          type: string
+          maxLength: 100
+        file_size:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        storage_provider:
+          type: string
+          maxLength: 50
+        storage_key:
+          type: string
+          maxLength: 500
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+        transaction:
+          type: string
+          format: uuid
+      required:
+      - file_name
+      - file_size
+      - file_type
+      - id
+      - storage_key
+      - transaction
+      - uploaded_at
+    TypeEnum:
+      enum:
+      - ASSET
+      - LIABILITY
+      - EQUITY
+      - REVENUE
+      - EXPENSE
+      type: string
+      description: |-
+        * `ASSET` - Asset
+        * `LIABILITY` - Liability
+        * `EQUITY` - Equity
+        * `REVENUE` - Revenue
+        * `EXPENSE` - Expense
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/UserRoleEnum'
+        branch:
+          allOf:
+          - $ref: '#/components/schemas/Branch'
+          readOnly: true
+        member_id:
+          type: string
+          nullable: true
+          maxLength: 50
+      required:
+      - branch
+      - email
+      - id
+    UserRoleEnum:
+      enum:
+      - super_admin
+      - church_admin
+      - pastor
+      - treasurer
+      - member
+      type: string
+      description: |-
+        * `super_admin` - Super Admin
+        * `church_admin` - Church Admin
+        * `pastor` - Pastor
+        * `treasurer` - Treasurer
+        * `member` - Member
+    VisibilityLevelEnum:
+      enum:
+      - PRIVATE
+      - GROUP_LEADERS
+      - GROUP_MEMBERS
+      - BRANCH
+      type: string
+      description: |-
+        * `PRIVATE` - Private
+        * `GROUP_LEADERS` - Group Leaders
+        * `GROUP_MEMBERS` - Group Members
+        * `BRANCH` - Branch
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

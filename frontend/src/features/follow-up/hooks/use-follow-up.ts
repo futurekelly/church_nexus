@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import type { VisitorProfile, FollowUpTicket, ContactHistoryLog, FollowUpStatus, InteractionType } from "../types/follow-up.types";
 import { MOCK_VISITOR_PROFILES, MOCK_FOLLOW_UP_TICKETS, MOCK_CONTACT_LOGS } from "../data/mock-visitors";
 import { MOCK_MEMBERS } from "@/features/members/data/mock-members";
 import type { Member } from "@/features/members/types/member.types";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 
 const VISITORS_KEY = "church-mock-visitors";
 const TICKETS_KEY = "church-follow-up-tickets";
@@ -12,68 +13,37 @@ const LOGS_KEY = "church-visitor-contact-logs";
 const MEMBERS_KEY = "church-mock-members";
 const ATTENDANCE_TICKETS_KEY = "church-attendance-follow-up-tickets";
 
-const getStoredData = <T>(key: string, initialData: T): T => {
-  if (typeof window === "undefined") return initialData;
-  const stored = localStorage.getItem(key);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return initialData;
-    }
-  }
-  localStorage.setItem(key, JSON.stringify(initialData));
-  return initialData;
-};
-
-const notifyFollowUpChange = () => {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("church-follow-up-update"));
-  }
-};
-
 export function useFollowUp() {
-  const [visitors, setVisitors] = useState<VisitorProfile[]>([]);
-  const [tickets, setTickets] = useState<FollowUpTicket[]>([]);
-  const [logs, setLogs] = useState<ContactHistoryLog[]>([]);
-
-  const reloadData = useCallback(() => {
-    setVisitors(getStoredData(VISITORS_KEY, MOCK_VISITOR_PROFILES));
-    setTickets(getStoredData(TICKETS_KEY, MOCK_FOLLOW_UP_TICKETS));
-    setLogs(getStoredData(LOGS_KEY, MOCK_CONTACT_LOGS));
-  }, []);
-
-  // Run on initial mount and setup event listener
-  useEffect(() => {
-    reloadData();
-    if (typeof window !== "undefined") {
-      window.addEventListener("church-follow-up-update", reloadData);
-      return () => {
-        window.removeEventListener("church-follow-up-update", reloadData);
-      };
-    }
-  }, [reloadData]);
+  const [visitors, setVisitors] = useLocalStorageState<VisitorProfile[]>(
+    VISITORS_KEY,
+    MOCK_VISITOR_PROFILES
+  );
+  const [tickets, setTickets] = useLocalStorageState<FollowUpTicket[]>(
+    TICKETS_KEY,
+    MOCK_FOLLOW_UP_TICKETS
+  );
+  const [logs, setLogs] = useLocalStorageState<ContactHistoryLog[]>(
+    LOGS_KEY,
+    MOCK_CONTACT_LOGS
+  );
 
   // Add a new visitor profile manually + create a New Visitor ticket
   const addVisitor = useCallback((
     profile: Omit<VisitorProfile, "id" | "membership_number" | "date_joined">,
     notes: string
   ) => {
-    const currentVisitors = getStoredData(VISITORS_KEY, MOCK_VISITOR_PROFILES);
-    const currentTickets = getStoredData(TICKETS_KEY, MOCK_FOLLOW_UP_TICKETS);
-
-    const visitorId = `vis-${Date.now()}`;
-    const newProfile: VisitorProfile = {
+    const newId = `vis-${Date.now()}`;
+    const newVisitor: VisitorProfile = {
       ...profile,
-      id: visitorId,
+      id: newId,
       membership_number: `VST-2026-${Math.floor(100 + Math.random() * 900)}`,
       date_joined: new Date().toISOString(),
+      notes: notes || profile.notes || "",
     };
 
-    const ticketId = `tkt-${Date.now()}`;
     const newTicket: FollowUpTicket = {
-      id: ticketId,
-      visitor_id: visitorId,
+      id: `tkt-${Date.now()}`,
+      visitor_id: newId,
       visitor_name: `${profile.first_name} ${profile.last_name}`,
       status: "New Visitor",
       source: "Manual",
@@ -83,33 +53,27 @@ export function useFollowUp() {
       is_completed: false,
     };
 
-    const updatedVisitors = [...currentVisitors, newProfile];
-    const updatedTickets = [newTicket, ...currentTickets];
-
-    localStorage.setItem(VISITORS_KEY, JSON.stringify(updatedVisitors));
-    localStorage.setItem(TICKETS_KEY, JSON.stringify(updatedTickets));
-    notifyFollowUpChange();
-    return newProfile;
-  }, []);
+    setVisitors((prev) => [newVisitor, ...prev]);
+    setTickets((prev) => [newTicket, ...prev]);
+    return newVisitor;
+  }, [setVisitors, setTickets]);
 
   // Update follow-up ticket status
   const updateTicketStatus = useCallback((ticketId: string, status: FollowUpStatus) => {
-    const currentTickets = getStoredData(TICKETS_KEY, MOCK_FOLLOW_UP_TICKETS);
-    const updatedTickets = currentTickets.map((t) => {
-      if (t.id === ticketId) {
-        return {
-          ...t,
-          status,
-          updated_at: new Date().toISOString(),
-          is_completed: status === "Active Member",
-        };
-      }
-      return t;
-    });
-
-    localStorage.setItem(TICKETS_KEY, JSON.stringify(updatedTickets));
-    notifyFollowUpChange();
-  }, []);
+    setTickets((prev) =>
+      prev.map((t) => {
+        if (t.id === ticketId) {
+          return {
+            ...t,
+            status,
+            updated_at: new Date().toISOString(),
+            is_completed: status === "Active Member",
+          };
+        }
+        return t;
+      })
+    );
+  }, [setTickets]);
 
   // Log contact history interaction note
   const logInteraction = useCallback((
@@ -118,7 +82,6 @@ export function useFollowUp() {
     notes: string,
     contacted_by: string
   ) => {
-    const currentLogs = getStoredData(LOGS_KEY, MOCK_CONTACT_LOGS);
     const newLog: ContactHistoryLog = {
       id: `log-${Date.now()}`,
       visitor_id: visitorId,
@@ -128,13 +91,25 @@ export function useFollowUp() {
       contacted_by: contacted_by || "Pastor",
     };
 
-    const updatedLogs = [newLog, ...currentLogs];
-    localStorage.setItem(LOGS_KEY, JSON.stringify(updatedLogs));
-    notifyFollowUpChange();
-    return newLog;
-  }, []);
+    setLogs((prev) => [newLog, ...prev]);
 
-  // Import tickets logged from Attendance module
+    // Also find the ticket for this visitor and update its status to "Contacted"
+    setTickets((prevTickets) =>
+      prevTickets.map((t) => {
+        if (t.visitor_id === visitorId) {
+          return {
+            ...t,
+            status: "Contacted" as const,
+            updated_at: new Date().toISOString(),
+          };
+        }
+        return t;
+      })
+    );
+
+    return newLog;
+  }, [setLogs, setTickets]);
+
   const importAttendanceTickets = useCallback(() => {
     if (typeof window === "undefined") return;
     const attendanceTicketsJSON = localStorage.getItem(ATTENDANCE_TICKETS_KEY);
@@ -144,24 +119,17 @@ export function useFollowUp() {
       const attendanceTickets = JSON.parse(attendanceTicketsJSON);
       if (!Array.isArray(attendanceTickets) || attendanceTickets.length === 0) return;
 
-      const currentVisitors = getStoredData(VISITORS_KEY, MOCK_VISITOR_PROFILES);
-      const currentTickets = getStoredData(TICKETS_KEY, MOCK_FOLLOW_UP_TICKETS);
-
-      let newVisitors = [...currentVisitors];
-      let newTickets = [...currentTickets];
       let importedCount = 0;
+      let newVisitors = [...visitors];
+      let newTickets = [...tickets];
 
       attendanceTickets.forEach((tkt) => {
-        // Double import check
         const alreadyExists = newTickets.some(
           (t) => t.source === "Attendance Absentee" && t.notes.includes(tkt.id)
         );
         if (alreadyExists) return;
 
-        // Generate visitor profile for the member who missed service
         const visitorId = `vis-mem-${tkt.member_id}`;
-        
-        // Find existing visitor or create
         let visitorProfile = newVisitors.find((v) => v.id === visitorId);
         if (!visitorProfile) {
           visitorProfile = {
@@ -169,9 +137,9 @@ export function useFollowUp() {
             membership_number: `VST-ATT-${Math.floor(100 + Math.random() * 900)}`,
             first_name: tkt.member_name.split(" ")[0] || "Absentee",
             last_name: tkt.member_name.split(" ").slice(1).join(" ") || "Member",
-            email: `${tkt.member_id}@church-nexus.com`, // Simulated email
-            phone_number: "+254 700 000 000",
-            gender: "male", // default fallback
+            email: tkt.email || '',
+            phone_number: "",
+            gender: "male",
             date_joined: new Date().toISOString(),
             first_time_visitor: false,
             notes: `Auto-generated from absentee check-in session: ${tkt.session_title}.`,
@@ -196,22 +164,19 @@ export function useFollowUp() {
       });
 
       if (importedCount > 0) {
-        localStorage.setItem(VISITORS_KEY, JSON.stringify(newVisitors));
-        localStorage.setItem(TICKETS_KEY, JSON.stringify(newTickets));
-        // Clear processed items
+        setVisitors(newVisitors);
+        setTickets(newTickets);
         localStorage.removeItem(ATTENDANCE_TICKETS_KEY);
-        notifyFollowUpChange();
       }
     } catch (err) {
       console.warn("Importing attendance tickets failed", err);
     }
-  }, []);
+  }, [visitors, tickets, setVisitors, setTickets]);
 
   // Convert follow-up ticket/visitor to active member
   const convertToActiveMember = useCallback((ticketId: string) => {
-    const currentTickets = getStoredData(TICKETS_KEY, MOCK_FOLLOW_UP_TICKETS);
-    const currentVisitors = getStoredData(VISITORS_KEY, MOCK_VISITOR_PROFILES);
-    const currentMembers = getStoredData(MEMBERS_KEY, MOCK_MEMBERS);
+    const currentTickets = tickets;
+    const currentVisitors = visitors;
 
     const ticket = currentTickets.find((t) => t.id === ticketId);
     if (!ticket) return null;
@@ -219,7 +184,9 @@ export function useFollowUp() {
     const visitor = currentVisitors.find((v) => v.id === ticket.visitor_id);
     if (!visitor) return null;
 
-    // Check if member already exists to prevent duplicate creation
+    const storedMembers = typeof window !== "undefined" ? localStorage.getItem(MEMBERS_KEY) : null;
+    const currentMembers: Member[] = storedMembers ? JSON.parse(storedMembers) : MOCK_MEMBERS;
+
     const emailLower = visitor.email.toLowerCase();
     const nameMatch = (first: string, last: string) => 
       first.toLowerCase() === visitor.first_name.toLowerCase() && 
@@ -234,23 +201,48 @@ export function useFollowUp() {
     if (existingMember) {
       finalMemberId = existingMember.id;
     } else {
-      // Create new member record
       finalMemberId = `m0${currentMembers.length + 1}`;
       const newMember: Member = {
         id: finalMemberId,
-        membership_number: `CN-2026-${Math.floor(100 + Math.random() * 900)}`,
+        branch_id: "branch-001",
+        family_id: null,
+        membership_number: `MBR-2026-${String(Math.floor(100 + Math.random() * 900)).padStart(6, "0")}`,
         first_name: visitor.first_name,
         last_name: visitor.last_name,
+        profile_photo: null,
+        gender: visitor.gender,
+        date_of_birth: "1995-01-01",
+        marriage_anniversary_date: null,
+        marital_status: "Single",
+        occupation: null,
+        education_level: null,
+        national_id_passport: null,
         email: visitor.email,
         phone_number: visitor.phone_number,
-        gender: visitor.gender,
-        date_of_birth: "1995-01-01", // Default placeholder
-        address: "Nairobi, Kenya", // Default placeholder
+        address: "Nairobi, Kenya",
+        status: "Active",
+        member_type: "Regular",
+        baptism_status: "Not Baptized",
+        baptism_date: null,
+        baptism_place: null,
+        baptism_officiant: null,
+        salvation_status: "Born Again",
+        salvation_date: new Date().toISOString().split("T")[0],
+        join_date: new Date().toISOString().split("T")[0],
         date_joined: new Date().toISOString().split("T")[0],
-        status: "active",
+        emergency_name: null,
+        emergency_relationship: null,
+        emergency_phone: null,
+        pastoral_notes: null,
+        notes: `Converted from visitor follow-up ticket. Notes: ${visitor.notes || ""}`,
         role: "member",
         ministries: [],
-        notes: `Converted from visitor follow-up ticket. Notes: ${visitor.notes || ""}`,
+        custom_fields: {},
+        communication_preferences: { email: true, sms: true, in_app: true },
+        donor_status: "Non-Donor",
+        recurring_giving_opt_in: false,
+        is_archived: false,
+        archived_at: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -258,13 +250,15 @@ export function useFollowUp() {
       const updatedMembers = [...currentMembers, newMember];
       localStorage.setItem(MEMBERS_KEY, JSON.stringify(updatedMembers));
       
-      // Notify members route to refresh
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("church-members-update"));
+        window.dispatchEvent(
+          new CustomEvent("local-storage-update", {
+            detail: { key: MEMBERS_KEY, newValue: updatedMembers },
+          })
+        );
       }
     }
 
-    // Complete the ticket and transition status
     const updatedTickets = currentTickets.map((t) => {
       if (t.id === ticketId) {
         return {
@@ -278,11 +272,10 @@ export function useFollowUp() {
       return t;
     });
 
-    localStorage.setItem(TICKETS_KEY, JSON.stringify(updatedTickets));
-    notifyFollowUpChange();
+    setTickets(updatedTickets);
 
     return finalMemberId;
-  }, []);
+  }, [tickets, visitors, setTickets]);
 
   return {
     visitors,

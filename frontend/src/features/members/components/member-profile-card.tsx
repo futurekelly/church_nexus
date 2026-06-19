@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MemberStatusBadge } from "@/features/members/components/member-status-badge";
-import { useMemberPermissions } from "@/features/members/hooks/use-member-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { ROLE_LABELS } from "@/types/roles";
 import { getInitials } from "@/lib/utils";
 import type { Member } from "@/features/members/types/member.types";
@@ -40,7 +40,8 @@ function InfoRow({
 }
 
 export function MemberProfileCard({ member, className }: MemberProfileCardProps) {
-  const { canEdit, canViewContactDetails } = useMemberPermissions();
+  const { members } = useAppPermissions();
+  const { canEdit, canViewContactDetails } = members;
 
   const age = member.date_of_birth
     ? Math.floor(
@@ -120,7 +121,7 @@ export function MemberProfileCard({ member, className }: MemberProfileCardProps)
           <InfoRow
             icon={Calendar}
             label="Date of Birth"
-            value={`${new Date(member.date_of_birth).toLocaleDateString("en-KE", { day: "numeric", month: "long", year: "numeric" })} (${age} yrs)`}
+            value={`${new Date(member.date_of_birth as string).toLocaleDateString("en-KE", { day: "numeric", month: "long", year: "numeric" })} (${age} yrs)`}
           />
         )}
         {member.occupation && (

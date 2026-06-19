@@ -7,12 +7,12 @@ import { ArrowLeft, User, Phone, Mail, Calendar, Sparkles, MessageSquare, Clipbo
 import { motion } from "framer-motion";
 import {
   useFollowUp,
-  useFollowUpPermissions,
   ContactHistoryTimeline,
   LogInteractionModal,
   FOLLOW_UP_STATUS_COLORS,
   type InteractionType,
 } from "@/features/follow-up";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +28,8 @@ export default function FollowUpDetailPage() {
     logInteraction,
   } = useFollowUp();
 
-  const { canManage, canViewFollowUp } = useFollowUpPermissions();
+  const { followUp: followUpPermissions } = useAppPermissions();
+  const { canManage, canViewFollowUp } = followUpPermissions;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 1. Permission Gating

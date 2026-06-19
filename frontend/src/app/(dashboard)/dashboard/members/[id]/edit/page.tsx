@@ -5,14 +5,15 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { MemberForm } from "@/features/members/components/member-form";
 import { useMembers } from "@/features/members/hooks/use-members";
-import { useMemberPermissions } from "@/features/members/hooks/use-member-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import type { MemberFormValues } from "@/features/members/types/member.types";
 
 export default function EditMemberPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { getMemberById } = useMembers();
-  const { canEdit } = useMemberPermissions();
+  const { members } = useAppPermissions();
+  const canEdit = members.canEdit;
 
   const member = getMemberById(id);
 
@@ -64,6 +65,7 @@ export default function EditMemberPage() {
     ministries: member.ministries,
     occupation: member.occupation ?? "",
     notes: member.notes ?? "",
+    role: member.role,
   };
 
   const handleSubmit = (values: MemberFormValues) => {

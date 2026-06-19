@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { MOCK_SESSIONS, MOCK_RECORDS } from "../data/mock-attendance";
 import type {
   AttendanceSession,
@@ -10,88 +10,31 @@ import type {
   AttendanceSortConfig,
 } from "../types/attendance.types";
 import { MOCK_MEMBERS } from "@/features/members/data/mock-members";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 
 const SESSIONS_KEY = "church-mock-attendance-sessions";
 const RECORDS_KEY = "church-mock-attendance-records";
 const TICKETS_KEY = "church-attendance-follow-up-tickets";
 
-const getInitialSessions = (): AttendanceSession[] => {
-  if (typeof window === "undefined") return MOCK_SESSIONS;
-  const stored = localStorage.getItem(SESSIONS_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return MOCK_SESSIONS;
-    }
-  }
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(MOCK_SESSIONS));
-  return MOCK_SESSIONS;
-};
-
-const getInitialRecords = (): AttendanceRecord[] => {
-  if (typeof window === "undefined") return MOCK_RECORDS;
-  const stored = localStorage.getItem(RECORDS_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return MOCK_RECORDS;
-    }
-  }
-  localStorage.setItem(RECORDS_KEY, JSON.stringify(MOCK_RECORDS));
-  return MOCK_RECORDS;
-};
-
-const getInitialTickets = (): FollowUpTicket[] => {
-  if (typeof window === "undefined") return [];
-  const stored = localStorage.getItem(TICKETS_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return [];
-    }
-  }
-  localStorage.setItem(TICKETS_KEY, JSON.stringify([]));
-  return [];
-};
-
-const notifyStorageChange = () => {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("church-attendance-update"));
-  }
-};
-
 /**
  * Singleton state hook for Attendance sessions and check-in records.
  */
 export function useAttendance() {
-  const [sessions, setSessions] = useState<AttendanceSession[]>([]);
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
-  const [tickets, setTickets] = useState<FollowUpTicket[]>([]);
-
-  const reloadData = useCallback(() => {
-    setSessions(getInitialSessions());
-    setRecords(getInitialRecords());
-    setTickets(getInitialTickets());
-  }, []);
-
-  useEffect(() => {
-    reloadData();
-    if (typeof window !== "undefined") {
-      window.addEventListener("church-attendance-update", reloadData);
-      return () => {
-        window.removeEventListener("church-attendance-update", reloadData);
-      };
-    }
-  }, [reloadData]);
+  const [sessions, setSessions] = useLocalStorageState<AttendanceSession[]>(
+    SESSIONS_KEY,
+    MOCK_SESSIONS
+  );
+  const [records, setRecords] = useLocalStorageState<AttendanceRecord[]>(
+    RECORDS_KEY,
+    MOCK_RECORDS
+  );
+  const [tickets, setTickets] = useLocalStorageState<FollowUpTicket[]>(
+    TICKETS_KEY,
+    []
+  );
 
   const addSession = useCallback(
     (newSession: Omit<AttendanceSession, "id" | "status" | "present_count" | "absent_count" | "excused_count" | "created_at" | "updated_at">) => {
-      const currentSessions = getInitialSessions();
-      const currentRecords = getInitialRecords();
-
       const newId = `sess-${Date.now()}`;
       const session: AttendanceSession = {
         ...newSession,
@@ -117,113 +60,99 @@ export function useAttendance() {
         check_in_method: null,
       }));
 
-      const updatedSessions = [session, ...currentSessions];
-      const updatedRecords = [...newRecords, ...currentRecords];
-
-      localStorage.setItem(SESSIONS_KEY, JSON.stringify(updatedSessions));
-      localStorage.setItem(RECORDS_KEY, JSON.stringify(updatedRecords));
-      notifyStorageChange();
+      setSessions((prev) => [session, ...prev]);
+      setRecords((prev) => [...newRecords, ...prev]);
       return session;
     },
-    []
+    [setSessions, setRecords]
   );
 
   const updateSessionCounts = useCallback((sessionId: string, currentRecords: AttendanceRecord[]) => {
-    const currentSessions = getInitialSessions();
     const sessionRecords = currentRecords.filter((r) => r.session_id === sessionId);
 
     const present = sessionRecords.filter((r) => r.status === "Present").length;
     const absent = sessionRecords.filter((r) => r.status === "Absent").length;
     const excused = sessionRecords.filter((r) => r.status === "Excused").length;
 
-    const updatedSessions = currentSessions.map((s) =>
-      s.id === sessionId
-        ? {
-            ...s,
-            present_count: present,
-            absent_count: absent,
-            excused_count: excused,
-            updated_at: new Date().toISOString(),
-          }
-        : s
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === sessionId
+          ? {
+              ...s,
+              present_count: present,
+              absent_count: absent,
+              excused_count: excused,
+              updated_at: new Date().toISOString(),
+            }
+          : s
+      )
     );
-
-    localStorage.setItem(SESSIONS_KEY, JSON.stringify(updatedSessions));
-  }, []);
+  }, [setSessions]);
 
   const checkInMember = useCallback(
     (sessionId: string, memberId: string, status: "Present" | "Absent", method: "QR" | "Barcode" | "Manual" | null) => {
-      const currentRecords = getInitialRecords();
-
-      const updatedRecords = currentRecords.map((r) => {
-        if (r.session_id === sessionId && r.member_id === memberId) {
-          return {
-            ...r,
-            status,
-            check_in_time: status === "Present" ? new Date().toISOString() : null,
-            check_in_method: status === "Present" ? method : null,
-            excuse_notes: undefined,
-          };
-        }
-        return r;
+      setRecords((prev) => {
+        const updatedRecords = prev.map((r) => {
+          if (r.session_id === sessionId && r.member_id === memberId) {
+            return {
+              ...r,
+              status,
+              check_in_time: status === "Present" ? new Date().toISOString() : null,
+              check_in_method: status === "Present" ? method : null,
+              excuse_notes: undefined,
+            };
+          }
+          return r;
+        });
+        updateSessionCounts(sessionId, updatedRecords);
+        return updatedRecords;
       });
-
-      localStorage.setItem(RECORDS_KEY, JSON.stringify(updatedRecords));
-      updateSessionCounts(sessionId, updatedRecords);
-      notifyStorageChange();
     },
-    [updateSessionCounts]
+    [setRecords, updateSessionCounts]
   );
 
   const excuseMember = useCallback(
     (sessionId: string, memberId: string, notes: string) => {
-      const currentRecords = getInitialRecords();
-
-      const updatedRecords = currentRecords.map((r) => {
-        if (r.session_id === sessionId && r.member_id === memberId) {
-          return {
-            ...r,
-            status: "Excused" as const,
-            check_in_time: null,
-            check_in_method: null,
-            excuse_notes: notes,
-          };
-        }
-        return r;
+      setRecords((prev) => {
+        const updatedRecords = prev.map((r) => {
+          if (r.session_id === sessionId && r.member_id === memberId) {
+            return {
+              ...r,
+              status: "Excused" as const,
+              check_in_time: null,
+              check_in_method: null,
+              excuse_notes: notes,
+            };
+          }
+          return r;
+        });
+        updateSessionCounts(sessionId, updatedRecords);
+        return updatedRecords;
       });
-
-      localStorage.setItem(RECORDS_KEY, JSON.stringify(updatedRecords));
-      updateSessionCounts(sessionId, updatedRecords);
-      notifyStorageChange();
     },
-    [updateSessionCounts]
+    [setRecords, updateSessionCounts]
   );
 
   const closeSession = useCallback(
     (sessionId: string) => {
-      const currentSessions = getInitialSessions();
-
-      const updatedSessions = currentSessions.map((s) =>
-        s.id === sessionId
-          ? {
-              ...s,
-              status: "Completed" as const,
-              updated_at: new Date().toISOString(),
-            }
-          : s
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === sessionId
+            ? {
+                ...s,
+                status: "Completed" as const,
+                updated_at: new Date().toISOString(),
+              }
+            : s
+        )
       );
-
-      localStorage.setItem(SESSIONS_KEY, JSON.stringify(updatedSessions));
-      notifyStorageChange();
     },
-    []
+    [setSessions]
   );
 
   const createFollowUpTicket = useCallback(
     (sessionId: string, memberId: string, reason: string) => {
-      const currentTickets = getInitialTickets();
-      const currentSessions = getInitialSessions();
-      const session = currentSessions.find((s) => s.id === sessionId);
+      const session = sessions.find((s) => s.id === sessionId);
 
       const ticket: FollowUpTicket = {
         id: `tkt-${Date.now()}`,
@@ -237,12 +166,10 @@ export function useAttendance() {
         created_at: new Date().toISOString(),
       };
 
-      const updatedTickets = [ticket, ...currentTickets];
-      localStorage.setItem(TICKETS_KEY, JSON.stringify(updatedTickets));
-      notifyStorageChange();
+      setTickets((prev) => [ticket, ...prev]);
       return ticket;
     },
-    []
+    [sessions, setTickets]
   );
 
   const getSessionById = useCallback(

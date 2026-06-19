@@ -2,14 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Landmark } from "lucide-react";
-import { useDonations, useDonationPermissions } from "@/features/donations";
+import { useDonations } from "@/features/donations";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { DonationForm } from "@/features/donations/components/donation-form";
 import { motion } from "framer-motion";
 
 export default function CreateDonationPage() {
   const router = useRouter();
   const { campaigns, addDonation } = useDonations();
-  const { canManage } = useDonationPermissions();
+  const { donations: donationPermissions } = useAppPermissions();
+  const { canManage } = donationPermissions;
 
   if (!canManage) {
     return (

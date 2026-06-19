@@ -65,6 +65,8 @@ const MOCK_USERS: Record<string, User> = {
     role: "church_admin",
     status: "active",
     created_at: new Date().toISOString(),
+    member_id: "m001",
+    memberId: "m001",
   },
   "pastor@church.com": {
     id: 3,
@@ -101,6 +103,8 @@ const MOCK_USERS: Record<string, User> = {
     role: "member",
     status: "active",
     created_at: new Date().toISOString(),
+    member_id: "m002",
+    memberId: "m002",
   },
 };
 
@@ -140,28 +144,30 @@ export async function loginUser(
 
     return { ...tokens, user };
   } catch (error) {
-    // Check if network/connection error to fallback to local mock login
-    const isConnectionError =
-      axios.isAxiosError(error) &&
-      (!error.response || error.code === "ERR_NETWORK" || error.message.includes("Network Error"));
+    if (process.env.NODE_ENV !== "production") {
+      // Check if network/connection error to fallback to local mock login
+      const isConnectionError =
+        axios.isAxiosError(error) &&
+        (!error.response || error.code === "ERR_NETWORK" || error.message.includes("Network Error"));
 
-    if (isConnectionError && MOCK_USERS[emailLower]) {
-      console.warn("Backend API not reachable. Logging in with mock user:", emailLower);
-      return {
-        access_token: "mock-access-token",
-        refresh_token: "mock-refresh-token",
-        user: MOCK_USERS[emailLower],
-      };
-    }
-    
-    // Also fallback if backend throws a 404/500/etc during development
-    if (MOCK_USERS[emailLower]) {
-      console.warn("Backend failed. Falling back to mock user:", emailLower);
-      return {
-        access_token: "mock-access-token",
-        refresh_token: "mock-refresh-token",
-        user: MOCK_USERS[emailLower],
-      };
+      if (isConnectionError && MOCK_USERS[emailLower]) {
+        console.warn("Backend API not reachable. Logging in with mock user:", emailLower);
+        return {
+          access_token: "mock-access-token",
+          refresh_token: "mock-refresh-token",
+          user: MOCK_USERS[emailLower],
+        };
+      }
+      
+      // Also fallback if backend throws a 404/500/etc during development
+      if (MOCK_USERS[emailLower]) {
+        console.warn("Backend failed. Falling back to mock user:", emailLower);
+        return {
+          access_token: "mock-access-token",
+          refresh_token: "mock-refresh-token",
+          user: MOCK_USERS[emailLower],
+        };
+      }
     }
 
     throw new Error(getErrorMessage(error));
@@ -180,12 +186,14 @@ export async function registerUser(payload: RegisterPayload): Promise<void> {
       throw new Error(response.message);
     }
   } catch (error) {
-    const isConnectionError =
-      axios.isAxiosError(error) &&
-      (!error.response || error.code === "ERR_NETWORK" || error.message.includes("Network Error"));
-    if (isConnectionError) {
-      console.warn("Backend down. Simulating successful mock registration.");
-      return;
+    if (process.env.NODE_ENV !== "production") {
+      const isConnectionError =
+        axios.isAxiosError(error) &&
+        (!error.response || error.code === "ERR_NETWORK" || error.message.includes("Network Error"));
+      if (isConnectionError) {
+        console.warn("Backend down. Simulating successful mock registration.");
+        return;
+      }
     }
     throw new Error(getErrorMessage(error));
   }
@@ -213,12 +221,14 @@ export async function requestPasswordReset(
       throw new Error(response.message);
     }
   } catch (error) {
-    const isConnectionError =
-      axios.isAxiosError(error) &&
-      (!error.response || error.code === "ERR_NETWORK" || error.message.includes("Network Error"));
-    if (isConnectionError) {
-      console.warn("Backend down. Simulating successful password reset request.");
-      return;
+    if (process.env.NODE_ENV !== "production") {
+      const isConnectionError =
+        axios.isAxiosError(error) &&
+        (!error.response || error.code === "ERR_NETWORK" || error.message.includes("Network Error"));
+      if (isConnectionError) {
+        console.warn("Backend down. Simulating successful password reset request.");
+        return;
+      }
     }
     throw new Error(getErrorMessage(error));
   }
@@ -238,12 +248,14 @@ export async function resetPassword(
       throw new Error(response.message);
     }
   } catch (error) {
-    const isConnectionError =
-      axios.isAxiosError(error) &&
-      (!error.response || error.code === "ERR_NETWORK" || error.message.includes("Network Error"));
-    if (isConnectionError) {
-      console.warn("Backend down. Simulating successful password reset completion.");
-      return;
+    if (process.env.NODE_ENV !== "production") {
+      const isConnectionError =
+        axios.isAxiosError(error) &&
+        (!error.response || error.code === "ERR_NETWORK" || error.message.includes("Network Error"));
+      if (isConnectionError) {
+        console.warn("Backend down. Simulating successful password reset completion.");
+        return;
+      }
     }
     throw new Error(getErrorMessage(error));
   }

@@ -18,10 +18,20 @@ const STATUS_COLORS: Record<
     text: "text-amber-400",
     dot: "bg-amber-400 shadow-[0_0_8px_#f59e0b]",
   },
+  Scheduled: {
+    bg: "bg-cyan-500/10 border border-cyan-500/20",
+    text: "text-cyan-400",
+    dot: "bg-cyan-400 shadow-[0_0_8px_#06b6d4]",
+  },
   Published: {
     bg: "bg-emerald-500/10 border border-emerald-500/20",
     text: "text-emerald-400",
     dot: "bg-emerald-400 shadow-[0_0_8px_#10b981]",
+  },
+  "In Progress": {
+    bg: "bg-indigo-500/10 border border-indigo-500/20",
+    text: "text-indigo-400",
+    dot: "bg-indigo-400 shadow-[0_0_8px_#6366f1] animate-pulse",
   },
   Cancelled: {
     bg: "bg-rose-500/10 border border-rose-500/20",
@@ -32,6 +42,11 @@ const STATUS_COLORS: Record<
     bg: "bg-slate-500/10 border border-slate-500/20",
     text: "text-slate-400",
     dot: "bg-slate-400 shadow-[0_0_8px_#94a3b8]",
+  },
+  Archived: {
+    bg: "bg-pink-500/10 border border-pink-500/20",
+    text: "text-pink-400",
+    dot: "bg-pink-400 shadow-[0_0_8px_#ec4899]",
   },
 };
 

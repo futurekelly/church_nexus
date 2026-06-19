@@ -10,6 +10,7 @@ export interface RegisterPayload {
   last_name: string;
   email: string;
   password: string;
+  branch: string;
 }
 
 export interface ForgotPasswordPayload {

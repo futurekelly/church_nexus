@@ -1,19 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { formatTZS } from "../utils/format";
-import type { DonationRecord, PledgeCampaign } from "../types/donations.types";
+import { formatCurrency } from "@/lib/localization";
+import type { Donation, PledgeCampaign } from "../types/donations.types";
 import { DollarSign, Landmark, PiggyBank, Receipt } from "lucide-react";
 
 interface DonationStatsProps {
-  donations: DonationRecord[];
+  donations: Donation[];
   campaigns: PledgeCampaign[];
 }
 
 export function DonationStats({ donations, campaigns }: DonationStatsProps) {
   // 1. Total Raised TZS (Only completed transactions)
   const completedDonations = donations.filter((d) => d.status === "Completed");
-  const totalRaised = completedDonations.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalRaised = completedDonations.reduce((acc, curr) => acc + curr.amount * curr.exchange_rate_to_base, 0);
 
   // 2. Monthly Average (average of last 30 days or general average)
   // Let's get unique months/years of completed donations to calculate average per month
@@ -27,7 +27,7 @@ export function DonationStats({ donations, campaigns }: DonationStatsProps) {
 
   // 3. Active Campaigns count & Total Campaign Targets
   const activeCampaigns = campaigns.filter((c) => c.status === "Active");
-  const activeCampaignsRaised = activeCampaigns.reduce((acc, curr) => acc + curr.raised_amount, 0);
+  const activeCampaignsRaised = activeCampaigns.reduce((acc, curr) => acc + (curr.raised_amount || 0), 0);
 
   // 4. Receipt Count
   const totalReceiptsCount = completedDonations.length;
@@ -35,21 +35,21 @@ export function DonationStats({ donations, campaigns }: DonationStatsProps) {
   const stats = [
     {
       label: "Total Giving YTD",
-      value: formatTZS(totalRaised),
+      value: formatCurrency(totalRaised),
       description: "Total completed donations",
       icon: Landmark,
       color: "from-emerald-500/20 to-teal-500/10 border-emerald-500/30 text-emerald-400",
     },
     {
       label: "Monthly Average",
-      value: formatTZS(monthlyAverage),
+      value: formatCurrency(monthlyAverage),
       description: "Calculated across active months",
       icon: DollarSign,
       color: "from-indigo-500/20 to-blue-500/10 border-indigo-500/30 text-indigo-400",
     },
     {
       label: "Pledges Raised",
-      value: formatTZS(activeCampaignsRaised),
+      value: formatCurrency(activeCampaignsRaised),
       description: `${activeCampaigns.length} active campaigns running`,
       icon: PiggyBank,
       color: "from-violet-500/20 to-purple-500/10 border-violet-500/30 text-violet-400",

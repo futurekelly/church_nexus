@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AUTH_ROUTES, PUBLIC_ROUTES } from "@/constants/routes";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -21,6 +22,7 @@ const NAV_LINKS = [
 export function PublicNavbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, isAuthenticated, isHydrated, clearSession } = useAuth();
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -56,18 +58,45 @@ export function PublicNavbar() {
         </ul>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <Link
-            href={AUTH_ROUTES.LOGIN}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Login
-          </Link>
-          <Link
-            href={AUTH_ROUTES.REGISTER}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
-          >
-            Join Community
-          </Link>
+          {isHydrated && isAuthenticated && user ? (
+            <>
+              <span className="text-sm font-medium text-muted-foreground">
+                Welcome, <span className="text-primary font-semibold">{user.first_name}</span>
+                {user.role === "visitor" && " (Visitor)"}
+              </span>
+              {user.role === "visitor" ? (
+                <button
+                  type="button"
+                  onClick={() => clearSession()}
+                  className="rounded-lg bg-warning/20 px-4 py-2 text-sm font-semibold text-warning transition-all duration-200 hover:bg-warning/30"
+                >
+                  Logout
+                </button>
+              ) : (
+                <Link
+                  href="/dashboard"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
+                >
+                  Go to Dashboard
+                </Link>
+              )}
+            </>
+          ) : (
+            <>
+              <Link
+                href={AUTH_ROUTES.LOGIN}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                Login
+              </Link>
+              <Link
+                href={AUTH_ROUTES.REGISTER}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
+              >
+                Join Community
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -91,42 +120,78 @@ export function PublicNavbar() {
           <button
             type="button"
             aria-label="Close navigation menu"
-            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm lg:hidden animate-fade-in"
             onClick={closeMobile}
           />
           <div
             id="mobile-nav-menu"
-            className="glass-panel absolute left-0 right-0 top-16 z-50 border-b border-border lg:hidden"
+            className="absolute right-4 top-16 z-50 w-72 rounded-2xl border border-border bg-background/98 backdrop-blur-md p-2 shadow-2xl lg:hidden animate-slide-up ring-1 ring-primary/20"
           >
-            <ul className="flex flex-col gap-1 px-4 py-4">
+            <ul className="flex flex-col gap-1 p-1">
               {NAV_LINKS.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
                     onClick={closeMobile}
-                    className="block rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-card/60 hover:text-primary"
+                    className={cn(
+                      "block rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-primary/10 hover:text-primary",
+                      pathname === link.href && "bg-primary/10 text-primary font-semibold"
+                    )}
                   >
                     {link.label}
                   </Link>
                 </li>
               ))}
-              <li className="mt-2 border-t border-border pt-3">
-                <Link
-                  href={AUTH_ROUTES.LOGIN}
-                  onClick={closeMobile}
-                  className="block rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground"
-                >
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={AUTH_ROUTES.REGISTER}
-                  onClick={closeMobile}
-                  className="block rounded-lg bg-primary px-3 py-2.5 text-center text-sm font-semibold text-white shadow-neon"
-                >
-                  Join Community
-                </Link>
+              <li className="my-2 border-t border-border/60" />
+              <li className="flex flex-col gap-2 p-1">
+                {isHydrated && isAuthenticated && user ? (
+                  <div className="flex flex-col gap-2 rounded-xl bg-primary/5 border border-primary/10 p-2.5">
+                    <div className="px-1 text-xs text-muted-foreground">
+                      Logged in as{" "}
+                      <span className="font-semibold text-primary">
+                        {user.first_name} {user.last_name}
+                      </span>
+                      {user.role === "visitor" && " (Visitor)"}
+                    </div>
+                    {user.role === "visitor" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          clearSession();
+                          closeMobile();
+                        }}
+                        className="block rounded-lg bg-warning/20 px-4 py-2.5 text-center text-sm font-semibold text-warning transition-all duration-200 hover:bg-warning/30"
+                      >
+                        Logout
+                      </button>
+                    ) : (
+                      <Link
+                        href="/dashboard"
+                        onClick={closeMobile}
+                        className="block rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90"
+                      >
+                        Go to Dashboard
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <Link
+                      href={AUTH_ROUTES.LOGIN}
+                      onClick={closeMobile}
+                      className="block rounded-lg border border-border/60 px-4 py-2.5 text-center text-sm font-medium text-primary-foreground transition-colors hover:bg-card/60 hover:text-primary"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href={AUTH_ROUTES.REGISTER}
+                      onClick={closeMobile}
+                      className="block rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90"
+                    >
+                      Join Community
+                    </Link>
+                  </>
+                )}
               </li>
             </ul>
           </div>

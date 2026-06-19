@@ -6,7 +6,7 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import { MemberProfileCard } from "@/features/members/components/member-profile-card";
 import { MemberActivityTimeline } from "@/features/members/components/member-activity-timeline";
 import { useMembers } from "@/features/members/hooks/use-members";
-import { useMemberPermissions } from "@/features/members/hooks/use-member-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import {
   MOCK_MEMBER_ACTIVITIES,
   DEFAULT_MEMBER_ACTIVITY,
@@ -17,7 +17,8 @@ export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { getMemberById } = useMembers();
-  const { canDelete, canViewActivity } = useMemberPermissions();
+  const { members } = useAppPermissions();
+  const { canDelete, canViewActivity } = members;
 
   const member = getMemberById(id);
 

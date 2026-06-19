@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft, BarChart3, TrendingUp, Calendar } from "lucide-react";
-import { useDonations, useDonationPermissions, formatTZS } from "@/features/donations";
+import { useDonations } from "@/features/donations";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
+import { formatCurrency } from "@/lib/localization";
 import { GivingCategoryChart } from "@/features/donations/components/giving-category-chart";
 import { GivingTrendChart } from "@/features/donations/components/giving-trend-chart";
 import { DonationStats } from "@/features/donations/components/donation-stats";
@@ -11,7 +13,8 @@ import { motion } from "framer-motion";
 export default function DonationsReportsPage() {
   const router = useRouter();
   const { donations, campaigns } = useDonations();
-  const { canViewReports } = useDonationPermissions();
+  const { donations: donationPermissions } = useAppPermissions();
+  const { canViewReports } = donationPermissions;
 
   if (!canViewReports) {
     return (
@@ -87,13 +90,13 @@ export default function DonationsReportsPage() {
               {campaigns.map((camp) => {
                 const percentage = Math.min(
                   100,
-                  Math.round((camp.raised_amount / camp.target_amount) * 100)
+                  Math.round(((camp.raised_amount || 0) / camp.target_amount) * 100)
                 );
                 return (
                   <tr key={camp.id} className="hover:bg-slate-900/10">
-                    <td className="p-4 font-bold text-xs">{camp.name}</td>
-                    <td className="p-4 text-xs font-medium text-slate-300">{formatTZS(camp.target_amount)}</td>
-                    <td className="p-4 text-xs font-bold text-emerald-400">{formatTZS(camp.raised_amount)}</td>
+                    <td className="p-4 font-bold text-xs">{camp.title || camp.name}</td>
+                    <td className="p-4 text-xs font-medium text-slate-300">{formatCurrency(camp.target_amount)}</td>
+                    <td className="p-4 text-xs font-bold text-emerald-400">{formatCurrency(camp.raised_amount || 0)}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-24 rounded-full bg-slate-800 overflow-hidden">
@@ -106,7 +109,7 @@ export default function DonationsReportsPage() {
                       </div>
                     </td>
                     <td className="p-4 text-xs text-slate-300">
-                      {new Date(camp.target_date).toLocaleDateString()}
+                      {new Date(camp.end_date || camp.target_date!).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-xs">
                       <span

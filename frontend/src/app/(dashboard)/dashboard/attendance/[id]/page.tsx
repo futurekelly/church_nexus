@@ -6,12 +6,12 @@ import { motion } from "framer-motion";
 import { ArrowLeft, CheckCircle, FileBarChart, Lock, LockKeyhole, PlayCircle } from "lucide-react";
 import {
   useAttendance,
-  useAttendancePermissions,
   LiveProgressRing,
   ScannerSimulator,
   ManualChecklist,
   SESSION_TYPE_LABELS,
 } from "@/features/attendance";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { cn } from "@/lib/utils";
 
 export default function SessionCheckInPage() {
@@ -27,7 +27,8 @@ export default function SessionCheckInPage() {
     closeSession,
   } = useAttendance();
 
-  const { canManage, canViewAttendance, isMember, canViewReports } = useAttendancePermissions();
+  const { attendance: attendancePermissions } = useAppPermissions();
+  const { canManage, canViewAttendance, isMember, canViewReports } = attendancePermissions;
 
   const session = getSessionById(sessionId);
   const records = getSessionRecords(sessionId);

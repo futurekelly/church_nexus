@@ -1,16 +1,36 @@
+import { DEFAULT_LOCALIZATION_PROFILE, type LocalizationProfile } from "./types";
+
+/**
+ * Resolves the active localization profile from localStorage (if browser context)
+ * or defaults to the standard Kenya/KES/en profile.
+ */
+export function getActiveLocalizationProfile(): LocalizationProfile {
+  if (typeof window === "undefined") return DEFAULT_LOCALIZATION_PROFILE;
+  try {
+    const stored = window.localStorage.getItem("church-localization-profile");
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.warn("Error reading localization profile from localStorage:", error);
+  }
+  return DEFAULT_LOCALIZATION_PROFILE;
+}
+
 /**
  * Formats a numeric amount to a localized currency string.
- * Supports East African currencies (TZS, KES, UGX, RWF) and USD.
- * East African currencies default to displaying no decimals, matching regional custom.
+ * Resolves currency dynamically from getActiveLocalizationProfile() if not passed explicitly.
  */
 export function formatCurrency(
   amount: number,
-  currency: "TZS" | "KES" | "UGX" | "RWF" | "USD" | string,
+  currency?: "TZS" | "KES" | "UGX" | "RWF" | "USD" | string,
   locale?: string
 ): string {
+  const activeCurrency = currency || getActiveLocalizationProfile().currency;
+  
   let defaultLocale = locale;
   if (!defaultLocale) {
-    switch (currency.toUpperCase()) {
+    switch (activeCurrency.toUpperCase()) {
       case "TZS":
         defaultLocale = "sw-TZ";
         break;
@@ -31,7 +51,7 @@ export function formatCurrency(
   }
 
   try {
-    const uppercaseCurrency = currency.toUpperCase();
+    const uppercaseCurrency = activeCurrency.toUpperCase();
     const isUSD = uppercaseCurrency === "USD";
     return new Intl.NumberFormat(defaultLocale, {
       style: "currency",
@@ -41,6 +61,6 @@ export function formatCurrency(
     }).format(amount);
   } catch (error) {
     console.warn(`Error formatting currency:`, error);
-    return `${currency.toUpperCase()} ${amount.toLocaleString()}`;
+    return `${activeCurrency.toUpperCase()} ${amount.toLocaleString()}`;
   }
 }

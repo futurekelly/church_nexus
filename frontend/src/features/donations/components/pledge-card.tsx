@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { formatTZS } from "../utils/format";
+import { formatCurrency } from "@/lib/localization";
 import type { PledgeCampaign } from "../types/donations.types";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Calendar, Target } from "lucide-react";
@@ -13,10 +13,10 @@ interface PledgeCardProps {
 export function PledgeCard({ campaign }: PledgeCardProps) {
   const percentage = Math.min(
     100,
-    Math.max(0, Math.round((campaign.raised_amount / campaign.target_amount) * 100))
+    Math.max(0, Math.round(((campaign.raised_amount || 0) / campaign.target_amount) * 100))
   );
 
-  const formattedTargetDate = new Date(campaign.target_date).toLocaleDateString("en-US", {
+  const formattedTargetDate = new Date(campaign.end_date || campaign.target_date!).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -57,7 +57,7 @@ export function PledgeCard({ campaign }: PledgeCardProps) {
       <div>
         <div className="flex items-start justify-between">
           <h4 className="font-bold text-primary-foreground group-hover:text-indigo-400 transition-colors duration-300">
-            {campaign.name}
+            {campaign.title || campaign.name}
           </h4>
           <StatusBadge
             label={campaign.status}
@@ -94,10 +94,10 @@ export function PledgeCard({ campaign }: PledgeCardProps) {
         <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
           <div className="flex items-center space-x-1">
             <Target className="h-3 w-3 text-indigo-400" />
-            <span>Raised: <strong>{formatTZS(campaign.raised_amount)}</strong></span>
+            <span>Raised: <strong>{formatCurrency(campaign.raised_amount || 0)}</strong></span>
           </div>
           <div className="text-slate-400 font-medium">
-            Goal: {formatTZS(campaign.target_amount)}
+            Goal: {formatCurrency(campaign.target_amount)}
           </div>
         </div>
       </div>

@@ -1,184 +1,212 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import type { DonationRecord, PledgeCampaign, DonationReceipt } from "../types/donations.types";
-import { MOCK_DONATIONS, MOCK_CAMPAIGNS, MOCK_RECEIPTS } from "../data/mock-donations";
-
-const DONATIONS_KEY = "church-mock-donations";
-const CAMPAIGNS_KEY = "church-mock-pledges";
-const RECEIPTS_KEY = "church-mock-receipts";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import type { 
+  Donation, PledgeCampaign, Pledge, Expense, 
+  FinancialPeriod, FinancialAuditLog 
+} from "../types/donations.types";
+import { DonationsRepository } from "../repositories/donations.repository";
 
 export function useDonations() {
-  const [donations, setDonations] = useState<DonationRecord[]>([]);
+  const { user, role } = useAuth();
+  const branchId = (user as any)?.branch_id || "branch-001";
+  const userUuid = String(user?.id || "unknown-user");
+  const userMemberId = (user as any)?.member_id || (user as any)?.memberId || null;
+
+  const [donations, setDonations] = useState<(Donation & { type: Donation["donation_type"]; reference_number: string; donor_name: string; donor_email?: string | null })[]>([]);
   const [campaigns, setCampaigns] = useState<PledgeCampaign[]>([]);
-  const [receipts, setReceipts] = useState<DonationReceipt[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [periods, setPeriods] = useState<FinancialPeriod[]>([]);
+  const [auditLogs, setAuditLogs] = useState<FinancialAuditLog[]>([]);
 
-  // Reload data from localStorage
-  const reloadData = useCallback(() => {
-    if (typeof window === "undefined") return;
+  const loadData = useCallback(async () => {
+    try {
+      // 1. Fetch campaigns for branch
+      const camps = await DonationsRepository.getPledgeCampaigns(branchId);
+      
+      // Calculate raised_amount for each campaign dynamically to satisfy the UI
+      const allDonsResponse = await DonationsRepository.getDonations(
+        { search: "", type: "all", method: "all", status: "all", campaign: "all", dateRange: "all" },
+        { branchId, role: "Super Admin", memberId: null }
+      );
+      
+      const allDons = allDonsResponse.results;
+      
+      const campaignsWithRaised = camps.map(c => {
+        const campaignDonations = allDons.filter(d => d.campaign_id === c.id && d.status === "Completed");
+        const raised = campaignDonations.reduce((sum, d) => sum + d.amount * d.exchange_rate_to_base, 0);
+        return {
+          ...c,
+          name: c.title,
+          target_date: c.end_date,
+          raised_amount: raised,
+          status: raised >= c.target_amount ? ("Fulfilled" as const) : c.status
+        };
+      });
 
-    // Load Donations
-    const storedDonations = localStorage.getItem(DONATIONS_KEY);
-    let loadedDonations: DonationRecord[] = [];
-    if (storedDonations) {
-      try {
-        loadedDonations = JSON.parse(storedDonations);
-      } catch {
-        loadedDonations = MOCK_DONATIONS;
-      }
-    } else {
-      localStorage.setItem(DONATIONS_KEY, JSON.stringify(MOCK_DONATIONS));
-      loadedDonations = MOCK_DONATIONS;
+      setCampaigns(campaignsWithRaised);
+
+      // 2. Fetch donations (with role-based filtration enforced in repo)
+      const donsResponse = await DonationsRepository.getDonations(
+        { search: "", type: "all", method: "all", status: "all", campaign: "all", dateRange: "all", pageSize: 1000 },
+        { branchId, role: role || "Visitor", memberId: userMemberId }
+      );
+      
+      // Map legacy fields for backwards compatibility
+      const mappedDons = donsResponse.results.map(d => ({
+        ...d,
+        type: d.donation_type,
+        reference_number: d.transaction_reference,
+        donor_name: d.anonymous ? "Anonymous" : (d.guest_name || "Member Contribution")
+      }));
+      setDonations(mappedDons as any);
+
+      // 3. Fetch expenses
+      const exps = await DonationsRepository.getExpenses(branchId);
+      setExpenses(exps);
+
+      // 4. Fetch periods
+      const pers = await DonationsRepository.getPeriods(branchId);
+      setPeriods(pers);
+
+      // 5. Fetch audit logs
+      const audits = await DonationsRepository.getFinancialAuditLogs(branchId);
+      setAuditLogs(audits);
+    } catch (err) {
+      console.error("Error loading donations data in hook:", err);
     }
-    setDonations(loadedDonations);
-
-    // Load Campaigns
-    const storedCampaigns = localStorage.getItem(CAMPAIGNS_KEY);
-    let loadedCampaigns: PledgeCampaign[] = [];
-    if (storedCampaigns) {
-      try {
-        loadedCampaigns = JSON.parse(storedCampaigns);
-      } catch {
-        loadedCampaigns = MOCK_CAMPAIGNS;
-      }
-    } else {
-      localStorage.setItem(CAMPAIGNS_KEY, JSON.stringify(MOCK_CAMPAIGNS));
-      loadedCampaigns = MOCK_CAMPAIGNS;
-    }
-    setCampaigns(loadedCampaigns);
-
-    // Load Receipts
-    const storedReceipts = localStorage.getItem(RECEIPTS_KEY);
-    let loadedReceipts: DonationReceipt[] = [];
-    if (storedReceipts) {
-      try {
-        loadedReceipts = JSON.parse(storedReceipts);
-      } catch {
-        loadedReceipts = MOCK_RECEIPTS;
-      }
-    } else {
-      localStorage.setItem(RECEIPTS_KEY, JSON.stringify(MOCK_RECEIPTS));
-      loadedReceipts = MOCK_RECEIPTS;
-    }
-    setReceipts(loadedReceipts);
-  }, []);
+  }, [branchId, role, userMemberId]);
 
   useEffect(() => {
-    reloadData();
-    
-    // Listen for storage events or custom updates
-    if (typeof window !== "undefined") {
-      const handleUpdate = () => reloadData();
-      window.addEventListener("church-donations-update", handleUpdate);
-      return () => {
-        window.removeEventListener("church-donations-update", handleUpdate);
-      };
-    }
-  }, [reloadData]);
+    loadData();
 
-  // Trigger global update event
-  const triggerUpdate = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("church-donations-update"));
-    }
-  }, []);
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (
+        customEvent.detail &&
+        [
+          "church-mock-donations",
+          "church-mock-expenses",
+          "church-mock-financial-periods",
+          "church-mock-pledge-campaigns",
+          "church-mock-pledges"
+        ].includes(customEvent.detail.key)
+      ) {
+        loadData();
+      }
+    };
+
+    window.addEventListener("local-storage-update", handleStorageUpdate);
+    return () => {
+      window.removeEventListener("local-storage-update", handleStorageUpdate);
+    };
+  }, [loadData]);
 
   // Record a new donation
-  const addDonation = useCallback((donationData: {
+  const addDonation = useCallback(async (donationData: {
     member_id: string | null;
     donor_name: string;
     donor_email?: string;
     amount: number;
-    type: DonationRecord["type"];
-    payment_method: DonationRecord["payment_method"];
+    type: Donation["donation_type"];
+    payment_method: Donation["payment_method"];
     notes?: string;
-    campaign_id?: string; // Optional campaign target
+    campaign_id?: string;
   }) => {
-    const nextId = `don-${Date.now()}`;
-    const refPrefix = donationData.payment_method === "M-Pesa" ? "MP-" : 
-                      donationData.payment_method === "Card" ? "CRD-" :
-                      donationData.payment_method === "Bank Transfer" ? "BK-" : "CSH-";
-    
-    const referenceNumber = `${refPrefix}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-    const newDonation: DonationRecord = {
-      id: nextId,
+    const result = await DonationsRepository.createDonation({
+      branch_id: branchId,
       member_id: donationData.member_id,
-      donor_name: donationData.donor_name,
-      donor_email: donationData.donor_email,
       amount: donationData.amount,
-      type: donationData.type,
+      currency: "TZS",
+      donation_type: donationData.type,
       payment_method: donationData.payment_method,
       status: "Completed",
-      notes: donationData.notes,
-      created_at: new Date().toISOString(),
-      reference_number: referenceNumber,
+      donation_date: new Date().toISOString(),
+      anonymous: !donationData.donor_name || donationData.donor_name === "Anonymous",
+      notes: donationData.notes || null,
+      guest_name: donationData.donor_name || null,
+      guest_email: donationData.donor_email || null,
+      campaign_id: donationData.campaign_id || null
+    }, userUuid);
+
+    await loadData();
+    return {
+      ...result,
+      type: result.donation_type,
+      reference_number: result.transaction_reference,
+      donor_name: result.anonymous ? "Anonymous" : (result.guest_name || "Member Contribution")
     };
+  }, [branchId, userUuid, loadData]);
 
-    // 1. Save donation
-    const updatedDonations = [newDonation, ...donations];
-    localStorage.setItem(DONATIONS_KEY, JSON.stringify(updatedDonations));
+  // Void a donation
+  const voidDonation = useCallback(async (id: string, reason: string) => {
+    const result = await DonationsRepository.voidDonation(id, userUuid, reason);
+    await loadData();
+    return result;
+  }, [userUuid, loadData]);
 
-    // 2. Generate and save Receipt
-    const receiptNumStr = String(receipts.length + 1).padStart(3, "0");
-    const newReceipt: DonationReceipt = {
-      id: `rec-${nextId}`,
-      donation_id: nextId,
-      receipt_number: `REC-2026-${receiptNumStr}`,
-      issued_at: newDonation.created_at,
+  // Create an expense
+  const addExpense = useCallback(async (expenseData: Omit<Expense, "id" | "exchange_rate_to_base" | "base_currency" | "created_at" | "updated_at" | "approved_by" | "approved_at" | "status">) => {
+    const result = await DonationsRepository.createExpense({
+      ...expenseData,
+      branch_id: branchId
+    }, userUuid);
+    await loadData();
+    return result;
+  }, [branchId, userUuid, loadData]);
+
+  // Approve an expense
+  const approveExpense = useCallback(async (id: string) => {
+    const result = await DonationsRepository.approveExpense(id, userUuid);
+    await loadData();
+    return result;
+  }, [userUuid, loadData]);
+
+  // Close period
+  const closePeriod = useCallback(async (id: string) => {
+    const result = await DonationsRepository.closeFinancialPeriod(id, userUuid);
+    await loadData();
+    return result;
+  }, [userUuid, loadData]);
+
+  const getDonationById = useCallback(async (id: string) => {
+    const result = await DonationsRepository.getDonationById(id);
+    if (!result) return null;
+    return {
+      ...result,
+      type: result.donation_type,
+      reference_number: result.transaction_reference,
+      donor_name: result.anonymous ? "Anonymous" : (result.guest_name || "Member Contribution")
     };
-    const updatedReceipts = [newReceipt, ...receipts];
-    localStorage.setItem(RECEIPTS_KEY, JSON.stringify(updatedReceipts));
+  }, []);
 
-    // 3. Increment campaign if campaign_id is provided or matches campaign type
-    let updatedCampaigns = [...campaigns];
-    const targetCampaignId = donationData.campaign_id || 
-      (donationData.type === "Building Fund" ? "camp-building" : 
-       donationData.type === "Outreach" ? "camp-youth" : undefined);
-
-    if (targetCampaignId) {
-      updatedCampaigns = campaigns.map((campaign) => {
-        if (campaign.id === targetCampaignId) {
-          const newRaised = campaign.raised_amount + donationData.amount;
-          return {
-            ...campaign,
-            raised_amount: newRaised,
-            status: newRaised >= campaign.target_amount ? "Fulfilled" as const : campaign.status,
-          };
-        }
-        return campaign;
-      });
-      localStorage.setItem(CAMPAIGNS_KEY, JSON.stringify(updatedCampaigns));
-    }
-
-    triggerUpdate();
-    return newDonation;
-  }, [donations, campaigns, receipts, triggerUpdate]);
-
-  // Helper to retrieve receipt details
   const getReceiptForDonation = useCallback((donationId: string) => {
-    const receipt = receipts.find((r) => r.donation_id === donationId);
-    if (receipt) return receipt;
-    // Fallback if not found, dynamically generate
+    const donation = donations.find(d => d.id === donationId);
     return {
       id: `rec-${donationId}`,
       donation_id: donationId,
-      receipt_number: `REC-2026-TMP`,
-      issued_at: new Date().toISOString(),
+      receipt_number: donation ? `REC-2026-${donation.id.slice(-3).toUpperCase()}` : `REC-2026-TMP`,
+      issued_at: donation ? donation.created_at : new Date().toISOString(),
     };
-  }, [receipts]);
-
-  // Helper to fetch single donation
-  const getDonationById = useCallback((id: string) => {
-    return donations.find((d) => d.id === id) ?? null;
   }, [donations]);
 
   return {
     donations,
     campaigns,
-    receipts,
+    expenses,
+    periods,
+    auditLogs,
     addDonation,
+    voidDonation,
+    addExpense,
+    approveExpense,
+    closePeriod,
     getDonationById,
     getReceiptForDonation,
+    getMemberStatement: DonationsRepository.getMemberStatement,
+    getHouseholdStatement: DonationsRepository.getHouseholdStatement,
+    getCampaignStatement: DonationsRepository.getCampaignStatement,
+    generateStatement: DonationsRepository.generateStatement
   };
 }

@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
-  ArrowRight, Calendar, BookOpen, CheckCircle, Trophy,
+  ArrowRight, Calendar, BookOpen, CheckCircle, Trophy, ShieldAlert,
 } from "lucide-react";
+import { apiGet } from "@/services/api-client";
 import { KpiCard } from "@/features/dashboard/components/widgets/kpi-card";
 import { QuickActionCard } from "@/features/dashboard/components/widgets/quick-action-card";
 import { ActivityFeed } from "@/features/dashboard/components/widgets/activity-feed";
@@ -37,9 +39,74 @@ const recentSermons = [
 export function MemberHome() {
   const { user } = useAuth();
   const firstName = user?.first_name ?? "Friend";
+  const isVisitor = user?.role === "visitor";
+
+  const [scripture, setScripture] = useState({
+    verse: scriptureOfTheDay.verse,
+    reference: scriptureOfTheDay.reference,
+    reflection: scriptureOfTheDay.reflection,
+  });
+
+  useEffect(() => {
+    async function loadScripture() {
+      try {
+        const response = await apiGet<any>("/api/sermons/scripture/daily/");
+        if (response.success && response.data) {
+          setScripture({
+            verse: response.data.verse || scriptureOfTheDay.verse,
+            reference: response.data.reference || scriptureOfTheDay.reference,
+            reflection: response.data.reflection || scriptureOfTheDay.reflection,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load daily scripture:", err);
+      }
+    }
+    loadScripture();
+  }, []);
 
   return (
     <div className="space-y-8">
+      {isVisitor && (
+        <motion.section
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative overflow-hidden rounded-2xl border border-warning/30 bg-warning/5 p-5 backdrop-blur-[16px] shadow-glass"
+          aria-label="Pending account verification notice"
+        >
+          {/* Subtle background glow */}
+          <div
+            className="pointer-events-none absolute left-0 top-0 h-32 w-32 rounded-full opacity-10"
+            aria-hidden="true"
+            style={{
+              background: "radial-gradient(circle, #f59e0b 0%, transparent 70%)",
+              transform: "translate(-30%, -30%)",
+            }}
+          />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning/15 text-warning shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                <ShieldAlert className="h-5 w-5 animate-pulse" aria-hidden="true" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold text-warning">
+                  Verification Pending — Visitor Role
+                </h2>
+                <p className="text-xs leading-relaxed text-muted-foreground max-w-2xl">
+                  Welcome to the community! Your registration has been received and is waiting for administrator approval. In the meantime, you have been assigned limited Visitor access to explore sermons, events, and other areas of the platform.
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0 self-start sm:self-center">
+              <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-semibold text-warning ring-1 ring-inset ring-warning/20">
+                Visitor Account
+              </span>
+            </div>
+          </div>
+        </motion.section>
+      )}
+
       {/* Welcome */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
@@ -75,13 +142,13 @@ export function MemberHome() {
           }}
         />
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-          Today's Scripture — {scriptureOfTheDay.reference}
+          Today's Scripture — {scripture.reference}
         </p>
         <blockquote className="mt-3 text-base font-medium leading-relaxed text-primary-foreground md:text-lg">
-          "{scriptureOfTheDay.verse}"
+          "{scripture.verse}"
         </blockquote>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          {scriptureOfTheDay.reflection}
+          {scripture.reflection}
         </p>
         <Link
           href="/dashboard/scripture"

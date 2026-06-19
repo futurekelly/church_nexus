@@ -4,7 +4,8 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Clipboard, Save, ArrowLeft, AlertTriangle } from "lucide-react";
-import { useAttendance, SESSION_TYPES, SESSION_TYPE_LABELS, useAttendancePermissions, type SessionType } from "@/features/attendance";
+import { useAttendance, SESSION_TYPES, SESSION_TYPE_LABELS, type SessionType } from "@/features/attendance";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -28,7 +29,8 @@ const errorClass = "mt-1 text-xs text-red-400";
 export default function CreateSessionPage() {
   const router = useRouter();
   const { addSession } = useAttendance();
-  const { canManage } = useAttendancePermissions();
+  const { attendance: attendancePermissions } = useAppPermissions();
+  const { canManage } = attendancePermissions;
 
   const {
     register,

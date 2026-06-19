@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { KanbanBoard, useFollowUp, useFollowUpPermissions, type FollowUpStatus } from "@/features/follow-up";
+import { KanbanBoard, useFollowUp, type FollowUpStatus } from "@/features/follow-up";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterSelect } from "@/components/ui/filter-select";
 import { Lock, RefreshCw, BarChart2, CheckCircle, AlertCircle, ShieldAlert, Award } from "lucide-react";
@@ -17,7 +18,8 @@ export default function FollowUpDashboardPage() {
     importAttendanceTickets,
   } = useFollowUp();
 
-  const { canManage, canViewFollowUp } = useFollowUpPermissions();
+  const { followUp: followUpPermissions } = useAppPermissions();
+  const { canManage, canViewFollowUp } = followUpPermissions;
   
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string>("all");

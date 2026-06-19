@@ -12,6 +12,7 @@ import {
   type MemberFormValues,
   type Member,
 } from "@/features/members/types/member.types";
+import { E164_PHONE_REGEX } from "@/lib/localization";
 
 interface MemberFormProps {
   defaultValues?: Partial<MemberFormValues>;
@@ -54,7 +55,7 @@ export function MemberForm({
       date_of_birth: "",
       address: "",
       date_joined: new Date().toISOString().slice(0, 10),
-      status: "active",
+      status: "Active",
       ministries: [],
       occupation: "",
       notes: "",
@@ -193,7 +194,13 @@ export function MemberForm({
               className={inputClass}
               aria-required="true"
               aria-invalid={!!errors.phone_number}
-              {...register("phone_number", { required: "Phone number is required" })}
+              {...register("phone_number", {
+                required: "Phone number is required",
+                pattern: {
+                  value: E164_PHONE_REGEX,
+                  message: "Must be a valid E.164 phone number (e.g., +254712345678)"
+                }
+              })}
             />
             {errors.phone_number && (
               <p className={errorClass} role="alert">{errors.phone_number.message}</p>

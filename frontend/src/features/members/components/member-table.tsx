@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowUpDown, ArrowUp, ArrowDown, Eye, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MemberStatusBadge } from "@/features/members/components/member-status-badge";
-import { useMemberPermissions } from "@/features/members/hooks/use-member-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { ROLE_LABELS } from "@/types/roles";
 import type { Member, MemberSortConfig } from "@/features/members/types/member.types";
 import { getInitials } from "@/lib/utils";
@@ -92,7 +92,8 @@ export function MemberTable({
   onDelete,
   isLoading = false,
 }: MemberTableProps) {
-  const { canEdit, canDelete, canViewContactDetails } = useMemberPermissions();
+  const { members: memberPermissions } = useAppPermissions();
+  const { canEdit, canDelete, canViewContactDetails } = memberPermissions;
 
   if (isLoading) {
     return (

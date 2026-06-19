@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, UserCheck, ShieldAlert } from "lucide-react";
-import { useFollowUp, useFollowUpPermissions, VisitorForm } from "@/features/follow-up";
+import { useFollowUp, VisitorForm } from "@/features/follow-up";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import Link from "next/link";
 
 export default function CreateFollowUpPage() {
   const router = useRouter();
   const { addVisitor } = useFollowUp();
-  const { canManage } = useFollowUpPermissions();
+  const { followUp: followUpPermissions } = useAppPermissions();
+  const { canManage } = followUpPermissions;
 
   const handleFormSubmit = (values: any) => {
     if (!canManage) return;

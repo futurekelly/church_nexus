@@ -24,7 +24,7 @@ export const MOCK_PRAYERS: PrayerRequest[] = [
     status: "In Progress",
     anonymous: true,
     user_id: "user-member-2",
-    user_name: "John Doe",
+    user_name: "Kelvin Mbise",
     pray_count: 24,
     prayed_user_ids: ["user-member-1"],
     pastor_response: "We are standing in agreement with you, brother. Trust that God has a perfect plan for your provision. Please reach out to our benevolence team if you need immediate assistance.",

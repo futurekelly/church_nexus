@@ -1,7 +1,6 @@
 export * from "./types/livestream.types";
 export * from "./data/mock-livestream";
 export * from "./hooks/use-livestream";
-export * from "./hooks/use-livestream-permissions";
 
 // Components
 export { LivestreamPlayer } from "./components/livestream-player";

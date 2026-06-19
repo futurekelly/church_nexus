@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Save, ClipboardList, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { VisitorProfile } from "../types/follow-up.types";
+import { E164_PHONE_REGEX } from "@/lib/localization";
 import { INVITED_BY_OPTIONS, SPIRITUAL_BACKGROUND_OPTIONS } from "../types/follow-up.types";
 
 interface VisitorFormValues {
@@ -134,7 +135,10 @@ export function VisitorForm({ onSubmit, onCancel, isLoading = false }: VisitorFo
             className={inputClass}
             {...register("phone_number", {
               required: "Phone number is required",
-              minLength: { value: 10, message: "Invalid phone number length" },
+              pattern: {
+                value: E164_PHONE_REGEX,
+                message: "Must be a valid E.164 phone number (e.g., +254712345678)"
+              }
             })}
           />
           {errors.phone_number && <p className={errorClass}>{errors.phone_number.message}</p>}

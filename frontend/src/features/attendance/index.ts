@@ -9,6 +9,5 @@ export { CheckInMethodBar } from "./components/checkin-method-bar";
 export { AbsenteeListWidget } from "./components/absentee-list-widget";
 
 export { useAttendance, useFilteredSessions } from "./hooks/use-attendance";
-export { useAttendancePermissions } from "./hooks/use-attendance-permissions";
 
 export * from "./types/attendance.types";

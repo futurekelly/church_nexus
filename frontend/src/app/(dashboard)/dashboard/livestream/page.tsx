@@ -1,6 +1,7 @@
 "use client";
 
-import { useLivestream, useLivestreamPermissions, LivestreamPlayer, LivestreamChat, ModeratorControls, ArchiveDialog } from "@/features/livestream";
+import { useLivestream, LivestreamPlayer, LivestreamChat, ModeratorControls, ArchiveDialog } from "@/features/livestream";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,7 +24,8 @@ export default function DashboardLivestreamPage() {
     resetStream,
   } = useLivestream();
 
-  const { canModerate, canChat } = useLivestreamPermissions();
+  const { livestream: livestreamPermissions } = useAppPermissions();
+  const { canModerate, canChat } = livestreamPermissions;
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const [wasStreamEnded, setWasStreamEnded] = useState(false);
 

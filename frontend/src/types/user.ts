@@ -10,6 +10,8 @@ export interface User {
   role: Role;
   status: "active" | "inactive" | "locked";
   created_at: string;
+  member_id?: string; // Optional member reference
+  memberId?: string;  // Optional member reference
 }
 
 export interface AuthTokens {

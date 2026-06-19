@@ -4,7 +4,9 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Plus, BarChart3, Heart, Receipt, Sparkles } from "lucide-react";
-import { useDonations, useDonationPermissions, formatTZS } from "@/features/donations";
+import { useDonations } from "@/features/donations";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
+import { formatCurrency } from "@/lib/localization";
 import { DonationStats } from "@/features/donations/components/donation-stats";
 import { PledgeCard } from "@/features/donations/components/pledge-card";
 import { SearchInput } from "@/components/ui/search-input";
@@ -16,7 +18,8 @@ const ITEMS_PER_PAGE = 6;
 export default function DonationsDashboardPage() {
   const router = useRouter();
   const { donations, campaigns } = useDonations();
-  const { canManage, canViewReports, isMember, userMemberId } = useDonationPermissions();
+  const { donations: donationPermissions } = useAppPermissions();
+  const { canManage, canViewReports, isMember, userMemberId } = donationPermissions;
 
   // Filters & State
   const [search, setSearch] = useState("");
@@ -211,7 +214,7 @@ export default function DonationsDashboardPage() {
                       </span>
                     </td>
                     <td className="p-4 text-xs font-bold text-emerald-400">
-                      {formatTZS(donation.amount)}
+                      {formatCurrency(donation.amount)}
                     </td>
                     <td className="p-4 text-xs text-slate-300">
                       {donation.payment_method}

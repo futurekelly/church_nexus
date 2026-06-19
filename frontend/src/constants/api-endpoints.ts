@@ -1,4 +1,4 @@
-const API_VERSION = "/api/v1";
+const API_VERSION = "/api";
 
 export const API_ENDPOINTS = {
   AUTH: {

@@ -9,20 +9,21 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
   usePrayers,
-  usePrayerPermissions,
   PrayerStatusBadge,
   PRAYER_CATEGORY_LABELS,
   STATUS_LABELS,
   PRAYER_STATUSES,
   type PrayerStatus,
 } from "@/features/prayer";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 
 export default function PrayerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
   const { getRequestById, togglePrayCount, updateStatus, respondToRequest } = usePrayers();
-  const { canRespond, canManageStatus, canSeeAnonymousNames } = usePrayerPermissions();
+  const { prayer: prayerPermissions } = useAppPermissions();
+  const { canRespond, canManageStatus, canSeeAnonymousNames } = prayerPermissions;
 
   const request = getRequestById(id);
   const [responseText, setResponseText] = useState(request?.pastor_response || "");

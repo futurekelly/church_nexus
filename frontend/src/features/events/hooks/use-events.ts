@@ -1,151 +1,193 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { MOCK_EVENTS } from "../data/mock-events";
-import type { Event, EventFilters, EventSortConfig } from "../types/event.types";
-
-const LOCAL_STORAGE_KEY = "church-mock-events";
-const REGISTRATIONS_KEY = "church-mock-event-registrations";
-
-// Helper to initialize local storage data safe for SSR
-const getInitialEvents = (): Event[] => {
-  if (typeof window === "undefined") return MOCK_EVENTS;
-  const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return MOCK_EVENTS;
-    }
-  }
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(MOCK_EVENTS));
-  return MOCK_EVENTS;
-};
-
-const getInitialRegistrations = (): Record<string, boolean> => {
-  if (typeof window === "undefined") return {};
-  const stored = localStorage.getItem(REGISTRATIONS_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return {};
-    }
-  }
-  return {};
-};
-
-const notifyStorageChange = () => {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("church-events-update"));
-  }
-};
+import { useState, useEffect, useCallback, useMemo } from "react";
+import type { Event, EventFilters, EventSortConfig, EventRegistration, EventStats, RSVPStatus, PaginatedResponse } from "../types/event.types";
+import { EventsRepository } from "../repositories/events.repository";
+import { EventConflictService } from "../services/event-conflict.service";
+import { useAuth } from "@/hooks/use-auth";
 
 /**
- * Singleton state hook for Events data using localstorage.
- * Syncs reactive changes across all instances without Zustand.
+ * Singleton state hook for Events data.
+ * Wraps EventsRepository and ensures pages do not access storage directly.
  */
 export function useEvents() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [registrations, setRegistrations] = useState<Record<string, boolean>>({});
+  const { user, role } = useAuth();
+  const branchId = (user as any)?.branch_id || "branch-001";
+  const userUuid = user?.id ? String(user.id) : "d3b07384-d113-4ec2-a5d8-c83d6850c2f3";
+  const userName = user ? `${user.first_name} ${user.last_name}` : "Member User";
+  const memberId = (user as any)?.member_id || (user as any)?.memberId || null;
 
-  const reloadData = useCallback(() => {
-    setEvents(getInitialEvents());
-    setRegistrations(getInitialRegistrations());
-  }, []);
+  const [rawEvents, setRawEvents] = useState<Event[]>([]);
+  const [userRsvps, setUserRsvps] = useState<EventRegistration[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load events and user registrations
+  const fetchState = useCallback(async () => {
+    if (!role) return;
+    try {
+      setLoading(true);
+      const paginated = await EventsRepository.getEvents(
+        { search: "", type: "all", status: "all", dateRange: "all", showArchived: true },
+        { branchId, role }
+      );
+      setRawEvents(paginated.results);
+
+      // Load all RSVPs for this user
+      const rsvpList: EventRegistration[] = [];
+      for (const ev of paginated.results) {
+        const rsvps = await EventsRepository.getRSVPs(ev.id);
+        const userRsvp = rsvps.find(
+          (r) =>
+            (r.user_id && String(r.user_id) === String(userUuid)) ||
+            (memberId && r.member_id && String(r.member_id) === String(memberId))
+        );
+        if (userRsvp) rsvpList.push(userRsvp);
+      }
+      setUserRsvps(rsvpList);
+    } catch (err) {
+      console.error("Failed to load events state:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [branchId, role, userUuid, memberId]);
 
   useEffect(() => {
-    reloadData();
-    if (typeof window !== "undefined") {
-      window.addEventListener("church-events-update", reloadData);
-      return () => {
-        window.removeEventListener("church-events-update", reloadData);
-      };
-    }
-  }, [reloadData]);
+    fetchState();
+  }, [fetchState]);
 
-  const addEvent = useCallback((newEvent: Omit<Event, "id" | "registered_count" | "created_at" | "updated_at">) => {
-    const list = getInitialEvents();
-    const event: Event = {
-      ...newEvent,
-      id: `ev-${Date.now()}`,
-      registered_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    const updated = [event, ...list];
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-    notifyStorageChange();
-    return event;
-  }, []);
-
-  const updateEvent = useCallback((id: string, updatedFields: Partial<Event>) => {
-    const list = getInitialEvents();
-    const updated = list.map((e) =>
-      e.id === id
-        ? {
-            ...e,
-            ...updatedFields,
-            updated_at: new Date().toISOString(),
-          }
-        : e
-    );
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-    notifyStorageChange();
-  }, []);
-
-  const cancelEvent = useCallback((id: string) => {
-    updateEvent(id, { status: "Cancelled" });
-  }, [updateEvent]);
-
-  const toggleRegister = useCallback((eventId: string) => {
-    const regs = getInitialRegistrations();
-    const isRegistered = !regs[eventId];
-    regs[eventId] = isRegistered;
-    localStorage.setItem(REGISTRATIONS_KEY, JSON.stringify(regs));
-
-    const list = getInitialEvents();
-    const updated = list.map((e) => {
-      if (e.id === eventId) {
-        const diff = isRegistered ? 1 : -1;
-        return {
-          ...e,
-          registered_count: Math.max(0, Math.min(e.capacity, e.registered_count + diff)),
-        };
+  // Tab synchronization listener
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleSync = (e: any) => {
+      const customEvent = e as CustomEvent<{ key: string }>;
+      if (
+        customEvent.detail &&
+        (customEvent.detail.key === "church-mock-events" ||
+          customEvent.detail.key === "church-mock-event-registrations")
+      ) {
+        fetchState();
       }
-      return e;
-    });
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-    notifyStorageChange();
-  }, []);
+    };
+    window.addEventListener("local-storage-update" as any, handleSync);
+    return () => {
+      window.removeEventListener("local-storage-update" as any, handleSync);
+    };
+  }, [fetchState]);
+
+  const addEvent = useCallback(
+    async (newEvent: Omit<Event, "id" | "registered_count" | "created_at" | "updated_at" | "is_archived" | "archived_at">) => {
+      const created = await EventsRepository.createEvent(newEvent);
+      await fetchState();
+      return created;
+    },
+    [fetchState]
+  );
+
+  const updateEvent = useCallback(
+    async (id: string, updatedFields: Partial<Event>) => {
+      const updated = await EventsRepository.updateEvent(id, updatedFields);
+      await fetchState();
+      return updated;
+    },
+    [fetchState]
+  );
+
+  const cancelEvent = useCallback(
+    async (id: string) => {
+      await updateEvent(id, { status: "Cancelled" });
+    },
+    [updateEvent]
+  );
+
+  const archiveEvent = useCallback(
+    async (id: string) => {
+      await EventsRepository.archiveEvent(id);
+      await fetchState();
+    },
+    [fetchState]
+  );
+
+  const restoreEvent = useCallback(
+    async (id: string) => {
+      await EventsRepository.restoreEvent(id);
+      await fetchState();
+    },
+    [fetchState]
+  );
+
+  /**
+   * Toggles the user's registration for an event.
+   * Promotes waitlisted candidates if the user cancels.
+   */
+  const toggleRegister = useCallback(
+    async (eventId: string) => {
+      try {
+        const existingRsvp = userRsvps.find((r) => r.event_id === eventId);
+        
+        if (existingRsvp) {
+          // If already registered, cancel/decline the RSVP
+          await EventsRepository.updateRSVPStatus(existingRsvp.id, "Declined");
+        } else {
+          // Create new Attending RSVP
+          await EventsRepository.createRSVP({
+            event_id: eventId,
+            user_id: userUuid,
+            member_id: memberId,
+            visitor_name: user ? `${user.first_name} ${user.last_name}` : "Member Guest",
+            visitor_email: user?.email || "guest@churchnexus.org",
+            visitor_phone: (user as any)?.phone || "",
+            status: "Attending",
+            notes: null
+          });
+        }
+        await fetchState();
+      } catch (err) {
+        console.error("Failed to toggle registration:", err);
+      }
+    },
+    [userRsvps, userUuid, memberId, user, fetchState]
+  );
 
   const getEventById = useCallback(
     (id: string) => {
-      return events.find((e) => e.id === id) || null;
+      return rawEvents.find((e) => e.id === id) || null;
     },
-    [events]
+    [rawEvents]
   );
 
   const isUserRegistered = useCallback(
     (eventId: string) => {
-      return !!registrations[eventId];
+      const r = userRsvps.find((rsvp) => rsvp.event_id === eventId);
+      return !!r && (r.status === "Attending" || r.status === "Waitlisted");
     },
-    [registrations]
+    [userRsvps]
+  );
+
+  const getUserRSVPStatus = useCallback(
+    (eventId: string): RSVPStatus | null => {
+      const r = userRsvps.find((rsvp) => rsvp.event_id === eventId);
+      return r ? r.status : null;
+    },
+    [userRsvps]
   );
 
   return {
-    events,
+    events: rawEvents,
     addEvent,
     updateEvent,
     cancelEvent,
+    archiveEvent,
+    restoreEvent,
     toggleRegister,
     getEventById,
     isUserRegistered,
+    getUserRSVPStatus,
+    loading
   };
 }
 
 /**
- * Helper hook to filter, search, sort, and paginate events
+ * Filter hook to search, sort, and paginate events from the repository
  */
 export function useFilteredEvents(
   filters: EventFilters,
@@ -153,65 +195,66 @@ export function useFilteredEvents(
   page: number,
   pageSize: number
 ) {
-  const {
-    events,
-    addEvent,
-    updateEvent,
-    cancelEvent,
-    toggleRegister,
-    getEventById,
-    isUserRegistered,
-  } = useEvents();
+  const { role, user } = useAuth();
+  const branchId = (user as any)?.branch_id || "branch-001";
+  const { events, addEvent, updateEvent, cancelEvent, toggleRegister, getEventById, isUserRegistered } = useEvents();
 
-  const filteredEvents = useMemo(() => {
-    let result = [...events];
+  const [paginatedData, setPaginatedData] = useState<PaginatedResponse<Event>>({
+    count: 0,
+    page: 1,
+    page_size: pageSize,
+    total_pages: 1,
+    next: null,
+    previous: null,
+    results: []
+  });
+  const [loading, setLoading] = useState(true);
 
-    // Search query
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      result = result.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          e.description.toLowerCase().includes(q) ||
-          e.location.toLowerCase().includes(q) ||
-          e.organizer.toLowerCase().includes(q)
-      );
+  const fetchFilteredData = useCallback(async () => {
+    if (!role) return;
+    setLoading(true);
+    try {
+      const repoFilters: EventFilters = {
+        ...filters,
+        page,
+        pageSize
+      };
+      const response = await EventsRepository.getEvents(repoFilters, { branchId, role });
+      setPaginatedData(response);
+    } catch (err) {
+      console.error("Failed to load filtered events:", err);
+    } finally {
+      setLoading(false);
     }
+  }, [filters, page, pageSize, branchId, role]);
 
-    // Type filter
-    if (filters.type !== "all") {
-      result = result.filter((e) => e.event_type === filters.type);
-    }
+  useEffect(() => {
+    fetchFilteredData();
+  }, [fetchFilteredData]);
 
-    // Status filter
-    if (filters.status !== "all") {
-      result = result.filter((e) => e.status === filters.status);
-    }
+  // Tab sync refresh
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleSync = (e: any) => {
+      const customEvent = e as CustomEvent<{ key: string }>;
+      if (
+        customEvent.detail &&
+        (customEvent.detail.key === "church-mock-events" ||
+          customEvent.detail.key === "church-mock-event-registrations")
+      ) {
+        fetchFilteredData();
+      }
+    };
+    window.addEventListener("local-storage-update" as any, handleSync);
+    return () => {
+      window.removeEventListener("local-storage-update" as any, handleSync);
+    };
+  }, [fetchFilteredData]);
 
-    // Date range filter
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
-    if (filters.dateRange === "today") {
-      result = result.filter((e) => {
-        const start = new Date(e.start_date);
-        return start >= todayStart && start <= todayEnd;
-      });
-    } else if (filters.dateRange === "upcoming") {
-      result = result.filter((e) => new Date(e.start_date) >= now);
-    } else if (filters.dateRange === "past") {
-      result = result.filter((e) => new Date(e.end_date) < now || e.status === "Completed");
-    } else if (filters.dateRange === "this-week") {
-      const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      result = result.filter((e) => {
-        const start = new Date(e.start_date);
-        return start >= now && start <= oneWeekFromNow;
-      });
-    }
-
-    // Sorting
-    result.sort((a, b) => {
+  // Sorting helper
+  const sortedResults = useMemo(() => {
+    const list = [...paginatedData.results];
+    list.sort((a, b) => {
       let aVal: string | number = a[sortConfig.key];
       let bVal: string | number = b[sortConfig.key];
 
@@ -224,22 +267,13 @@ export function useFilteredEvents(
       if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
-
-    return result;
-  }, [events, filters, sortConfig]);
-
-  const totalItems = filteredEvents.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-
-  const paginatedEvents = useMemo(() => {
-    const startIdx = (page - 1) * pageSize;
-    return filteredEvents.slice(startIdx, startIdx + pageSize);
-  }, [filteredEvents, page, pageSize]);
+    return list;
+  }, [paginatedData.results, sortConfig]);
 
   // Aggregate stats
-  const stats = useMemo(() => {
+  const stats = useMemo<EventStats>(() => {
     const now = new Date();
-    const upcoming = events.filter((e) => new Date(e.start_date) >= now && e.status !== "Cancelled");
+    const upcoming = events.filter((e) => new Date(e.start_date) >= now && e.status !== "Cancelled" && e.status !== "Archived");
     const completed = events.filter((e) => e.status === "Completed" || new Date(e.end_date) < now);
     const totalRegs = events.reduce((sum, e) => sum + e.registered_count, 0);
 
@@ -257,14 +291,14 @@ export function useFilteredEvents(
       upcomingCount: upcoming.length,
       completedCount: completed.length,
       totalRegistrations: totalRegs,
-      capacityUtilization: avgUtilization,
+      capacityUtilization: avgUtilization
     };
   }, [events]);
 
   return {
-    events: paginatedEvents,
-    totalItems,
-    totalPages,
+    events: sortedResults,
+    totalItems: paginatedData.count,
+    totalPages: paginatedData.total_pages,
     stats,
     addEvent,
     updateEvent,
@@ -272,5 +306,6 @@ export function useFilteredEvents(
     toggleRegister,
     getEventById,
     isUserRegistered,
+    loading
   };
 }

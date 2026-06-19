@@ -3,7 +3,8 @@
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Lock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import { useEvents, useEventPermissions, EventForm } from "@/features/events";
+import { useEvents, EventForm } from "@/features/events";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
 import { cn } from "@/lib/utils";
 
@@ -11,14 +12,15 @@ export default function EditEventPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { getEventById, updateEvent } = useEvents();
-  const { canEdit } = useEventPermissions();
+  const { events: eventPermissions } = useAppPermissions();
+  const canEdit = eventPermissions.canEdit;
 
   const event = getEventById(id);
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = async (values: any) => {
     if (!event) return;
     try {
-      updateEvent(event.id, {
+      await updateEvent(event.id, {
         title: values.title,
         description: values.description,
         event_type: values.event_type,
@@ -32,7 +34,7 @@ export default function EditEventPage() {
 
       toast.success("Event updated successfully!");
       router.push(`/dashboard/events/${event.id}`);
-    } catch {
+    } catch (err) {
       toast.error("Failed to update event. Please try again.");
     }
   };

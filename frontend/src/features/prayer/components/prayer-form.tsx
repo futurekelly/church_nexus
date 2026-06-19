@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { PrayerRequest, PrayerCategory, PrayerStatus } from "../types/prayer.types";
 import { PRAYER_CATEGORIES, PRAYER_CATEGORY_LABELS, PRAYER_STATUSES, STATUS_LABELS } from "../types/prayer.types";
-import { usePrayerPermissions } from "../hooks/use-prayer-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 
 interface PrayerFormValues {
   title: string;
@@ -42,7 +42,8 @@ export function PrayerForm({
 }: PrayerFormProps) {
   const router = useRouter();
   const isEdit = !!request;
-  const { canManageStatus } = usePrayerPermissions();
+  const { prayer: prayerPermissions } = useAppPermissions();
+  const { canManageStatus } = prayerPermissions;
 
   const {
     register,

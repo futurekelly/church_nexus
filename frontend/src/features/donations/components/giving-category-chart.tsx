@@ -2,11 +2,11 @@
 
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import type { DonationRecord } from "../types/donations.types";
-import { formatTZS } from "../utils/format";
+import type { Donation } from "../types/donations.types";
+import { formatCurrency } from "@/lib/localization";
 
 interface GivingCategoryChartProps {
-  donations: DonationRecord[];
+  donations: Donation[];
 }
 
 export function GivingCategoryChart({ donations }: GivingCategoryChartProps) {
@@ -22,10 +22,12 @@ export function GivingCategoryChart({ donations }: GivingCategoryChartProps) {
   };
 
   completed.forEach((d) => {
-    if (sums[d.type] !== undefined) {
-      sums[d.type] += d.amount;
+    const typeKey = d.donation_type;
+    const amountBase = d.amount * d.exchange_rate_to_base;
+    if (sums[typeKey] !== undefined) {
+      sums[typeKey] += amountBase;
     } else {
-      sums.Other += d.amount;
+      sums.Other += amountBase;
     }
   });
 
@@ -86,7 +88,7 @@ export function GivingCategoryChart({ donations }: GivingCategoryChartProps) {
                     return (
                       <div className="rounded-lg border border-border/60 bg-card/90 px-3 py-2 text-xs shadow-glass backdrop-blur-[16px] text-primary-foreground">
                         <p className="font-semibold" style={{ color: item.payload.color }}>
-                          {item.name}: {formatTZS(item.value as number)} ({percent}%)
+                          {item.name}: {formatCurrency(item.value as number)} ({percent}%)
                         </p>
                       </div>
                     );
@@ -100,7 +102,7 @@ export function GivingCategoryChart({ donations }: GivingCategoryChartProps) {
                 iconSize={8}
                 formatter={(value, entry: any) => (
                   <span className="text-xs text-muted-foreground font-medium">
-                    {value} ({formatTZS(entry.payload.value)})
+                    {value} ({formatCurrency(entry.payload.value)})
                   </span>
                 )}
               />

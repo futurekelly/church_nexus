@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
 import { toast } from "sonner";
-import { useSermons, useSermonPermissions, SermonForm } from "@/features/sermons";
+import { useSermons, SermonForm } from "@/features/sermons";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
 
 export default function CreateSermonPage() {
   const router = useRouter();
   const { addSermon } = useSermons();
-  const { canCreate } = useSermonPermissions();
+  const { sermons: sermonPermissions } = useAppPermissions();
+  const canCreate = sermonPermissions.canCreate;
 
   const handleFormSubmit = (values: any) => {
     try {

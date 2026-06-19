@@ -23,6 +23,7 @@ export function useRegister() {
         last_name: values.last_name,
         email: values.email,
         password: values.password,
+        branch: values.branch,
       });
 
       const session = await loginUser({
@@ -38,7 +39,10 @@ export function useRegister() {
         },
       });
 
-      toast.success("Account created successfully. Welcome!");
+      toast.success(`Welcome, ${values.first_name}!`, {
+        description: "Your account request has been sent to the admin. You can browse under the Visitor role while waiting for approval.",
+        duration: 8000,
+      });
       router.replace(PUBLIC_ROUTES.HOME);
     } catch (err) {
       const message =

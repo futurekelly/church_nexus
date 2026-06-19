@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { MemberForm } from "@/features/members/components/member-form";
-import { useMemberPermissions } from "@/features/members/hooks/use-member-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import type { MemberFormValues } from "@/features/members/types/member.types";
 
 export default function CreateMemberPage() {
   const router = useRouter();
-  const { canCreate } = useMemberPermissions();
+  const { members } = useAppPermissions();
+  const canCreate = members.canCreate;
 
   if (!canCreate) {
     return (

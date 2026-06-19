@@ -6,12 +6,12 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Users, UserMinus, UserCheck, Percent, HelpCircle, BarChart3, AlertCircle } from "lucide-react";
 import {
   useAttendance,
-  useAttendancePermissions,
   GenderDistributionChart,
   CheckInMethodBar,
   AbsenteeListWidget,
   SESSION_TYPE_LABELS,
 } from "@/features/attendance";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 
 export default function SessionReportPage() {
   const params = useParams();
@@ -24,7 +24,8 @@ export default function SessionReportPage() {
     createFollowUpTicket,
   } = useAttendance();
 
-  const { canViewReports, canManage } = useAttendancePermissions();
+  const { attendance: attendancePermissions } = useAppPermissions();
+  const { canViewReports, canManage } = attendancePermissions;
 
   const session = getSessionById(sessionId);
   const records = getSessionRecords(sessionId);

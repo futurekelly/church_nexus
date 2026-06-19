@@ -50,6 +50,7 @@ export const registerSchema = z
     first_name: registerStepOneSchema.shape.first_name,
     last_name: registerStepOneSchema.shape.last_name,
     email: registerStepTwoSchema.shape.email,
+    branch: z.string().min(1, "Local branch selection is required"),
     password: passwordSchema,
     confirm_password: z.string().min(1, "Please confirm your password"),
   })
@@ -65,7 +66,7 @@ export const REGISTER_STEP_FIELDS: Record<
   (keyof RegisterFormValues)[]
 > = {
   1: ["first_name", "last_name"],
-  2: ["email"],
+  2: ["email", "branch"],
   3: ["password", "confirm_password"],
 };
 

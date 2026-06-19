@@ -11,6 +11,7 @@ export { EventForm } from "./components/event-form";
 export { EventPagination } from "./components/event-pagination";
 
 export { useEvents, useFilteredEvents } from "./hooks/use-events";
-export { useEventPermissions } from "./hooks/use-event-permissions";
+export { EventsRepository } from "./repositories/events.repository";
+export { EventConflictService } from "./services/event-conflict.service";
 
 export * from "./types/event.types";

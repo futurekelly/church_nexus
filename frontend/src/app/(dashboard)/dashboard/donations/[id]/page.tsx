@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Printer, CheckCircle, Gift, Calendar, User, CreditCard, Hash } from "lucide-react";
-import { useDonations, formatTZS } from "@/features/donations";
+import { useDonations } from "@/features/donations";
+import { formatCurrency } from "@/lib/localization";
 import { motion } from "framer-motion";
 
 export default function DonationReceiptPage() {
@@ -10,8 +12,32 @@ export default function DonationReceiptPage() {
   const router = useRouter();
   const { getDonationById, getReceiptForDonation } = useDonations();
 
-  const donation = getDonationById(id);
+  const [donation, setDonation] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDonation() {
+      try {
+        const result = await getDonationById(id);
+        setDonation(result);
+      } catch (err) {
+        console.error("Error loading donation details page", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDonation();
+  }, [id, getDonationById]);
+
   const receipt = getReceiptForDonation(id);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <p className="text-sm text-muted-foreground animate-pulse">Loading transaction details...</p>
+      </div>
+    );
+  }
 
   if (!donation) {
     return (
@@ -157,7 +183,7 @@ export default function DonationReceiptPage() {
             Total Amount Received
           </span>
           <h2 className="text-3xl font-extrabold text-emerald-400 print:text-emerald-700">
-            {formatTZS(donation.amount)}
+            {formatCurrency(donation.amount)}
           </h2>
           <p className="text-xs text-muted-foreground print:text-slate-600">
             Allocated to: <strong>{donation.type}</strong>

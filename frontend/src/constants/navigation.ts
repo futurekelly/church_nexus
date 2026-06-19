@@ -17,6 +17,7 @@ import {
   UserCheck,
   Users,
   Video,
+  FileText,
 } from "lucide-react";
 
 export interface NavItem {
@@ -106,6 +107,13 @@ export const SIDEBAR_NAV_ITEMS: NavItem[] = [
     group: "community",
   },
   {
+    label: "Connect Groups",
+    href: DASHBOARD_ROUTES.GROUPS,
+    icon: Users,
+    permission: PERMISSIONS.GROUPS_VIEW,
+    group: "community",
+  },
+  {
     label: "Attendance",
     href: DASHBOARD_ROUTES.ATTENDANCE,
     icon: CheckSquare,
@@ -125,6 +133,13 @@ export const SIDEBAR_NAV_ITEMS: NavItem[] = [
     icon: DollarSign,
     permission: PERMISSIONS.DONATIONS_VIEW,
     group: "finance",
+  },
+  {
+    label: "Documents",
+    href: DASHBOARD_ROUTES.DOCUMENTS,
+    icon: FileText,
+    permission: PERMISSIONS.DOCUMENTS_VIEW,
+    group: "admin",
   },
   {
     label: "Analytics",

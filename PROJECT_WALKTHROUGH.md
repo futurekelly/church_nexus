@@ -19,7 +19,7 @@
 | Frontend — Feature Modules | Visitor Follow-up | ✅ Complete |
 | Frontend — Feature Modules | Donations | ✅ Complete |
 | Frontend — Feature Modules | Livestream | ✅ Complete |
-| Frontend — Feature Modules | Testimonies | 🔄 Active Module |
+| Frontend — Feature Modules | Testimonies | ✅ Complete |
 | Backend — Django API | All services | ⬜ Not Started |
 | Database | PostgreSQL schema | ⬜ Not Started |
 | CI/CD | GitHub Actions | ⬜ Not Started |
@@ -190,13 +190,20 @@
 
 ---
 
-## 🔄 IN PROGRESS
+### 📢 Testimonies Module (`features/testimonies/`)
+- [x] Defined testimony type schema with `is_featured: boolean`, `branch_id?: string`, and `views: number` fields.
+- [x] Implemented `useTestimonies` state hook with generic `useLocalStorageState` persistence.
+- [x] Gated moderation workflows under centralized `testimonies` namespace permissions (Super Admin, Church Admin, Pastor).
+- [x] Built the public testimonies wall feed (`/testimonies`) with search, category filters, and expand-to-read views increments.
+- [x] Developed the public submission flow page (`/submit-testimony`) defaulting to pending state.
+- [x] Developed the moderator control panel (`/dashboard/testimonies`) with review stats and quick-action buttons.
 
-### 📢 Testimonies (`features/testimonies/`)
-- [ ] Testimony wall
-- [ ] Submit testimony form
-- [ ] Approval workflow (Church Admin)
-- [ ] Featured testimonies section
+> [!NOTE]
+> **Backend Upgrade Candidate**: Testimonies feed records, featured indicators, and view metrics are stored locally via `localStorage` (key: `church-mock-testimonies`).
+
+---
+
+## 🔄 IN PROGRESS
 
 ### 🔔 Notifications (`features/notifications/`)
 - [ ] Notification center page

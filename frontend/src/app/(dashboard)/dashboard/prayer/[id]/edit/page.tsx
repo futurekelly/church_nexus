@@ -4,14 +4,16 @@ import { useParams, useRouter } from "next/navigation";
 import { Lock, AlertTriangle, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { usePrayers, usePrayerPermissions } from "@/features/prayer";
+import { usePrayers } from "@/features/prayer";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { PrayerForm } from "@/features/prayer/components/prayer-form";
 
 export default function EditPrayerRequestPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { getRequestById, updateRequest } = usePrayers();
-  const { canEdit } = usePrayerPermissions();
+  const { prayer: prayerPermissions } = useAppPermissions();
+  const { canEdit } = prayerPermissions;
 
   const request = getRequestById(id);
 
@@ -48,7 +50,7 @@ export default function EditPrayerRequestPage() {
     );
   }
 
-  const isUserAllowed = canEdit(request);
+  const isUserAllowed = canEdit(request.user_id);
 
   if (!isUserAllowed) {
     return (

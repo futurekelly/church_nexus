@@ -1,12 +1,12 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreditCard, Smartphone, Landmark, CheckCircle, Receipt, ArrowRight, Info } from "lucide-react";
 import { useMembers } from "@/features/members/hooks/use-members";
-import { useDonationPermissions } from "../hooks/use-donation-permissions";
-import { formatTZS } from "../utils/format";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
+import { formatCurrency, E164_PHONE_REGEX } from "@/lib/localization";
 import type { DonationType, PaymentMethod, PledgeCampaign } from "../types/donations.types";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ interface DonationFormValues {
   campaign_id: string;
   link_member: boolean;
   anonymous: boolean;
+  phone_number?: string;
 }
 
 interface DonationFormProps {
@@ -49,7 +50,8 @@ const errorClass = "mt-1 text-xs text-red-400";
 
 export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: DonationFormProps) {
   const { allMembers } = useMembers();
-  const { isMember, userId, userEmail, userName, userMemberId } = useDonationPermissions();
+  const { donations: donationPermissions, userId, userEmail, userName } = useAppPermissions();
+  const { isMember, userMemberId } = donationPermissions;
   const [matchedMember, setMatchedMember] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successDonation, setSuccessDonation] = useState<any>(null);
@@ -65,9 +67,9 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
     defaultValues: {
       donor_name: "",
       donor_email: "",
-      amount: 50000, // Default 50,000 TZS
+            amount: 50000, // Default 50,000 TZS
       type: "Offering",
-      payment_method: "M-Pesa",
+      payment_method: "Mobile Money",
       notes: "",
       campaign_id: "none",
       link_member: false,
@@ -127,7 +129,7 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
   }, [watchAnonymous, isMember, userName, userEmail, setValue]);
 
   // Handle donation submit
-  const onFormSubmit = async (data: DonationFormValues) => {
+  const onFormSubmit: SubmitHandler<DonationFormValues> = async (data) => {
     setIsSubmitting(true);
     try {
       // Determine member_id
@@ -192,7 +194,7 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Amount Paid:</span>
-            <span className="text-emerald-400 font-bold">{formatTZS(successDonation.amount)}</span>
+            <span className="text-emerald-400 font-bold">{formatCurrency(successDonation.amount)}</span>
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Payment Method:</span>
@@ -347,7 +349,7 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
           </div>
           {errors.amount && <p className={errorClass}>{errors.amount.message}</p>}
           <span className="text-[10px] text-muted-foreground mt-1 block">
-            Equal to: {formatTZS(Number(watchAmount || 0))}
+            Equal to: {formatCurrency(Number(watchAmount || 0))}
           </span>
         </div>
 
@@ -384,7 +386,7 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
               <option value="none">General Contribution (No Campaign Link)</option>
               {campaigns.map((camp) => (
                 <option key={camp.id} value={camp.id}>
-                  {camp.name} (Goal: {formatTZS(camp.target_amount)})
+                  {camp.name} (Goal: {formatCurrency(camp.target_amount)})
                 </option>
               ))}
             </select>
@@ -396,9 +398,9 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
           <label className={labelClass}>Payment Method *</label>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { id: "M-Pesa", label: "M-Pesa", icon: Smartphone },
-              { id: "Card", label: "Debit/Credit Card", icon: CreditCard },
-              { id: "Bank Transfer", label: "Bank Transfer", icon: Landmark },
+              { id: "Mobile Money", label: "Mobile Money (M-Pesa)", icon: Smartphone },
+              { id: "Bank Transfer", label: "Bank/Credit Card", icon: Landmark },
+              { id: "Cash", label: "Cash Receipt", icon: CreditCard },
             ].map((method) => {
               const Icon = method.icon;
               const active = watchPaymentMethod === method.id;
@@ -423,7 +425,7 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
         </div>
 
         {/* Simulated payment detail inputs */}
-        {watchPaymentMethod === "M-Pesa" && (
+        {watchPaymentMethod === "Mobile Money" && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -435,17 +437,26 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
             <input
               id="phone_number"
               type="text"
-              placeholder="e.g. +255 754 123456"
-              className={inputClass}
-              required
+              placeholder="e.g. +254712345678"
+              className={cn(inputClass, errors.phone_number && "border-rose-500")}
+              {...register("phone_number", {
+                required: watchPaymentMethod === "Mobile Money" ? "Phone number is required for Mobile Money" : false,
+                pattern: {
+                  value: E164_PHONE_REGEX,
+                  message: "Must be a valid E.164 phone number (e.g., +254712345678)"
+                }
+              })}
             />
+            {errors.phone_number && (
+              <p className={errorClass}>{errors.phone_number.message}</p>
+            )}
             <span className="text-[10px] text-muted-foreground mt-1 block">
               We will send an M-Pesa push PIN prompt to approve this transaction.
             </span>
           </motion.div>
         )}
 
-        {watchPaymentMethod === "Card" && (
+        {watchPaymentMethod === "Bank Transfer" && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -512,7 +523,7 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
         disabled={isSubmitting}
         className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-neon transition-all hover:brightness-110 disabled:opacity-50"
       >
-        <span>{isSubmitting ? "Processing Transaction..." : `Donate ${formatTZS(Number(watchAmount || 0))}`}</span>
+        <span>{isSubmitting ? "Processing Transaction..." : `Donate ${formatCurrency(Number(watchAmount || 0))}`}</span>
         {!isSubmitting && <ArrowRight className="h-4 w-4" />}
       </button>
     </motion.form>

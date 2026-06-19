@@ -1,55 +1,25 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { MOCK_PRAYERS } from "../data/mock-prayers";
 import type {
   PrayerRequest,
   PrayerFilters,
   PrayerSortConfig,
 } from "../types/prayer.types";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 
 const LOCAL_STORAGE_KEY = "church-mock-prayers";
-
-const getInitialPrayers = (): PrayerRequest[] => {
-  if (typeof window === "undefined") return MOCK_PRAYERS;
-  const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return MOCK_PRAYERS;
-    }
-  }
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(MOCK_PRAYERS));
-  return MOCK_PRAYERS;
-};
-
-const notifyStorageChange = () => {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("church-prayers-update"));
-  }
-};
 
 /**
  * Singleton state hook for Prayer Requests using LocalStorage.
  * Syncs reactive changes across all instances.
  */
 export function usePrayers() {
-  const [prayers, setPrayers] = useState<PrayerRequest[]>([]);
-
-  const reloadData = useCallback(() => {
-    setPrayers(getInitialPrayers());
-  }, []);
-
-  useEffect(() => {
-    reloadData();
-    if (typeof window !== "undefined") {
-      window.addEventListener("church-prayers-update", reloadData);
-      return () => {
-        window.removeEventListener("church-prayers-update", reloadData);
-      };
-    }
-  }, [reloadData]);
+  const [prayers, setPrayers] = useLocalStorageState<PrayerRequest[]>(
+    LOCAL_STORAGE_KEY,
+    MOCK_PRAYERS
+  );
 
   const addRequest = useCallback(
     (
@@ -64,8 +34,6 @@ export function usePrayers() {
         | "updated_at"
       >
     ) => {
-      const list = getInitialPrayers();
-
       const request: PrayerRequest = {
         ...newRequest,
         id: `pr-${Date.now()}`,
@@ -77,32 +45,27 @@ export function usePrayers() {
         updated_at: new Date().toISOString(),
       };
 
-      const updatedList = [request, ...list];
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
-      notifyStorageChange();
+      setPrayers((prev) => [request, ...prev]);
       return request;
     },
-    []
+    [setPrayers]
   );
 
   const updateRequest = useCallback(
     (id: string, updatedFields: Partial<PrayerRequest>) => {
-      const list = getInitialPrayers();
-
-      const updatedList = list.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              ...updatedFields,
-              updated_at: new Date().toISOString(),
-            }
-          : p
+      setPrayers((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                ...updatedFields,
+                updated_at: new Date().toISOString(),
+              }
+            : p
+        )
       );
-
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
-      notifyStorageChange();
     },
-    []
+    [setPrayers]
   );
 
   const updateStatus = useCallback(
@@ -121,33 +84,29 @@ export function usePrayers() {
 
   const togglePrayCount = useCallback(
     (id: string, userId: string | number) => {
-      const list = getInitialPrayers();
+      setPrayers((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
 
-      const updatedList = list.map((p) => {
-        if (p.id !== id) return p;
+          const alreadyPrayed = p.prayed_user_ids.map(String).includes(String(userId));
+          const prayedIds = alreadyPrayed
+            ? p.prayed_user_ids.filter((uid) => String(uid) !== String(userId))
+            : [...p.prayed_user_ids, userId];
 
-        const alreadyPrayed = p.prayed_user_ids.map(String).includes(String(userId));
-        const prayedIds = alreadyPrayed
-          ? p.prayed_user_ids.filter((uid) => String(uid) !== String(userId))
-          : [...p.prayed_user_ids, userId];
-
-        return {
-          ...p,
-          prayed_user_ids: prayedIds,
-          pray_count: prayedIds.length,
-          updated_at: new Date().toISOString(),
-        };
-      });
-
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedList));
-      notifyStorageChange();
+          return {
+            ...p,
+            prayed_user_ids: prayedIds,
+            pray_count: prayedIds.length,
+            updated_at: new Date().toISOString(),
+          };
+        })
+      );
     },
-    []
+    [setPrayers]
   );
 
   const deleteRequest = useCallback(
     (id: string) => {
-      // Soft-delete transition to Archived status
       updateStatus(id, "Archived");
     },
     [updateStatus]

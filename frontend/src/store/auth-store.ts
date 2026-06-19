@@ -40,7 +40,6 @@ export const useAuthStore = create<AuthState>()(
       name: "church-auth-storage",
       partialize: (state) => ({
         user: state.user,
-        tokens: state.tokens,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {

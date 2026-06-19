@@ -20,18 +20,19 @@ import {
 } from "lucide-react";
 import {
   useEvents,
-  useEventPermissions,
   EventStatusBadge,
   EventAttendeePreview,
   EventRegistrationDialog,
 } from "@/features/events";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { cn } from "@/lib/utils";
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { getEventById, toggleRegister, isUserRegistered, cancelEvent } = useEvents();
-  const { canEdit, canCancel, canRegister, role } = useEventPermissions();
+  const { events: eventPermissions } = useAppPermissions();
+  const { canEdit, canCancel, canRegister, role } = eventPermissions;
 
   const [isDialogOp, setIsDialogOp] = useState(false);
 

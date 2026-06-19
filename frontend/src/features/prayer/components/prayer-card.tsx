@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { PrayerRequest } from "../types/prayer.types";
 import { PRAYER_CATEGORY_LABELS } from "../types/prayer.types";
 import { PrayerStatusBadge } from "./prayer-status-badge";
-import { usePrayerPermissions } from "../hooks/use-prayer-permissions";
+import { useAppPermissions } from "@/hooks/use-app-permissions";
 
 interface PrayerCardProps {
   request: PrayerRequest;
@@ -24,13 +24,13 @@ export function PrayerCard({
   onDeleteClick,
   isDashboard = true,
 }: PrayerCardProps) {
+  const { prayer: prayerPermissions, userId } = useAppPermissions();
   const {
     canEdit,
     canDelete,
     canRespond,
     canSeeAnonymousNames,
-    userId,
-  } = usePrayerPermissions();
+  } = prayerPermissions;
 
   const isOwner = userId ? String(userId) === String(request.user_id) : false;
   const userHasPrayed = userId ? request.prayed_user_ids.map(String).includes(String(userId)) : false;
@@ -147,7 +147,7 @@ export function PrayerCard({
           )}
 
           {/* Edit Button (Submitter / Admin) */}
-          {canEdit(request) && (
+          {canEdit(request.user_id) && (
             <Link
               href={`/dashboard/prayer/${request.id}/edit`}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-card/40 text-muted-foreground transition-all hover:border-primary/40 hover:text-primary hover:bg-primary/5"
@@ -158,7 +158,7 @@ export function PrayerCard({
           )}
 
           {/* Delete Button (Submitter / Admin) */}
-          {canDelete(request) && onDeleteClick && (
+          {canDelete(request.user_id) && onDeleteClick && (
             <button
               type="button"
               onClick={() => onDeleteClick(request.id)}

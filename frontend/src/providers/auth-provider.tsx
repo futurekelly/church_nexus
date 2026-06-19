@@ -4,7 +4,6 @@ import { useEffect, type ReactNode } from "react";
 import { API_ENDPOINTS } from "@/constants/api-endpoints";
 import {
   apiPost,
-  getErrorMessage,
   initializeApiClient,
   isApiError,
 } from "@/services/api-client";
@@ -32,26 +31,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const setTokens = useAuthStore((state) => state.setTokens);
   const clearSession = useAuthStore((state) => state.clearSession);
   const isHydrated = useAuthStore((state) => state.isHydrated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   useEffect(() => {
     initializeApiClient({
       getAccessToken,
       refreshTokens: async (): Promise<AuthTokens | null> => {
-        const refreshToken = useAuthStore.getState().tokens?.refresh_token;
-        if (!refreshToken) return null;
-
         try {
-          const response = await apiPost<AuthTokens>(
+          const response = await apiPost<{ access: string }>(
             API_ENDPOINTS.AUTH.REFRESH,
-            { refresh_token: refreshToken },
+            {},
             { skipAuth: true } as never,
           );
 
-          if (isApiError(response)) return null;
+          if (isApiError(response) || !response.data?.access) return null;
 
-          setTokens(response.data);
-          setAccessTokenCookie(response.data.access_token);
-          return response.data;
+          const newTokens: AuthTokens = {
+            access_token: response.data.access,
+            refresh_token: "",
+          };
+
+          setTokens(newTokens);
+          setAccessTokenCookie(newTokens.access_token);
+          return newTokens;
         } catch {
           return null;
         }
@@ -62,6 +64,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
       },
     });
   }, [clearSession, setTokens]);
+
+  // Silent refresh on hydration / page reload
+  useEffect(() => {
+    async function performSilentRefresh() {
+      if (isHydrated && isAuthenticated && !getAccessToken()) {
+        try {
+          const response = await apiPost<{ access: string }>(
+            API_ENDPOINTS.AUTH.REFRESH,
+            {},
+            { skipAuth: true } as never,
+          );
+
+          if (!isApiError(response) && response.data?.access) {
+            const newTokens: AuthTokens = {
+              access_token: response.data.access,
+              refresh_token: "",
+            };
+            setTokens(newTokens);
+            setAccessTokenCookie(newTokens.access_token);
+          } else {
+            clearAccessTokenCookie();
+            clearSession();
+          }
+        } catch {
+          clearAccessTokenCookie();
+          clearSession();
+        }
+      }
+    }
+
+    performSilentRefresh();
+  }, [isHydrated, isAuthenticated, setTokens, clearSession]);
 
   useEffect(() => {
     if (isHydrated && tokens?.access_token) {

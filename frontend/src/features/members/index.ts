@@ -10,7 +10,7 @@ export { MemberActivityTimeline } from "@/features/members/components/member-act
 export { MemberEmptyState } from "@/features/members/components/member-empty-state";
 export { MemberForm } from "@/features/members/components/member-form";
 export { useMembers } from "@/features/members/hooks/use-members";
-export { useMemberPermissions } from "@/features/members/hooks/use-member-permissions";
+export { MembersRepository } from "@/features/members/repositories/members.repository";
 export type {
   Member,
   MemberStatus,
@@ -20,5 +20,11 @@ export type {
   MemberFormValues,
   MemberActivity,
   Ministry,
+  Family,
+  FamilyRelationship,
+  VolunteerAssignment,
+  MemberLifecycleTimeline,
+  GroupMembership,
+  PaginatedResponse,
 } from "@/features/members/types/member.types";
 
