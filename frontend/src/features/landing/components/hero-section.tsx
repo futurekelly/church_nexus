@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import Link from "next/link";
-import { AUTH_ROUTES, PUBLIC_ROUTES } from "@/constants/routes";
+import { AUTH_ROUTES } from "@/constants/routes";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { DailyScriptureWidget } from "@/features/landing/components/daily-scripture-widget";
 import type { DailyScripture } from "@/features/landing/types/landing.types";

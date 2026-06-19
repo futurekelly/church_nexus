@@ -2,7 +2,6 @@
 
 import { Quote } from "lucide-react";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
-import { MotionWrapper } from "@/features/landing/components/motion-wrapper";
 import { LandingSectionHeader } from "@/features/landing/components/landing-section-header";
 import type { Testimonial } from "@/features/landing/types/landing.types";
 import { cn } from "@/lib/utils";

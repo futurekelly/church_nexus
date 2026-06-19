@@ -5,6 +5,7 @@ from rest_framework.permissions import AllowAny
 from authentication.services.bible_service import get_daily_scripture
 from drf_spectacular.utils import extend_schema
 
+
 class DailyScriptureView(APIView):
     """
     Exposes a dynamic Daily Scripture (Verse of the Day) fetched from a public Bible API.
