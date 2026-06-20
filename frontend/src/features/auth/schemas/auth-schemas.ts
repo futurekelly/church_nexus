@@ -29,6 +29,9 @@ export const registerStepOneSchema = z.object({
     .string()
     .min(1, "Last name is required")
     .max(50, "Last name is too long"),
+  gender: z.enum(["male", "female"], {
+    errorMap: () => ({ message: "Gender selection is required" }),
+  }),
 });
 
 export const registerStepTwoSchema = z.object({
@@ -49,6 +52,7 @@ export const registerSchema = z
   .object({
     first_name: registerStepOneSchema.shape.first_name,
     last_name: registerStepOneSchema.shape.last_name,
+    gender: registerStepOneSchema.shape.gender,
     email: registerStepTwoSchema.shape.email,
     branch: z.string().min(1, "Local branch selection is required"),
     password: passwordSchema,
@@ -65,7 +69,7 @@ export const REGISTER_STEP_FIELDS: Record<
   number,
   (keyof RegisterFormValues)[]
 > = {
-  1: ["first_name", "last_name"],
+  1: ["first_name", "last_name", "gender"],
   2: ["email", "branch"],
   3: ["password", "confirm_password"],
 };

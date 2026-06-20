@@ -24,6 +24,7 @@ export function useRegister() {
         email: values.email,
         password: values.password,
         branch: values.branch,
+        gender: values.gender,
       });
 
       const session = await loginUser({

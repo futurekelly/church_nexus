@@ -6,6 +6,7 @@ export interface AppNotification {
   message: string;
   read_status: boolean;
   created_at: string;
+  action_url?: string;
 }
 
 interface NotificationState {

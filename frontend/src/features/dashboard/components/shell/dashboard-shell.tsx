@@ -37,6 +37,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
               message: n.message,
               read_status: n.read,
               created_at: n.created_at,
+              action_url: n.action_url,
             }));
             setNotifications(mapped);
           } else {

@@ -3,6 +3,7 @@
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { Bell } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { DASHBOARD_ROUTES } from "@/constants/routes";
@@ -12,6 +13,7 @@ import { useNotificationStore } from "@/store/notification-store";
 import { apiPatch } from "@/services/api-client";
 
 export function NotificationDropdown() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
@@ -19,14 +21,18 @@ export function NotificationDropdown() {
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const markAsRead = useNotificationStore((state) => state.markAsRead);
 
-  const handleMarkAsRead = async (id: string | number) => {
+  const handleMarkAsRead = async (id: string | number, actionUrl?: string) => {
     markAsRead(id);
+    setOpen(false);
     if (typeof id === "string") {
       try {
         await apiPatch(`/api/notifications/${id}/`, { read: true });
       } catch (err) {
         console.error("Failed to mark notification as read on backend:", err);
       }
+    }
+    if (actionUrl) {
+      router.push(actionUrl);
     }
   };
 
@@ -87,7 +93,7 @@ export function NotificationDropdown() {
                     <button
                       type="button"
                       role="menuitem"
-                      onClick={() => handleMarkAsRead(notification.id)}
+                      onClick={() => handleMarkAsRead(notification.id, notification.action_url)}
                       className={cn(
                         "w-full border-b border-border/30 px-4 py-3 text-left transition-colors hover:bg-card/60",
                         !notification.read_status && "bg-primary/5",

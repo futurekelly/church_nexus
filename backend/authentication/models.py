@@ -172,6 +172,7 @@ def create_visitor_registration_notification(sender, instance, created, **kwargs
             Q(role='super_admin') | 
             Q(role='church_admin', branch=instance.branch)
         )
+        action_url = f"/dashboard/members/{instance.member_id}" if instance.member_id else f"/admin/authentication/user/{instance.pk}/change/"
         for admin in admins:
             Notification.objects.create(
                 user=admin,
@@ -179,7 +180,7 @@ def create_visitor_registration_notification(sender, instance, created, **kwargs
                 message=f"{instance.first_name} {instance.last_name} ({instance.email}) registered and is pending approval.",
                 priority="High",
                 delivery_channel="In-App",
-                action_url=f"/admin/authentication/user/{instance.pk}/change/",
+                action_url=action_url,
                 branch=instance.branch
             )
 

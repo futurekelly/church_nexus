@@ -11,6 +11,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   branch: string;
+  gender?: string;
 }
 
 export interface ForgotPasswordPayload {

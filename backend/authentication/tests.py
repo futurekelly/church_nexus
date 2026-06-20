@@ -271,14 +271,25 @@ class TestAuthenticationAPI:
             'last_name': 'Visitor',
             'email': 'newvisitor@test.com',
             'password': 'SecurePassword123!',
-            'branch': branch.id
+            'branch': branch.id,
+            'gender': 'female'
         })
         assert response.status_code == status.HTTP_201_CREATED
         assert 'access' in response.data
         assert response.data['user']['email'] == 'newvisitor@test.com'
         assert response.data['user']['role'] == 'visitor'
         assert response.data['user']['branch']['id'] == branch.id
+        assert response.data['user']['member_id'] is not None
         assert 'refresh_token' in response.cookies
+
+        # Assert Member was created and linked correctly with matching gender
+        from members.models import Member
+        member = Member.objects.get(email="newvisitor@test.com")
+        assert member.first_name == "New"
+        assert member.last_name == "Visitor"
+        assert member.gender == "female"
+        assert member.status == "Visitor"
+        assert str(member.id) == response.data['user']['member_id']
 
         # Assert notifications were created for the admins, but NOT for normal members
         from authentication.models import Notification
@@ -289,9 +300,11 @@ class TestAuthenticationAPI:
         assert super_admin_notifs.count() == 1
         assert super_admin_notifs.first().title == "New Visitor Registration"
         assert "newvisitor@test.com" in super_admin_notifs.first().message
+        assert super_admin_notifs.first().action_url == f"/dashboard/members/{member.id}"
 
         assert church_admin_notifs.count() == 1
         assert church_admin_notifs.first().title == "New Visitor Registration"
+        assert church_admin_notifs.first().action_url == f"/dashboard/members/{member.id}"
         
         assert member_notifs.count() == 0
 

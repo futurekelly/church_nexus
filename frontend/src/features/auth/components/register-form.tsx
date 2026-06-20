@@ -68,6 +68,7 @@ export function RegisterForm() {
     defaultValues: {
       first_name: "",
       last_name: "",
+      gender: "male",
       email: "",
       branch: "hq-branch",
       password: "",
@@ -168,6 +169,23 @@ export function RegisterForm() {
                   placeholder="Doe"
                   {...register("last_name")}
                 />
+              </AuthFormField>
+              <AuthFormField
+                label="Gender"
+                htmlFor="gender"
+                error={errors.gender?.message as string | undefined}
+              >
+                <select
+                  id="gender"
+                  className={cn(
+                    inputClass(Boolean(errors.gender)),
+                    "text-primary-foreground bg-card"
+                  )}
+                  {...register("gender")}
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
               </AuthFormField>
             </motion.div>
           )}
@@ -272,6 +290,7 @@ export function RegisterForm() {
               className="space-y-3 rounded-lg border border-border/50 bg-card/30 p-4 text-sm"
             >
               <ReviewRow label="Name" value={`${values.first_name} ${values.last_name}`} />
+              <ReviewRow label="Gender" value={values.gender === "male" ? "Male" : "Female"} />
               <ReviewRow label="Email" value={values.email} />
               <ReviewRow label="Local Branch" value={branches.find((b) => b.id === values.branch)?.branch_name ?? "Not selected"} />
               <ReviewRow label="Role" value="Visitor (assigned on registration)" />
