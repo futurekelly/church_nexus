@@ -23,19 +23,22 @@ def handle_donation_ledger_posting(sender, instance, created, **kwargs):
         ).first()
         
         if not period:
-            from django.conf import settings
-            import sys
-            is_testing = getattr(settings, 'IS_TESTING', False) or 'test' in sys.argv or 'pytest' in sys.modules or 'PYTEST_CURRENT_TEST' in os.environ
-            if is_testing:
-                period = FinancialPeriod.objects.create(
-                    branch=instance.branch,
-                    name="Test Auto-Seeded Period",
-                    start_date=instance.date.date() - timedelta(days=30),
-                    end_date=instance.date.date() + timedelta(days=30),
-                    status='OPEN'
-                )
-            else:
-                raise ValidationError("No financial period found covering the donation date.")
+            from datetime import date
+            import calendar
+            event_date = instance.date.date() if hasattr(instance.date, 'date') else instance.date
+            year = event_date.year
+            month = event_date.month
+            _, last_day = calendar.monthrange(year, month)
+            start_dt = date(year, month, 1)
+            end_dt = date(year, month, last_day)
+            
+            period = FinancialPeriod.objects.create(
+                branch=instance.branch,
+                name=f"Auto-Opened Period {start_dt.strftime('%B %Y')}",
+                start_date=start_dt,
+                end_date=end_dt,
+                status='OPEN'
+            )
         if period.status in ['CLOSED', 'LOCKED']:
             raise ValidationError(f"Cannot post donation in a {period.status} financial period.")
 
@@ -184,19 +187,22 @@ def handle_expense_ledger_posting(sender, instance, created, **kwargs):
         ).first()
 
         if not period:
-            from django.conf import settings
-            import sys
-            is_testing = getattr(settings, 'IS_TESTING', False) or 'test' in sys.argv or 'pytest' in sys.modules or 'PYTEST_CURRENT_TEST' in os.environ
-            if is_testing:
-                period = FinancialPeriod.objects.create(
-                    branch=instance.branch,
-                    name="Test Auto-Seeded Period",
-                    start_date=instance.date.date() - timedelta(days=30),
-                    end_date=instance.date.date() + timedelta(days=30),
-                    status='OPEN'
-                )
-            else:
-                raise ValidationError("No financial period found covering the expense date.")
+            from datetime import date
+            import calendar
+            event_date = instance.date.date() if hasattr(instance.date, 'date') else instance.date
+            year = event_date.year
+            month = event_date.month
+            _, last_day = calendar.monthrange(year, month)
+            start_dt = date(year, month, 1)
+            end_dt = date(year, month, last_day)
+            
+            period = FinancialPeriod.objects.create(
+                branch=instance.branch,
+                name=f"Auto-Opened Period {start_dt.strftime('%B %Y')}",
+                start_date=start_dt,
+                end_date=end_dt,
+                status='OPEN'
+            )
         if period.status in ['CLOSED', 'LOCKED']:
             raise ValidationError(f"Cannot post expense in a {period.status} financial period.")
 

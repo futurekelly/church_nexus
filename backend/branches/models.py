@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 
 class Branch(models.Model):
@@ -27,4 +28,23 @@ class Branch(models.Model):
     class Meta:
         verbose_name = "Branch"
         verbose_name_plural = "Branches"
+
+
+class Inquiry(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True, related_name='inquiries')
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Inquiry"
+        verbose_name_plural = "Inquiries"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Inquiry from {self.name} - {self.subject}"
+
 

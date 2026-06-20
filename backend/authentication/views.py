@@ -5,12 +5,16 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import extend_schema, OpenApiResponse
+from rest_framework.decorators import action
+
 
 from authentication.serializers import UserSerializer, RegisterSerializer
 
 from rest_framework.throttling import SimpleRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf import settings
+from django.utils import timezone
+
 
 class LoginBurstThrottle(SimpleRateThrottle):
     scope = 'login_burst'
@@ -146,3 +150,153 @@ class RegisterView(APIView):
             )
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ---------------------------------------------------------------------------
+# Notifications & Announcements ViewSets
+# ---------------------------------------------------------------------------
+from django.db import models
+from authentication.serializers import NotificationSerializer, AnnouncementSerializer
+from authentication.models import Notification, Announcement
+from rest_framework import viewsets
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(self, "swagger_fake_view", False) or user.is_anonymous:
+            return Notification.objects.none()
+        return Notification.objects.filter(user=user).order_by('-created_at')
+
+    @action(detail=False, methods=['post'], url_path='mark-all-read')
+    def mark_all_read(self, request):
+        notifications = self.get_queryset().filter(read=False)
+        notifications.update(read=True, read_at=timezone.now())
+        return Response({"success": True, "message": "All notifications marked as read."})
+
+
+class AnnouncementViewSet(viewsets.ModelViewSet):
+    serializer_class = AnnouncementSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(self, "swagger_fake_view", False) or user.is_anonymous:
+            return Announcement.objects.none()
+        
+        # Super admin sees all announcements
+        if user.role == 'super_admin':
+            return Announcement.objects.all().order_by('-created_at')
+
+        # Filter by branch (Global or user's specific branch)
+        qs = Announcement.objects.filter(
+            models.Q(branch__isnull=True) | models.Q(branch=user.branch)
+        )
+        
+        # Filter by status: normal users can only see Published announcements
+        if user.role not in ['church_admin', 'pastor', 'super_admin']:
+            qs = qs.filter(status='Published')
+            
+        return qs.order_by('-created_at')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.role not in ['super_admin', 'church_admin', 'pastor']:
+            raise serializers.ValidationError("You do not have permission to create announcements.")
+        
+        branch = user.branch if user.role != 'super_admin' else serializer.validated_data.get('branch')
+        serializer.save(created_by=user, branch=branch)
+
+
+# ---------------------------------------------------------------------------
+# Password Reset ViewSets
+# ---------------------------------------------------------------------------
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.password_validation import validate_password
+from authentication.models import User
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        request=PasswordResetRequestSerializer,
+        responses={200: OpenApiResponse(description="If email exists, a password reset link has been sent.")},
+        description="Requests a password reset link for the given email address."
+    )
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        email = serializer.validated_data['email']
+        try:
+            user = User.objects.get(email=email)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            
+            # Formulate local/prod reset link
+            reset_url = f"http://localhost:3000/password-reset/confirm/?uid={uid}&token={token}"
+            
+            # Send the email
+            send_mail(
+                subject="Reset your Church Nexus password",
+                message=f"Hello,\n\nPlease use the link below to reset your password:\n\n{reset_url}\n\nThis link is valid for 24 hours.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+        except User.DoesNotExist:
+            # Prevent email enumeration by returning 200 OK regardless
+            pass
+            
+        return Response({"detail": "If the email is registered, a password reset link has been sent."}, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+    new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        request=PasswordResetConfirmSerializer,
+        responses={
+            200: OpenApiResponse(description="Password has been reset successfully."),
+            400: OpenApiResponse(description="Invalid token, expired token, or invalid user ID.")
+        },
+        description="Resets the password if the token and uid are valid."
+    )
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        uid = serializer.validated_data['uid']
+        token = serializer.validated_data['token']
+        new_password = serializer.validated_data['new_password']
+        
+        try:
+            uid_decoded = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=uid_decoded)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Invalid user identification."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if not default_token_generator.check_token(user, token):
+            return Response({"error": "Invalid or expired reset token."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user.set_password(new_password)
+        user.save()
+        return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
+

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from authentication.models import User
+from authentication.models import User, Notification, Announcement
 from branches.models import Branch
 from branches.serializers import BranchSerializer
 
@@ -33,4 +33,17 @@ class RegisterSerializer(serializers.Serializer):
             role='visitor'
         )
         return user
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'
+
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Announcement
+        fields = '__all__'
+
 
