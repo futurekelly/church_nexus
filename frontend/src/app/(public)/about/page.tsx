@@ -13,7 +13,7 @@ const LEADERS = [
     name: "Rev. Dr. Kelvin Mbise",
     role: "Senior Pastor",
     bio: "Serving with a passion for spiritual growth, fellowship, and community transformation.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&fit=crop&q=80",
+    image: "/images/kelvin_mbise.png",
   },
   {
     name: "Pastor Sarah Koech",
