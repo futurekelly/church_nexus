@@ -19,8 +19,11 @@ export function persistSession(session: AuthSession): void {
 }
 
 export function clearSession(): void {
+  console.log("session.ts: clearSession called");
   clearAccessTokenCookie();
+  console.log("session.ts: Cookie cleared, current document.cookie:", document.cookie);
   useAuthStore.getState().clearSession();
+  console.log("session.ts: Zustand session cleared");
 }
 
 export function saveRememberedEmail(email: string): void {

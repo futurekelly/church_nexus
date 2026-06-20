@@ -98,10 +98,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [isHydrated, isAuthenticated, setTokens, clearSession]);
 
   useEffect(() => {
-    if (isHydrated && tokens?.access_token) {
-      setAccessTokenCookie(tokens.access_token);
+    if (isHydrated) {
+      if (tokens?.access_token) {
+        setAccessTokenCookie(tokens.access_token);
+      } else if (!isAuthenticated) {
+        clearAccessTokenCookie();
+      }
     }
-  }, [isHydrated, tokens?.access_token]);
+  }, [isHydrated, tokens?.access_token, isAuthenticated]);
 
   return <>{children}</>;
 }

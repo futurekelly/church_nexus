@@ -2,9 +2,11 @@
 
 import { Church, Menu, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { AUTH_ROUTES, PUBLIC_ROUTES } from "@/constants/routes";
+import { logoutUser } from "@/features/auth/services/auth-service";
+import { clearSession as clearSessionUtil } from "@/features/auth/utils/session";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -20,11 +22,25 @@ const NAV_LINKS = [
 ] as const;
 
 export function PublicNavbar() {
+  const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, isAuthenticated, isHydrated, clearSession } = useAuth();
+  const { user, isAuthenticated, isHydrated } = useAuth();
 
   const closeMobile = () => setMobileOpen(false);
+
+  const handleLogout = async () => {
+    console.log("public-navbar: handleLogout triggered");
+    try {
+      await logoutUser();
+      console.log("public-navbar: logoutUser API call completed");
+    } catch (err) {
+      console.error("public-navbar: logoutUser API call failed", err);
+    }
+    clearSessionUtil();
+    console.log("public-navbar: session cleared, redirecting to", AUTH_ROUTES.LOGIN);
+    router.replace(AUTH_ROUTES.LOGIN);
+  };
 
   return (
     <header className="glass-panel sticky top-0 z-40 border-b border-border/50">
@@ -67,7 +83,7 @@ export function PublicNavbar() {
               {user.role === "visitor" ? (
                 <button
                   type="button"
-                  onClick={() => clearSession()}
+                  onClick={handleLogout}
                   className="rounded-lg bg-warning/20 px-4 py-2 text-sm font-semibold text-warning transition-all duration-200 hover:bg-warning/30"
                 >
                   Logout
@@ -157,7 +173,7 @@ export function PublicNavbar() {
                       <button
                         type="button"
                         onClick={() => {
-                          clearSession();
+                          handleLogout();
                           closeMobile();
                         }}
                         className="block rounded-lg bg-warning/20 px-4 py-2.5 text-center text-sm font-semibold text-warning transition-all duration-200 hover:bg-warning/30"
