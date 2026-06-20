@@ -259,6 +259,12 @@ class TestAuthenticationAPI:
 
     def test_jwt_register_success(self):
         branch = BranchFactory()
+        
+        # Create admins who should receive notifications
+        super_admin = UserFactory(email="superadmin@test.com", role="super_admin", branch=None)
+        church_admin = UserFactory(email="churchadmin@test.com", role="church_admin", branch=branch)
+        other_member = UserFactory(email="member@test.com", role="member", branch=branch)
+        
         url = reverse('token_register')
         response = self.client.post(url, {
             'first_name': 'New',
@@ -273,6 +279,21 @@ class TestAuthenticationAPI:
         assert response.data['user']['role'] == 'visitor'
         assert response.data['user']['branch']['id'] == branch.id
         assert 'refresh_token' in response.cookies
+
+        # Assert notifications were created for the admins, but NOT for normal members
+        from authentication.models import Notification
+        super_admin_notifs = Notification.objects.filter(user=super_admin)
+        church_admin_notifs = Notification.objects.filter(user=church_admin)
+        member_notifs = Notification.objects.filter(user=other_member)
+
+        assert super_admin_notifs.count() == 1
+        assert super_admin_notifs.first().title == "New Visitor Registration"
+        assert "newvisitor@test.com" in super_admin_notifs.first().message
+
+        assert church_admin_notifs.count() == 1
+        assert church_admin_notifs.first().title == "New Visitor Registration"
+        
+        assert member_notifs.count() == 0
 
     def test_jwt_register_duplicate_email(self):
         branch = BranchFactory()

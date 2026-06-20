@@ -161,4 +161,26 @@ class Announcement(models.Model):
     def __str__(self):
         return self.title
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db.models import Q
+
+@receiver(post_save, sender=User)
+def create_visitor_registration_notification(sender, instance, created, **kwargs):
+    if created and instance.role == 'visitor':
+        admins = User.objects.filter(
+            Q(role='super_admin') | 
+            Q(role='church_admin', branch=instance.branch)
+        )
+        for admin in admins:
+            Notification.objects.create(
+                user=admin,
+                title="New Visitor Registration",
+                message=f"{instance.first_name} {instance.last_name} ({instance.email}) registered and is pending approval.",
+                priority="High",
+                delivery_channel="In-App",
+                action_url=f"/admin/authentication/user/{instance.pk}/change/",
+                branch=instance.branch
+            )
+
 

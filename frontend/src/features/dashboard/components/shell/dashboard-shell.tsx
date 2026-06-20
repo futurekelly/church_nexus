@@ -10,6 +10,8 @@ import { useIsMobile } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import { useNotificationStore } from "@/store/notification-store";
 import { useUiStore } from "@/store/ui-store";
+import { apiGet } from "@/services/api-client";
+import { useAuth } from "@/hooks/use-auth";
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -21,11 +23,38 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const notifications = useNotificationStore((state) => state.notifications);
   const setNotifications = useNotificationStore((state) => state.setNotifications);
 
+  const { isAuthenticated } = useAuth();
+
   useEffect(() => {
-    if (notifications.length === 0) {
-      setNotifications(mockDashboardNotifications);
+    async function loadNotifications() {
+      try {
+        const response = await apiGet<any>("/api/notifications/");
+        if (response && response.success && Array.isArray(response.data)) {
+          if (response.data.length > 0) {
+            const mapped = response.data.map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              message: n.message,
+              read_status: n.read,
+              created_at: n.created_at,
+            }));
+            setNotifications(mapped);
+          } else {
+            setNotifications(mockDashboardNotifications);
+          }
+        } else {
+          setNotifications(mockDashboardNotifications);
+        }
+      } catch (err) {
+        console.warn("Failed to load real notifications, falling back to mocks:", err);
+        setNotifications(mockDashboardNotifications);
+      }
     }
-  }, [notifications.length, setNotifications]);
+
+    if (isAuthenticated) {
+      loadNotifications();
+    }
+  }, [isAuthenticated, setNotifications]);
 
   const sidebarOffset = isMobile
     ? "pl-0"

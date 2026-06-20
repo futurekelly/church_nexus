@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 export interface AppNotification {
-  id: number;
+  id: string | number;
   title: string;
   message: string;
   read_status: boolean;
@@ -12,7 +12,7 @@ interface NotificationState {
   notifications: AppNotification[];
   unreadCount: number;
   setNotifications: (notifications: AppNotification[]) => void;
-  markAsRead: (id: number) => void;
+  markAsRead: (id: string | number) => void;
   clearNotifications: () => void;
 }
 

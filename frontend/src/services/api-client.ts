@@ -150,6 +150,15 @@ export async function apiPut<T>(
   return response.data;
 }
 
+export async function apiPatch<T>(
+  url: string,
+  body?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<ApiResponse<T>> {
+  const response = await getApiClient().patch<ApiResponse<T>>(url, body, config);
+  return response.data;
+}
+
 export async function apiDelete<T>(
   url: string,
   config?: AxiosRequestConfig,

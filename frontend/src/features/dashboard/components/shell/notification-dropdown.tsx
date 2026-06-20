@@ -9,6 +9,7 @@ import { DASHBOARD_ROUTES } from "@/constants/routes";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { cn } from "@/lib/utils";
 import { useNotificationStore } from "@/store/notification-store";
+import { apiPatch } from "@/services/api-client";
 
 export function NotificationDropdown() {
   const [open, setOpen] = useState(false);
@@ -17,6 +18,17 @@ export function NotificationDropdown() {
   const notifications = useNotificationStore((state) => state.notifications);
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const markAsRead = useNotificationStore((state) => state.markAsRead);
+
+  const handleMarkAsRead = async (id: string | number) => {
+    markAsRead(id);
+    if (typeof id === "string") {
+      try {
+        await apiPatch(`/api/notifications/${id}/`, { read: true });
+      } catch (err) {
+        console.error("Failed to mark notification as read on backend:", err);
+      }
+    }
+  };
 
   useClickOutside(containerRef, () => setOpen(false), open);
 
@@ -75,7 +87,7 @@ export function NotificationDropdown() {
                     <button
                       type="button"
                       role="menuitem"
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => handleMarkAsRead(notification.id)}
                       className={cn(
                         "w-full border-b border-border/30 px-4 py-3 text-left transition-colors hover:bg-card/60",
                         !notification.read_status && "bg-primary/5",
