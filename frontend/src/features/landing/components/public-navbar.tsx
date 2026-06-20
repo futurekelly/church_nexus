@@ -141,7 +141,7 @@ export function PublicNavbar() {
           />
           <div
             id="mobile-nav-menu"
-            className="absolute right-4 top-16 z-50 w-72 rounded-2xl border border-border bg-background/98 backdrop-blur-md p-2 shadow-2xl lg:hidden animate-slide-up ring-1 ring-primary/20"
+            className="absolute right-4 top-16 z-50 w-72 rounded-2xl border border-border bg-surface p-2 shadow-2xl lg:hidden animate-slide-up ring-1 ring-primary/20"
           >
             <ul className="flex flex-col gap-1 p-1">
               {NAV_LINKS.map((link) => (
