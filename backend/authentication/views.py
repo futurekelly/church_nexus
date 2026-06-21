@@ -243,17 +243,35 @@ class PasswordResetRequestView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             
-            # Formulate local/prod reset link
-            reset_url = f"http://localhost:3000/password-reset/confirm/?uid={uid}&token={token}"
+            # Formulate local/prod reset link aligned with Next.js frontend route
+            reset_url = f"{settings.FRONTEND_URL}/reset-password/?uid={uid}&token={token}"
             
-            # Send the email
-            send_mail(
+            # Create database EmailLog entry
+            from authentication.models import EmailLog
+            log = EmailLog.objects.create(
+                recipient=user.email,
                 subject="Reset your Church Nexus password",
-                message=f"Hello,\n\nPlease use the link below to reset your password:\n\n{reset_url}\n\nThis link is valid for 24 hours.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
+                email_type="password_reset",
+                status="PENDING"
             )
+            
+            # Queue the Celery task asynchronously
+            import logging
+            logger = logging.getLogger(__name__)
+            try:
+                from authentication.tasks import send_password_reset_email_task
+                context = {
+                    'name': f"{user.first_name} {user.last_name}" if (user.first_name or user.last_name) else user.email,
+                    'reset_url': reset_url
+                }
+                send_password_reset_email_task.delay(str(log.id), context)
+            except Exception as e:
+                # Update status to FAILED if queuing fails
+                log.status = 'FAILED'
+                log.error_message = f"Failed to queue celery task: {str(e)}"
+                log.save()
+                logger.error(f"Failed to queue password reset email task for {user.email}: {e}")
+                
         except User.DoesNotExist:
             # Prevent email enumeration by returning 200 OK regardless
             pass

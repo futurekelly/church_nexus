@@ -19,6 +19,7 @@ export interface ForgotPasswordPayload {
 }
 
 export interface ResetPasswordPayload {
+  uid: string;
   token: string;
   password: string;
 }

@@ -7,15 +7,15 @@ import { AUTH_ROUTES } from "@/constants/routes";
 import { resetPassword } from "@/features/auth/services/auth-service";
 import type { ResetPasswordFormValues } from "@/features/auth/schemas/auth-schemas";
 
-export function useResetPassword(token: string) {
+export function useResetPassword(uid: string, token: string) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (values: ResetPasswordFormValues) => {
-    if (!token) {
-      setError("Invalid or missing reset token.");
+    if (!token || !uid) {
+      setError("Invalid or missing reset token or user identification.");
       return;
     }
 
@@ -24,6 +24,7 @@ export function useResetPassword(token: string) {
 
     try {
       await resetPassword({
+        uid,
         token,
         password: values.password,
       });
@@ -45,5 +46,5 @@ export function useResetPassword(token: string) {
     }
   };
 
-  return { submit, isLoading, isSuccess, error, hasToken: Boolean(token) };
+  return { submit, isLoading, isSuccess, error, hasToken: Boolean(token && uid) };
 }

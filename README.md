@@ -36,11 +36,11 @@ To create a modern, secure, intelligent, and community-driven Church Management 
 |---|---|
 | **Django 5+** | Web framework |
 | **Django REST Framework** | RESTful API |
-| **JWT (SimpleJWT)** | Authentication |
-| **PostgreSQL** | Primary database |
-| **Redis** | Caching & task queue |
-| **Celery** | Background jobs |
-| **Django Channels** | WebSockets (live chat, notifications) |
+| **SimpleJWT** | Secure JWT Authentication & Refresh token workflow |
+| **PostgreSQL** | Primary relational database |
+| **Redis** | Caching, task broker, and WebSockets broker |
+| **Celery** | Asynchronous task queue for email routing |
+| **Django Channels** | WebSockets (live notifications) |
 | **Swagger / OpenAPI** | API documentation |
 
 ### Deployment
@@ -76,7 +76,13 @@ church_saas/
 │       ├── types/             # TypeScript interfaces
 │       ├── constants/         # Routes, roles, API endpoints
 │       └── styles/            # CSS tokens & animation keyframes
-├── backend/                   # Django REST Framework API (planned)
+├── backend/                   # Django REST Framework API
+│   ├── authentication/        # User accounts, RBAC, Celery tasks, email logs
+│   ├── branches/              # Branch / campus management
+│   ├── donations/             # Financial donations ledger & lifecycle hooks
+│   ├── events/                # Scheduling & event models
+│   ├── finance/               # Double-entry ledger systems
+│   └── church_nexus/          # Project configurations & settings
 ├── docs/                      # Architecture & API documentation
 └── docker/                    # Docker compose config
 ```
@@ -90,19 +96,23 @@ church_saas/
 | `/` | `(public)` | Landing page |
 | `/about` | `(public)` | About the church |
 | `/contact` | `(public)` | Contact page |
+| `/ministries` | `(public)` | Public ministries directory |
 | `/livestream` | `(public)` | Public livestream viewer |
 | `/login` | `(auth)` | Login |
 | `/register` | `(auth)` | Member registration |
-| `/forgot-password` | `(auth)` | Password recovery |
-| `/reset-password` | `(auth)` | Password reset |
+| `/forgot-password` | `(auth)` | Password recovery request |
+| `/reset-password` | `(auth)` | Secure password reset confirmation |
 | `/dashboard` | `(dashboard)` | Dashboard home (role-redirected) |
-| `/dashboard/members` | `(dashboard)` | Member management |
+| `/dashboard/members` | `(dashboard)` | Congregation management & role transitions |
 | `/dashboard/sermons` | `(dashboard)` | Sermon library |
-| `/dashboard/events` | `(dashboard)` | Event management |
-| `/dashboard/donations` | `(dashboard)` | Donations & finance |
-| `/dashboard/prayer` | `(dashboard)` | Prayer center |
-| `/dashboard/analytics` | `(dashboard)` | Analytics & reports |
-| `/dashboard/settings` | `(dashboard)` | System settings |
+| `/dashboard/events` | `(dashboard)` | Event scheduling & tracking |
+| `/dashboard/celebrations` | `(dashboard)` | Birthdays, anniversaries, and milestones |
+| `/dashboard/scripture` | `(dashboard)` | Daily scripture & devotional editor |
+| `/dashboard/donations` | `(dashboard)` | Donations & financial analytics |
+| `/dashboard/prayer` | `(dashboard)` | Prayer requests center |
+| `/dashboard/users` | `(dashboard)` | Platform administrator user profiles |
+| `/dashboard/analytics` | `(dashboard)` | Interactive KPI graphs & reports |
+| `/dashboard/settings` | `(dashboard)` | System configurations (branches, payments, localization) |
 
 ---
 
@@ -110,13 +120,13 @@ church_saas/
 
 | Role | Access Level |
 |---|---|
-| **Super Admin** | Full platform access, users, audit, settings |
-| **Pastor** | Scripture, prayer, sermons, testimonies, livestream |
-| **Church Admin** | Members, events, attendance, visitors, follow-up |
-| **Treasurer** | Donations, reports, financial charts |
-| **Media Team** | Livestream, media upload, gallery |
-| **Member** | Scripture, events, prayer, sermons, profile |
-| **Visitor** | Public routes + limited authenticated views |
+| **Super Admin** | Full platform access, users, audit logs, system settings |
+| **Pastor** | Devotionals, scripture, prayer, sermons, testimonies, livestream |
+| **Church Admin** | Members, events, attendance, visitors, follow-up queues |
+| **Treasurer** | Donations, ledger books, financial charts |
+| **Media Team** | Livestream settings, media upload, gallery assets |
+| **Member** | Daily devotionals, events register, prayer wall, sermons, profile |
+| **Visitor** | Public marketing pages + limited authenticated views |
 
 ---
 
@@ -126,41 +136,43 @@ church_saas/
 - **Aesthetic:** Glassmorphism + neon interaction effects
 - **Animations:** Framer Motion throughout
 - **Typography:** Inter, Plus Jakarta Sans, JetBrains Mono (Google Fonts)
-- **Approach:** Mobile-first, accessibility-first
+- **Approach:** Mobile-first, accessibility-first, zero layout hydration mismatches
 
 ---
 
-## 🏗️ Feature Modules
+## 🏗️ Completed Milestone Features
 
-### Phase 1 (In Development)
-- ✅ Authentication & RBAC
-- ✅ Member Management
-- ✅ Sermon Management
-- ✅ Event Management
-- ✅ Livestream Center
-- ✅ Donations & Finance
-- ✅ Prayer Center
-- ✅ Testimonies
-- ✅ Media Center
-- ✅ Notifications
-- ✅ Analytics
-- ✅ Daily Scripture
-- ✅ Celebrations Widget
-- ✅ Visitor Follow-Up
+### 1. Authentication & RBAC
+- Secure login, register, and refresh token exchange using SimpleJWT.
+- Advanced role-based permissions client-side and backend authorization.
+- Password recovery request and tokenized confirmations.
 
-### Phase 2 (Planned)
-- ⬜ Kids Kingdom
-- ⬜ Bible Study Groups
-- ⬜ Achievement Badges
-- ⬜ AI Assistant
-- ⬜ Ministries Management
+### 2. Members & Visitor approval
+- Complete congregation lifecycle tracking.
+- Visitor role transitions with audit updates and automated welcome notification triggers.
 
-### Phase 3 (Future)
-- ⬜ Faith Questions Hub
-- ⬜ Multi-Church Support
-- ⬜ Mobile Applications
-- ⬜ WhatsApp Integration
-- ⬜ SMS Gateway
+### 3. Financial Ledger & Donations
+- Donations ledger tracks currency, branch, donor profile, and transaction references.
+- Double-entry accounting registers in `finance` module verifying ledger balance automatically.
+- Custom campaign tracking and active pledge meters.
+
+### 4. Asynchronous SMTP Notifications (Phase 1)
+- Celery-driven, non-blocking email notifications utilizing a resilient retry policy (exponential backoff).
+- Full database auditing using `EmailLog` models to track `PENDING`, `SENT`, and `FAILED` email attempts with errors.
+- Prevent duplicate receipts using validation blocks.
+- Customized responsive HTML/plaintext email layouts for:
+  - **Password Reset Link**
+  - **Visitor Registration Alert** (to Church Admins)
+  - **Visitor Approval Welcome** (to Members)
+  - **Donation Receipt** (triggered on Completed status)
+
+### 5. Bilingual Support (Phase 2)
+- English and Swahili (`en.json` and `sw.json`) dictionary catalogs with 100% key parity (197 keys).
+- Custom client-side `TranslationProvider` and `useTranslation` hook supporting runtime language switching.
+- Language selection is persisted in `localStorage` under `"church-settings-localization"`.
+- Server-side pre-render protection preventing hydration warning mismatch.
+- Support for fallback language defaults (to English) and development-only missing-key warning reports.
+- Localization settings kept separate from system currency configurations.
 
 ---
 
@@ -168,7 +180,7 @@ church_saas/
 
 ### Prerequisites
 - Node.js 20+
-- Python 3.11+
+- Python 3.12+
 - PostgreSQL 16+
 - Redis 7+
 
@@ -183,16 +195,38 @@ npm run dev
 
 Frontend runs at: **http://localhost:3000**
 
-### Backend Setup _(coming soon)_
+### Backend Setup
 
+1. Configure Python virtual environment:
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements/dev.txt
+# On Windows:
+.\venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Setup environment variables:
+```bash
 cp .env.example .env
+# Edit backend/.env to configure database and SMTP credentials.
+```
+
+4. Run migrations, seed test data, and launch Django:
+```bash
 python manage.py migrate
 python manage.py runserver
+```
+
+5. Run Celery Worker (in a separate terminal inside virtual environment):
+```bash
+celery -A church_nexus worker -l info
 ```
 
 Backend API at: **http://localhost:8000/api/v1/**

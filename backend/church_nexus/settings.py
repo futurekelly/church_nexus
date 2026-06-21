@@ -274,5 +274,9 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='futurekelly360@gmail.com')
 
+# Frontend URL configuration
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+
+
 
 

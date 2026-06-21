@@ -8,6 +8,7 @@ import { AUTH_ROUTES } from "@/constants/routes";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { DailyScriptureWidget } from "@/features/landing/components/daily-scripture-widget";
 import type { DailyScripture } from "@/features/landing/types/landing.types";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface HeroSectionProps {
   scripture: DailyScripture;
@@ -18,20 +19,22 @@ interface PhraseType {
   suffix: string;
 }
 
-const PHRASES: PhraseType[] = [
-  { prefix: "Growing Together in ", suffix: "Faith, Hope, and Love" },
-  { prefix: "A Welcoming Community for ", suffix: "Every Heart" },
-  { prefix: "Strengthening Families and Impacting ", suffix: "Our World" },
-  { prefix: "Connecting Hearts through ", suffix: "Worship and Service" }
-];
-
 function TypewriterHeading() {
+  const { t } = useTranslation();
+  const PHRASES: PhraseType[] = [
+    { prefix: t("public.hero.prefix_1"), suffix: t("public.hero.suffix_1") },
+    { prefix: t("public.hero.prefix_2"), suffix: t("public.hero.suffix_2") },
+    { prefix: t("public.hero.prefix_3"), suffix: t("public.hero.suffix_3") },
+    { prefix: t("public.hero.prefix_4"), suffix: t("public.hero.suffix_4") }
+  ];
+
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const currentPhrase = PHRASES[phraseIdx];
+    if (!currentPhrase) return;
     const fullText = currentPhrase.prefix + currentPhrase.suffix;
     let timer: NodeJS.Timeout;
 
@@ -55,9 +58,10 @@ function TypewriterHeading() {
     }
 
     return () => clearTimeout(timer);
-  }, [displayText, isDeleting, phraseIdx]);
+  }, [displayText, isDeleting, phraseIdx, PHRASES]);
 
   const currentPhrase = PHRASES[phraseIdx];
+  if (!currentPhrase) return null;
   const prefixText = displayText.slice(0, currentPhrase.prefix.length);
   const suffixText = displayText.slice(currentPhrase.prefix.length);
 
@@ -145,10 +149,11 @@ export function HeroSection({ scripture }: HeroSectionProps) {
 }
 
 function HeroContent() {
+  const { t } = useTranslation();
   return (
     <>
       <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">
-        Welcome Home
+        {t("common.welcome")}
       </p>
       <h1
         id="hero-heading"
@@ -157,16 +162,14 @@ function HeroContent() {
         <TypewriterHeading />
       </h1>
       <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-        A modern church community united in worship, discipleship, and service.
-        Join us as we connect hearts, strengthen families, and impact our world
-        for Christ.
+        {t("public.hero.title_main")}
       </p>
       <div className="mt-8 flex flex-col gap-4 sm:flex-row">
         <Link
           href={AUTH_ROUTES.REGISTER}
           className="group inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_28px_rgba(139,92,246,0.5)]"
         >
-          Join Community
+          {t("public.hero.cta_join")}
           <ArrowRight
             className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
             aria-hidden="true"
@@ -177,7 +180,7 @@ function HeroContent() {
           className="group inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card/40 px-6 py-3 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:border-primary/50 hover:bg-card/70 hover:shadow-neon"
         >
           <Play className="h-4 w-4 text-primary" aria-hidden="true" />
-          Watch Sermons
+          {t("public.hero.cta_livestream")}
         </Link>
       </div>
     </>

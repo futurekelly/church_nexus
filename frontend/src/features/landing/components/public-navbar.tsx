@@ -9,19 +9,22 @@ import { logoutUser } from "@/features/auth/services/auth-service";
 import { clearSession as clearSessionUtil } from "@/features/auth/utils/session";
 import { LANDING_SECTIONS } from "@/features/landing/constants/sections";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "@/hooks/use-translation";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { label: "Home", href: PUBLIC_ROUTES.HOME },
-  { label: "Sermons", href: PUBLIC_ROUTES.SERMONS },
-  { label: "Events", href: PUBLIC_ROUTES.EVENTS },
-  { label: "Ministries", href: `/#${LANDING_SECTIONS.MINISTRIES}` },
-  { label: "Livestream", href: PUBLIC_ROUTES.LIVESTREAM },
-  { label: "About", href: PUBLIC_ROUTES.ABOUT },
-  { label: "Contact", href: PUBLIC_ROUTES.CONTACT },
+  { label: "Home", href: PUBLIC_ROUTES.HOME, key: "navigation.home" },
+  { label: "Sermons", href: PUBLIC_ROUTES.SERMONS, key: "navigation.sermons" },
+  { label: "Events", href: PUBLIC_ROUTES.EVENTS, key: "navigation.events" },
+  { label: "Ministries", href: PUBLIC_ROUTES.MINISTRIES, key: "navigation.ministries" },
+  { label: "Livestream", href: PUBLIC_ROUTES.LIVESTREAM, key: "navigation.livestream" },
+  { label: "About", href: PUBLIC_ROUTES.ABOUT, key: "navigation.about" },
+  { label: "Contact", href: PUBLIC_ROUTES.CONTACT, key: "navigation.contact" },
 ] as const;
 
 export function PublicNavbar() {
+  const { t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -67,17 +70,18 @@ export function PublicNavbar() {
                   pathname === link.href && "text-primary",
                 )}
               >
-                {link.label}
+                {t(link.key)}
               </Link>
             </li>
           ))}
         </ul>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <LanguageSwitcher />
           {isHydrated && isAuthenticated && user ? (
             <>
               <span className="text-sm font-medium text-muted-foreground">
-                Welcome, <span className="text-primary font-semibold">{user.first_name}</span>
+                {t("common.welcome")}, <span className="text-primary font-semibold">{user.first_name}</span>
                 {user.role === "visitor" && " (Visitor)"}
               </span>
               {user.role === "visitor" ? (
@@ -86,14 +90,14 @@ export function PublicNavbar() {
                   onClick={handleLogout}
                   className="rounded-lg bg-warning/20 px-4 py-2 text-sm font-semibold text-warning transition-all duration-200 hover:bg-warning/30"
                 >
-                  Logout
+                  {t("common.logout")}
                 </button>
               ) : (
                 <Link
                   href="/dashboard"
                   className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
                 >
-                  Go to Dashboard
+                  {t("navigation.go_to_dashboard")}
                 </Link>
               )}
             </>
@@ -103,13 +107,13 @@ export function PublicNavbar() {
                 href={AUTH_ROUTES.LOGIN}
                 className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
               >
-                Login
+                {t("auth.login.submit_btn")}
               </Link>
               <Link
                 href={AUTH_ROUTES.REGISTER}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
               >
-                Join Community
+                {t("navigation.join_community")}
               </Link>
             </>
           )}
@@ -154,7 +158,7 @@ export function PublicNavbar() {
                       pathname === link.href && "bg-primary/10 text-primary font-semibold"
                     )}
                   >
-                    {link.label}
+                    {t(link.key)}
                   </Link>
                 </li>
               ))}
@@ -163,7 +167,7 @@ export function PublicNavbar() {
                 {isHydrated && isAuthenticated && user ? (
                   <div className="flex flex-col gap-2 rounded-xl bg-primary/5 border border-primary/10 p-2.5">
                     <div className="px-1 text-xs text-muted-foreground">
-                      Logged in as{" "}
+                      {t("common.welcome")},{" "}
                       <span className="font-semibold text-primary">
                         {user.first_name} {user.last_name}
                       </span>
@@ -178,7 +182,7 @@ export function PublicNavbar() {
                         }}
                         className="block rounded-lg bg-warning/20 px-4 py-2.5 text-center text-sm font-semibold text-warning transition-all duration-200 hover:bg-warning/30"
                       >
-                        Logout
+                        {t("common.logout")}
                       </button>
                     ) : (
                       <Link
@@ -186,7 +190,7 @@ export function PublicNavbar() {
                         onClick={closeMobile}
                         className="block rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90"
                       >
-                        Go to Dashboard
+                        {t("navigation.go_to_dashboard")}
                       </Link>
                     )}
                   </div>
@@ -197,17 +201,20 @@ export function PublicNavbar() {
                       onClick={closeMobile}
                       className="block rounded-lg border border-border/60 px-4 py-2.5 text-center text-sm font-medium text-primary-foreground transition-colors hover:bg-card/60 hover:text-primary"
                     >
-                      Login
+                      {t("auth.login.submit_btn")}
                     </Link>
                     <Link
                       href={AUTH_ROUTES.REGISTER}
                       onClick={closeMobile}
                       className="block rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-neon transition-all duration-200 hover:bg-primary/90"
                     >
-                      Join Community
+                      {t("navigation.join_community")}
                     </Link>
                   </>
                 )}
+                <div className="flex justify-center pt-2">
+                  <LanguageSwitcher />
+                </div>
               </li>
             </ul>
           </div>

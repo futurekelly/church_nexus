@@ -1,0 +1,19 @@
+Hello {{ name }},
+
+We are delighted to inform you that your registration at {{ branch_name }} has been approved and your account is now fully active!
+
+You can now sign in to your member dashboard to access resources, view upcoming events, set up giving, and connect with your fellowship groups.
+
+Please visit the link below to sign in:
+
+{{ login_url }}
+
+Branch Contact Details:
+- Branch: {{ branch_name }}
+{% if branch_email %}- Email: {{ branch_email }}{% endif %}
+{% if branch_phone %}- Phone: {{ branch_phone }}{% endif %}
+
+If you have any questions, please contact your branch administrators.
+
+Blessings,
+The {{ branch_name }} Team

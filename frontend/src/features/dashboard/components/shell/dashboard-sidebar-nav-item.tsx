@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { NavItem } from "@/constants/navigation";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface DashboardSidebarNavItemProps {
@@ -16,19 +17,22 @@ export function DashboardSidebarNavItem({
   collapsed,
   onNavigate,
 }: DashboardSidebarNavItemProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const isActive =
     pathname === item.href ||
     (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
   const Icon = item.icon;
+  const translationKey = "navigation." + item.label.toLowerCase().replace(/ /g, "_").replace(/-/g, "_");
+  const displayLabel = t(translationKey);
 
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
       aria-current={isActive ? "page" : undefined}
-      title={collapsed ? item.label : undefined}
+      title={collapsed ? displayLabel : undefined}
       className={cn(
         "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
         "text-muted-foreground hover:bg-card/80 hover:text-primary-foreground hover:shadow-neon",
@@ -43,7 +47,7 @@ export function DashboardSidebarNavItem({
         )}
         aria-hidden="true"
       />
-      {!collapsed && <span>{item.label}</span>}
+      {!collapsed && <span>{displayLabel}</span>}
     </Link>
   );
 }

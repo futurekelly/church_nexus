@@ -7,7 +7,7 @@ const FOOTER_LINKS = {
   explore: [
     { label: "Sermons", href: PUBLIC_ROUTES.SERMONS },
     { label: "Events", href: PUBLIC_ROUTES.EVENTS },
-    { label: "Ministries", href: `/#${LANDING_SECTIONS.MINISTRIES}` },
+    { label: "Ministries", href: PUBLIC_ROUTES.MINISTRIES },
     { label: "Livestream", href: PUBLIC_ROUTES.LIVESTREAM },
   ],
   connect: [

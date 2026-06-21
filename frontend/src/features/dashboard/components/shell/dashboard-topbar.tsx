@@ -4,6 +4,7 @@ import { Menu, Search } from "lucide-react";
 import { DashboardBreadcrumbs } from "@/features/dashboard/components/shell/dashboard-breadcrumbs";
 import { NotificationDropdown } from "@/features/dashboard/components/shell/notification-dropdown";
 import { UserProfileDropdown } from "@/features/dashboard/components/shell/user-profile-dropdown";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/ui-store";
@@ -51,6 +52,7 @@ export function DashboardTopbar() {
           />
         </div>
 
+        <LanguageSwitcher />
         <NotificationDropdown />
         <UserProfileDropdown />
       </div>

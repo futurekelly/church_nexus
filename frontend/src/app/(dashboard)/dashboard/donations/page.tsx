@@ -12,10 +12,12 @@ import { PledgeCard } from "@/features/donations/components/pledge-card";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterSelect } from "@/components/ui/filter-select";
 import { Pagination } from "@/components/ui/pagination";
+import { useTranslation } from "@/hooks/use-translation";
 
 const ITEMS_PER_PAGE = 6;
 
 export default function DonationsDashboardPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { donations, campaigns } = useDonations();
   const { donations: donationPermissions } = useAppPermissions();
@@ -75,11 +77,9 @@ export default function DonationsDashboardPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary-foreground">Donations & Giving</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-primary-foreground">{t("donations.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            {isMember
-              ? "Track your personal contributions, tithes, and active pledge campaigns."
-              : "Manage church Tithes, Offerings, pledge campaigns, and download receipts."}
+            {t("donations.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
@@ -98,7 +98,7 @@ export default function DonationsDashboardPage() {
               className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-neon hover:brightness-110 transition-all"
             >
               <Plus className="h-4 w-4" />
-              Record Gift
+              {t("donations.new_donation")}
             </button>
           )}
           <button

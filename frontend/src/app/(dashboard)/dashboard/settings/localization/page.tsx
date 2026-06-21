@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { useLocalizationSettings } from "@/features/settings/hooks/use-localization-settings";
 import type { LocalizationSettings, SupportedLanguage, SupportedCurrency, SupportedCountry } from "@/features/settings";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 const inputClass = cn(
@@ -17,6 +18,7 @@ const inputClass = cn(
 const labelClass = "block text-[10px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider";
 
 export default function LocalizationSettingsPage() {
+  const { t } = useTranslation();
   const { settings: permissions } = useAppPermissions();
   const { settings, updateLocalizationSettings } = useLocalizationSettings();
 
@@ -89,10 +91,10 @@ export default function LocalizationSettingsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-primary-foreground font-display flex items-center gap-2">
             <Globe className="h-6 w-6 text-indigo-400" />
-            Localization & Formats
+            {t("settings.localization.title")}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure system default languages, currency outputs, regional timezones, and display formats.
+            {t("settings.localization.subtitle")}
           </p>
         </div>
       </div>
@@ -104,7 +106,7 @@ export default function LocalizationSettingsPage() {
             <div className="grid gap-6 sm:grid-cols-2">
               {/* Language */}
               <div>
-                <label htmlFor="default_language" className={labelClass}>Default Language</label>
+                <label htmlFor="default_language" className={labelClass}>{t("settings.localization.default_lang")}</label>
                 <select id="default_language" className={inputClass} {...register("default_language")}>
                   <option value="sw">Kiswahili (Swahili)</option>
                   <option value="en">English (United States)</option>
@@ -113,7 +115,7 @@ export default function LocalizationSettingsPage() {
 
               {/* Currency */}
               <div>
-                <label htmlFor="default_currency" className={labelClass}>System Currency</label>
+                <label htmlFor="default_currency" className={labelClass}>{t("settings.localization.system_currency")}</label>
                 <select id="default_currency" className={inputClass} {...register("default_currency")}>
                   <option value="TZS">TZS - Tanzanian Shilling (TSh)</option>
                   <option value="KES">KES - Kenyan Shilling (KSh)</option>
@@ -127,7 +129,7 @@ export default function LocalizationSettingsPage() {
             <div className="grid gap-6 sm:grid-cols-2">
               {/* Country */}
               <div>
-                <label htmlFor="default_country" className={labelClass}>Default Country Code</label>
+                <label htmlFor="default_country" className={labelClass}>{t("settings.localization.default_country")}</label>
                 <select id="default_country" className={inputClass} {...register("default_country")}>
                   <option value="TZ">Tanzania (TZ)</option>
                   <option value="KE">Kenya (KE)</option>
@@ -139,7 +141,7 @@ export default function LocalizationSettingsPage() {
 
               {/* Timezone */}
               <div>
-                <label htmlFor="timezone" className={labelClass}>Timezone Offset</label>
+                <label htmlFor="timezone" className={labelClass}>{t("settings.localization.timezone")}</label>
                 <select id="timezone" className={inputClass} {...register("timezone")}>
                   <option value="Africa/Dar_es_Salaam">Africa/Dar es Salaam (EAT - UTC+3)</option>
                   <option value="Africa/Nairobi">Africa/Nairobi (EAT - UTC+3)</option>
@@ -156,7 +158,7 @@ export default function LocalizationSettingsPage() {
                 className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-2.5 text-xs font-semibold text-white transition-all hover:bg-indigo-600 shadow-neon"
               >
                 <Check className="h-4 w-4" />
-                <span>Save Localization Settings</span>
+                <span>{t("settings.localization.save_btn")}</span>
               </button>
             </div>
           </form>

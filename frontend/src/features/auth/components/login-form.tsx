@@ -15,9 +15,11 @@ import {
   type LoginFormValues,
 } from "@/features/auth/schemas/auth-schemas";
 import { getRememberedEmail } from "@/features/auth/utils/session";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 export function LoginForm() {
+  const { t } = useTranslation();
   const { login, isLoading, error } = useLogin();
 
   const {
@@ -44,16 +46,16 @@ export function LoginForm() {
 
   return (
     <AuthCard
-      title="Welcome Back"
-      subtitle="Sign in to your church community account"
+      title={t("auth.login.title")}
+      subtitle={t("auth.login.subtitle")}
       footer={
         <p>
-          Don&apos;t have an account?{" "}
+          {t("auth.login.no_account")}{" "}
           <Link
             href={AUTH_ROUTES.REGISTER}
             className="font-medium text-primary transition-colors hover:text-primary/80"
           >
-            Create one
+            {t("auth.login.register_link")}
           </Link>
         </p>
       }
@@ -69,7 +71,7 @@ export function LoginForm() {
         )}
 
         <AuthFormField
-          label="Email"
+          label={t("auth.login.email_label")}
           htmlFor="email"
           error={errors.email?.message}
         >
@@ -91,7 +93,7 @@ export function LoginForm() {
         </AuthFormField>
 
         <AuthFormField
-          label="Password"
+          label={t("auth.login.password_label")}
           htmlFor="password"
           error={errors.password?.message}
         >
@@ -99,7 +101,7 @@ export function LoginForm() {
             id="password"
             autoComplete="current-password"
             error={Boolean(errors.password)}
-            placeholder="Enter your password"
+            placeholder={t("auth.login.password_label")}
             {...register("password")}
           />
         </AuthFormField>
@@ -111,17 +113,17 @@ export function LoginForm() {
               className="h-4 w-4 rounded border-border bg-card accent-primary"
               {...register("remember_me")}
             />
-            Remember me
+            {t("auth.login.remember_me")}
           </label>
           <Link
             href={AUTH_ROUTES.FORGOT_PASSWORD}
             className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
           >
-            Forgot password?
+            {t("auth.login.forgot_password")}
           </Link>
         </div>
 
-        <AuthButton isLoading={isLoading}>Sign In</AuthButton>
+        <AuthButton isLoading={isLoading}>{t("auth.login.submit_btn")}</AuthButton>
       </form>
     </AuthCard>
   );

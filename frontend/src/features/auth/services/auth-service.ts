@@ -240,7 +240,11 @@ export async function resetPassword(
   try {
     const response = await apiPost<null>(
       API_ENDPOINTS.AUTH.RESET_PASSWORD,
-      payload,
+      {
+        uid: payload.uid,
+        token: payload.token,
+        new_password: payload.password,
+      },
       { skipAuth: true },
     );
 

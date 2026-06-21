@@ -7,9 +7,14 @@ import { DEFAULT_LOCALIZATION_PROFILE, type LocalizationProfile } from "./types"
 export function getActiveLocalizationProfile(): LocalizationProfile {
   if (typeof window === "undefined") return DEFAULT_LOCALIZATION_PROFILE;
   try {
-    const stored = window.localStorage.getItem("church-localization-profile");
+    const stored = window.localStorage.getItem("church-settings-localization");
     if (stored) {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      return {
+        country_code: parsed.default_country || DEFAULT_LOCALIZATION_PROFILE.country_code,
+        currency: parsed.default_currency || DEFAULT_LOCALIZATION_PROFILE.currency,
+        language: parsed.default_language || DEFAULT_LOCALIZATION_PROFILE.language,
+      };
     }
   } catch (error) {
     console.warn("Error reading localization profile from localStorage:", error);

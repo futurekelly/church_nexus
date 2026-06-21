@@ -274,8 +274,8 @@
 ### Phase 3 — Scale
 - Multi-church support
 - Mobile applications (React Native)
-- WhatsApp integration
-- SMS gateway
+- WhatsApp integration (Deferred - No Billing Budget)
+- SMS gateway (Deferred - No Billing Budget)
 - Regional administration
 
 ---

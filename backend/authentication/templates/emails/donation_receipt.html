@@ -1,0 +1,41 @@
+{% extends "emails/base.html" %}
+
+{% block header_title %}Donation Receipt{% endblock %}
+
+{% block content %}
+<p>Dear <span class="highlight">{{ donor_name }}</span>,</p>
+
+<p>Thank you so much for your generous support of our ministry! We are pleased to confirm that your donation has been completed and posted to the branch records.</p>
+
+<div class="card">
+    <h3 style="margin-top: 0; color: #60A5FA; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 8px;">Transaction Summary</h3>
+    <table class="details-table">
+        <tr>
+            <td class="label">Donor Name</td>
+            <td class="value">{{ donor_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Amount</td>
+            <td class="value" style="font-size: 18px; color: #10B981; font-weight: 700;">{{ amount }} {{ currency }}</td>
+        </tr>
+        <tr>
+            <td class="label">Branch</td>
+            <td class="value">{{ branch_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Reference</td>
+            <td class="value" style="font-family: monospace; font-size: 14px;">{{ transaction_ref }}</td>
+        </tr>
+        <tr>
+            <td class="label">Date & Time</td>
+            <td class="value">{{ timestamp }}</td>
+        </tr>
+    </table>
+</div>
+
+<p>Your giving helps us continue our mission, run outreach ministries, and build community services. We pray that you will be blessed abundantly for your stewardship and generosity.</p>
+
+<p>If you have any questions regarding this receipt, please reach out to the finance team or treasurer at {{ branch_name }}.</p>
+
+<p>With gratitude,<br>The {{ branch_name }} Finance Team</p>
+{% endblock %}

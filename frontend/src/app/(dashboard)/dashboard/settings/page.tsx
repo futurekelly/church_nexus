@@ -8,9 +8,11 @@ import { useBranches } from "@/features/settings/hooks/use-branches";
 import { usePaymentAccounts } from "@/features/settings/hooks/use-payment-accounts";
 import { useLocalizationSettings } from "@/features/settings/hooks/use-localization-settings";
 import { useChurchProfile } from "@/features/settings/hooks/use-church-profile";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 export default function SettingsDashboardPage() {
+  const { t } = useTranslation();
   const { settings: permissions } = useAppPermissions();
   const { branches } = useBranches();
   const { accounts } = usePaymentAccounts();
@@ -38,8 +40,8 @@ export default function SettingsDashboardPage() {
 
   const cards = [
     {
-      title: "Branch Management",
-      desc: "Manage headquarters, satellite campuses, pastors, and address details.",
+      title: t("settings.branch_management"),
+      desc: t("settings.branch_management_desc"),
       href: "/dashboard/settings/branches",
       icon: MapPin,
       show: permissions.canManageBranches || permissions.canViewBranches,
@@ -47,8 +49,8 @@ export default function SettingsDashboardPage() {
       color: "border-blue-500/20 bg-blue-500/5 text-blue-400"
     },
     {
-      title: "Localization & Formats",
-      desc: "Configure Swahili/English translations, currencies, date structures, and timezone offsets.",
+      title: t("settings.localization_formats"),
+      desc: t("settings.localization_formats_desc"),
       href: "/dashboard/settings/localization",
       icon: Globe,
       show: permissions.canManageLocalization,
@@ -56,8 +58,8 @@ export default function SettingsDashboardPage() {
       color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
     },
     {
-      title: "Payments & Merchant Codes",
-      desc: "Manage bank accounts and East African mobile paybills (M-Pesa, TigoPesa, Airtel Money).",
+      title: t("settings.payments_merchant"),
+      desc: t("settings.payments_merchant_desc"),
       href: "/dashboard/settings/payments",
       icon: CreditCard,
       show: permissions.canManagePayments,
@@ -65,8 +67,8 @@ export default function SettingsDashboardPage() {
       color: "border-amber-500/20 bg-amber-500/5 text-amber-400"
     },
     {
-      title: "Church Identity Profile",
-      desc: "Customize naming, slogans, logo configurations, and social media coordinates.",
+      title: t("settings.church_identity"),
+      desc: t("settings.church_identity_desc"),
       href: "/dashboard/settings/church-profile",
       icon: Info,
       show: permissions.canManageIdentity,
@@ -83,9 +85,9 @@ export default function SettingsDashboardPage() {
           <Settings className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary-foreground font-display">System Settings</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-primary-foreground font-display">{t("settings.title")}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure church identity, regional branch mappings, currency/language locales, and donation channels.
+            {t("settings.subtitle")}
           </p>
         </div>
       </div>

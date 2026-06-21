@@ -15,6 +15,7 @@ import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { MEMBERS_PER_PAGE } from "@/features/members/types/member.types";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
 import type { Member } from "@/features/members/types/member.types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 // Simple inline confirm dialog (no external lib needed)
@@ -96,6 +97,7 @@ export default function MembersListPage() {
     toggleSort,
   } = useMembers();
 
+  const { t } = useTranslation();
   const { members: memberPermissions } = useAppPermissions();
   const { canCreate, canDelete } = memberPermissions;
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
@@ -118,10 +120,10 @@ export default function MembersListPage() {
       >
         <div>
           <h1 className="font-display text-2xl font-bold text-primary-foreground">
-            Members
+            {t("members.title")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage your church member database
+            {t("members.subtitle")}
           </p>
         </div>
         {canCreate && (
@@ -135,7 +137,7 @@ export default function MembersListPage() {
             aria-label="Add new member"
           >
             <UserPlus className="h-4 w-4" aria-hidden="true" />
-            Add Member
+            {t("members.add_member")}
           </Link>
         )}
       </motion.div>

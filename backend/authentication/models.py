@@ -52,6 +52,10 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_role = self.role
+
     def clean(self):
         super().clean()
         if self.role != 'super_admin' and self.branch is None:
@@ -60,8 +64,46 @@ class User(AbstractUser):
             })
 
     def save(self, *args, **kwargs):
+        role_changed = False
+        if self.pk:
+            if self._original_role == 'visitor' and self.role != 'visitor':
+                role_changed = True
+                
         self.full_clean(exclude=['password'])
         super().save(*args, **kwargs)
+        
+        if role_changed:
+            import logging
+            from django.conf import settings
+            logger = logging.getLogger(__name__)
+            try:
+                from authentication.models import EmailLog
+                from authentication.tasks import send_visitor_approval_email_task
+                
+                log = EmailLog.objects.create(
+                    recipient=self.email,
+                    subject="Welcome to Church Nexus!",
+                    email_type="visitor_approval",
+                    status="PENDING"
+                )
+                
+                context = {
+                    'name': f"{self.first_name} {self.last_name}" if (self.first_name or self.last_name) else self.email,
+                    'login_url': f"{settings.FRONTEND_URL}/login",
+                    'branch_name': self.branch.branch_name if self.branch else "Church Nexus",
+                    'branch_email': self.branch.email if self.branch else None,
+                    'branch_phone': self.branch.phone if self.branch else None
+                }
+                
+                send_visitor_approval_email_task.delay(str(log.id), context)
+            except Exception as e:
+                if 'log' in locals():
+                    log.status = 'FAILED'
+                    log.error_message = f"Failed to queue celery task: {str(e)}"
+                    log.save()
+                logger.error(f"Failed to queue visitor approval email task: {e}")
+            
+        self._original_role = self.role
 
     def __str__(self):
         return f"{self.email} ({self.get_role_display()})"
@@ -161,6 +203,28 @@ class Announcement(models.Model):
     def __str__(self):
         return self.title
 
+
+class EmailLog(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('SENT', 'Sent'),
+        ('FAILED', 'Failed'),
+    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipient = models.EmailField()
+    subject = models.CharField(max_length=255)
+    email_type = models.CharField(max_length=50) # e.g. password_reset, visitor_registration, visitor_approval, donation_receipt
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    error_message = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.email_type} to {self.recipient} ({self.status})"
+
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Q
@@ -168,6 +232,7 @@ from django.db.models import Q
 @receiver(post_save, sender=User)
 def create_visitor_registration_notification(sender, instance, created, **kwargs):
     if created and instance.role == 'visitor':
+        # 1. In-App Notifications
         admins = User.objects.filter(
             Q(role='super_admin') | 
             Q(role='church_admin', branch=instance.branch)
@@ -183,5 +248,45 @@ def create_visitor_registration_notification(sender, instance, created, **kwargs
                 action_url=action_url,
                 branch=instance.branch
             )
+        
+        # 2. Trigger email task (Celery)
+        import logging
+        from django.conf import settings
+        logger = logging.getLogger(__name__)
+        
+        visitor_name = f"{instance.first_name} {instance.last_name}" if (instance.first_name or instance.last_name) else instance.email
+        branch_name = instance.branch.branch_name if instance.branch else "Global / No Branch"
+        reg_time = instance.date_joined.strftime('%Y-%m-%d %H:%M:%S') if hasattr(instance, 'date_joined') else instance.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        
+        for admin in admins:
+            try:
+                from authentication.models import EmailLog
+                from authentication.tasks import send_visitor_registration_email_task
+                
+                log = EmailLog.objects.create(
+                    recipient=admin.email,
+                    subject=f"[Church Nexus] New Visitor Registration - {visitor_name}",
+                    email_type="visitor_registration",
+                    status="PENDING"
+                )
+                
+                approval_url = f"{settings.FRONTEND_URL}/dashboard/members/{instance.member_id}" if instance.member_id else f"{settings.FRONTEND_URL}/dashboard/members"
+                
+                context = {
+                    'admin_name': f"{admin.first_name} {admin.last_name}" if (admin.first_name or admin.last_name) else admin.email,
+                    'visitor_name': visitor_name,
+                    'visitor_email': instance.email,
+                    'branch_name': branch_name,
+                    'timestamp': reg_time,
+                    'approval_url': approval_url
+                }
+                
+                send_visitor_registration_email_task.delay(str(log.id), context)
+            except Exception as e:
+                if 'log' in locals():
+                    log.status = 'FAILED'
+                    log.error_message = f"Failed to queue celery task: {str(e)}"
+                    log.save()
+                logger.error(f"Failed to queue visitor registration email task for {admin.email}: {e}")
 
 

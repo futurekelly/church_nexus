@@ -1,12 +1,10 @@
-import type { Metadata } from "next";
+"use client";
+
 import { PublicNavbar } from "@/features/landing/components/public-navbar";
 import { PublicFooter } from "@/features/landing/components/public-footer";
 import { Heart, Target, Eye, Shield, Users, BookOpen } from "lucide-react";
+import { useTranslation } from "@/hooks/use-translation";
 
-export const metadata: Metadata = {
-  title: "About Us",
-  description: "Learn more about our history, mission, vision, and leadership team at Church Nexus.",
-};
 
 const LEADERS = [
   {
@@ -53,6 +51,7 @@ const VALUES = [
 ];
 
 export default function AboutPage() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-background text-primary-foreground">
       <PublicNavbar />
@@ -63,7 +62,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
           <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
             <h1 className="font-display text-4xl font-extrabold tracking-tight text-primary-foreground sm:text-5xl lg:text-6xl">
-              Our Journey of <span className="text-primary shadow-neon">Faith & Service</span>
+              {t("public.about.title")}
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
               Church Nexus connects local congregations under a unified digital space to foster deep fellowship, coordinate outreach, and manage resources efficiently.
@@ -79,7 +78,7 @@ export default function AboutPage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Target className="h-6 w-6" />
                 </div>
-                <h2 className="mt-6 font-display text-2xl font-bold text-primary-foreground">Our Mission</h2>
+                <h2 className="mt-6 font-display text-2xl font-bold text-primary-foreground">{t("public.about.mission")}</h2>
                 <p className="mt-4 leading-relaxed text-muted-foreground">
                   To empower local congregations with modern tools that streamline administrative operations, enhance member care, and amplify community outreach. We seek to bring technology and faith together to serve the body of Christ.
                 </p>
@@ -89,7 +88,7 @@ export default function AboutPage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Eye className="h-6 w-6" />
                 </div>
-                <h2 className="mt-6 font-display text-2xl font-bold text-primary-foreground">Our Vision</h2>
+                <h2 className="mt-6 font-display text-2xl font-bold text-primary-foreground">{t("public.about.vision")}</h2>
                 <p className="mt-4 leading-relaxed text-muted-foreground">
                   To be the global digital infrastructure for local church congregations, enabling seamless connection, transparency in resource stewardship, and vibrant, active participation in the ministry of faith and fellowship.
                 </p>

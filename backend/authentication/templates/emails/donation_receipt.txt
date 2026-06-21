@@ -1,0 +1,17 @@
+Dear {{ donor_name }},
+
+Thank you so much for your generous support of our ministry! We are pleased to confirm that your donation has been completed and posted to the branch records.
+
+Transaction Summary:
+- Donor Name: {{ donor_name }}
+- Amount: {{ amount }} {{ currency }}
+- Branch: {{ branch_name }}
+- Reference: {{ transaction_ref }}
+- Date: {{ timestamp }}
+
+Your giving helps us continue our mission, run outreach ministries, and build community services. We pray that you will be blessed abundantly for your stewardship and generosity.
+
+If you have any questions regarding this receipt, please reach out to the finance team or treasurer at {{ branch_name }}.
+
+With gratitude,
+The {{ branch_name }} Finance Team

@@ -9,6 +9,7 @@ import { PublicNavbar } from "@/features/landing/components/public-navbar";
 import { PublicFooter } from "@/features/landing/components/public-footer";
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { AuthButton } from "@/features/auth/components/auth-button";
+import { useTranslation } from "@/hooks/use-translation";
 
 const contactSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
@@ -20,6 +21,7 @@ const contactSchema = z.object({
 type ContactFormValues = z.infer<typeof contactSchema>;
 
 export default function ContactPage() {
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -53,10 +55,10 @@ export default function ContactPage() {
       <main id="main-content" className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
         <div className="text-center">
           <h1 className="font-display text-4xl font-extrabold tracking-tight text-primary-foreground sm:text-5xl">
-            Get in <span className="text-primary shadow-neon">Touch</span>
+            {t("public.contact.title")}
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Have questions about our services, branches, or community? Drop us a line and we will get back to you shortly.
+            {t("public.contact.subtitle")}
           </p>
         </div>
 
@@ -176,7 +178,7 @@ export default function ContactPage() {
 
                 <AuthButton isLoading={isSubmitting} className="w-full flex items-center justify-center gap-2">
                   <Send className="h-4 w-4" />
-                  Send Message
+                  {t("public.contact.submit_btn")}
                 </AuthButton>
               </form>
             </div>

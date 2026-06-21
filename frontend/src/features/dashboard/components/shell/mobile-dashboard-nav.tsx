@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { useDashboardNavigation } from "@/features/dashboard/hooks/use-dashboard-navigation";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 export function MobileDashboardNav() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const prefersReducedMotion = useReducedMotion();
   const { mobileNavItems } = useDashboardNavigation();
@@ -24,6 +26,8 @@ export function MobileDashboardNav() {
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
           const Icon = item.icon;
+          const navKey = item.label === "Alerts" ? "alerts" : item.label.toLowerCase().replace(/ /g, "_").replace(/-/g, "_");
+          const displayLabel = t("navigation." + navKey);
 
           return (
             <li key={item.href} className="flex-1">
@@ -45,7 +49,7 @@ export function MobileDashboardNav() {
                   />
                 )}
                 <Icon className="relative h-5 w-5" aria-hidden="true" />
-                <span className="relative">{item.label}</span>
+                <span className="relative">{displayLabel}</span>
               </Link>
             </li>
           );

@@ -4,6 +4,7 @@ import { BookOpen } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import type { DailyScripture } from "@/features/landing/types/landing.types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface DailyScriptureWidgetProps {
@@ -15,6 +16,7 @@ export function DailyScriptureWidget({
   scripture,
   className,
 }: DailyScriptureWidgetProps) {
+  const { t } = useTranslation();
   const prefersReducedMotion = useReducedMotion();
   const formattedDate = format(parseISO(scripture.display_date), "MMMM d, yyyy");
 
@@ -38,7 +40,7 @@ export function DailyScriptureWidget({
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Daily Scripture
+            {t("public.hero.daily_scripture")}
           </p>
           <time
             dateTime={scripture.display_date}

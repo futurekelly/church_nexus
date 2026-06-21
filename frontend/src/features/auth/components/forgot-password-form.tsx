@@ -9,6 +9,7 @@ import { AuthButton } from "@/features/auth/components/auth-button";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { AuthFormField } from "@/features/auth/components/auth-form-field";
 import { useForgotPassword } from "@/features/auth/hooks/use-forgot-password";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
@@ -16,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export function ForgotPasswordForm() {
+  const { t } = useTranslation();
   const { submit, isLoading, isSuccess, error } = useForgotPassword();
 
   const {
@@ -54,14 +56,14 @@ export function ForgotPasswordForm() {
 
   return (
     <AuthCard
-      title="Forgot Password"
-      subtitle="Enter your email and we'll send reset instructions"
+      title={t("auth.forgot_password.title")}
+      subtitle={t("auth.forgot_password.subtitle")}
       footer={
         <Link
           href={AUTH_ROUTES.LOGIN}
           className="font-medium text-primary transition-colors hover:text-primary/80"
         >
-          Back to sign in
+          {t("auth.forgot_password.back_to_login")}
         </Link>
       }
     >
@@ -76,7 +78,7 @@ export function ForgotPasswordForm() {
         )}
 
         <AuthFormField
-          label="Email"
+          label={t("auth.forgot_password.email_label")}
           htmlFor="email"
           error={errors.email?.message}
         >
@@ -95,7 +97,7 @@ export function ForgotPasswordForm() {
           />
         </AuthFormField>
 
-        <AuthButton isLoading={isLoading}>Send Reset Link</AuthButton>
+        <AuthButton isLoading={isLoading}>{t("auth.forgot_password.submit_btn")}</AuthButton>
       </form>
     </AuthCard>
   );

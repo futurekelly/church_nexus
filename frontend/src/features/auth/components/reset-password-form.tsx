@@ -10,18 +10,21 @@ import { AuthCard } from "@/features/auth/components/auth-card";
 import { AuthFormField } from "@/features/auth/components/auth-form-field";
 import { PasswordInput } from "@/features/auth/components/password-input";
 import { useResetPassword } from "@/features/auth/hooks/use-reset-password";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
 } from "@/features/auth/schemas/auth-schemas";
 
 interface ResetPasswordFormProps {
+  uid: string;
   token: string;
 }
 
-export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
+export function ResetPasswordForm({ uid, token }: ResetPasswordFormProps) {
+  const { t } = useTranslation();
   const { submit, isLoading, isSuccess, error, hasToken } =
-    useResetPassword(token);
+    useResetPassword(uid, token);
 
   const {
     register,
@@ -75,14 +78,14 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   return (
     <AuthCard
-      title="Reset Password"
-      subtitle="Enter your new password below"
+      title={t("auth.reset_password.title")}
+      subtitle={t("auth.reset_password.subtitle")}
       footer={
         <Link
           href={AUTH_ROUTES.LOGIN}
           className="font-medium text-primary transition-colors hover:text-primary/80"
         >
-          Back to sign in
+          {t("auth.forgot_password.back_to_login")}
         </Link>
       }
     >
@@ -97,7 +100,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         )}
 
         <AuthFormField
-          label="New Password"
+          label={t("auth.reset_password.new_password")}
           htmlFor="password"
           error={errors.password?.message}
         >
@@ -105,13 +108,13 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             id="password"
             autoComplete="new-password"
             error={Boolean(errors.password)}
-            placeholder="Enter new password"
+            placeholder={t("auth.reset_password.new_password")}
             {...register("password")}
           />
         </AuthFormField>
 
         <AuthFormField
-          label="Confirm New Password"
+          label={t("auth.reset_password.confirm_password")}
           htmlFor="confirm_password"
           error={errors.confirm_password?.message}
         >
@@ -119,12 +122,12 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             id="confirm_password"
             autoComplete="new-password"
             error={Boolean(errors.confirm_password)}
-            placeholder="Confirm new password"
+            placeholder={t("auth.reset_password.confirm_password")}
             {...register("confirm_password")}
           />
         </AuthFormField>
 
-        <AuthButton isLoading={isLoading}>Reset Password</AuthButton>
+        <AuthButton isLoading={isLoading}>{t("auth.reset_password.submit_btn")}</AuthButton>
       </form>
     </AuthCard>
   );

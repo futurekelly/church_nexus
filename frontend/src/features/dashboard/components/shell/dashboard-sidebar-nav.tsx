@@ -3,6 +3,7 @@
 import { NAV_GROUP_LABELS } from "@/constants/navigation";
 import type { NavItem } from "@/constants/navigation";
 import { DashboardSidebarNavItem } from "@/features/dashboard/components/shell/dashboard-sidebar-nav-item";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface DashboardSidebarNavProps {
   items: NavItem[];
@@ -15,6 +16,7 @@ export function DashboardSidebarNav({
   collapsed,
   onNavigate,
 }: DashboardSidebarNavProps) {
+  const { t } = useTranslation();
   const groupedItems = items.reduce<Record<string, NavItem[]>>((groups, item) => {
     const group = item.group ?? "main";
     if (!groups[group]) groups[group] = [];
@@ -40,7 +42,7 @@ export function DashboardSidebarNav({
           <div key={group} className="space-y-1">
             {!collapsed && (
               <p className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {NAV_GROUP_LABELS[group]}
+                {t("navigation.groups." + group)}
               </p>
             )}
             <div className="space-y-1">

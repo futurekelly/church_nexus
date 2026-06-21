@@ -17,11 +17,13 @@ import {
 } from "@/features/events";
 import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 const EVENTS_PER_PAGE = 6;
 
 export default function EventsListPage() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
   const [page, setPage] = useState(1);
 
@@ -76,8 +78,8 @@ export default function EventsListPage() {
       {/* Top Section Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <SectionHeader
-          title="Event Management"
-          description="Schedule, organize, and coordinate church activities"
+          title={t("events.title")}
+          description={t("events.subtitle")}
         />
 
         {canCreate && (
@@ -90,7 +92,7 @@ export default function EventsListPage() {
             )}
           >
             <Plus className="h-4 w-4" />
-            Add Event
+            {t("events.add_event")}
           </Link>
         )}
       </div>

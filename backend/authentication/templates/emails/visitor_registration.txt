@@ -1,0 +1,16 @@
+Hello {{ admin_name }},
+
+A new visitor has registered on the Church Nexus platform and is pending review.
+
+Visitor Details:
+- Name: {{ visitor_name }}
+- Email: {{ visitor_email }}
+- Branch: {{ branch_name }}
+- Registered At: {{ timestamp }}
+
+Please visit the link below to review and approve this account:
+
+{{ approval_url }}
+
+Thank you,
+The Church Nexus System

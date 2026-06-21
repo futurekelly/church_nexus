@@ -18,11 +18,11 @@ import {
   registerSchema,
   type RegisterFormValues,
 } from "@/features/auth/schemas/auth-schemas";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
-const STEP_LABELS = ["Basic Info", "Contact & Branch", "Credentials", "Confirm"];
-
 export function RegisterForm() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const { register: submitRegistration, isLoading, error } = useRegister();
 
@@ -101,19 +101,26 @@ export function RegisterForm() {
 
   const values = getValues();
 
+  const STEP_LABELS = [
+    t("auth.register.step_personal"),
+    t("auth.register.step_church"),
+    t("auth.register.step_security"),
+    t("common.submit")
+  ];
+
   return (
     <AuthCard
-      title="Join the Community"
-      subtitle="Create your account — new members start as Visitors"
+      title={t("auth.register.title")}
+      subtitle={t("auth.register.subtitle")}
       className="max-w-lg"
       footer={
         <p>
-          Already have an account?{" "}
+          {t("auth.register.already_have_account")}{" "}
           <Link
             href={AUTH_ROUTES.LOGIN}
             className="font-medium text-primary transition-colors hover:text-primary/80"
           >
-            Sign in
+            {t("auth.register.login_link")}
           </Link>
         </p>
       }
@@ -311,7 +318,7 @@ export function RegisterForm() {
               disabled={isLoading}
               className="flex-1"
             >
-              Back
+              {t("common.back")}
             </AuthButton>
           )}
 
@@ -321,11 +328,11 @@ export function RegisterForm() {
               onClick={goNext}
               className="flex-1"
             >
-              Continue
+              {t("common.next")}
             </AuthButton>
           ) : (
             <AuthButton isLoading={isLoading} className="flex-1">
-              Create Account
+              {t("auth.register.submit_btn")}
             </AuthButton>
           )}
         </div>

@@ -35,6 +35,37 @@ class Donation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_status = self.status
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        status_changed_to_completed = False
+        if is_new:
+            if self.status == 'COMPLETED':
+                status_changed_to_completed = True
+        else:
+            if self._original_status != 'COMPLETED' and self.status == 'COMPLETED':
+                status_changed_to_completed = True
+
+        super().save(*args, **kwargs)
+        self._original_status = self.status
+
+        if status_changed_to_completed:
+            import logging
+            from django.db import transaction
+            logger = logging.getLogger(__name__)
+            
+            def send_receipt():
+                try:
+                    from authentication.tasks import send_donation_receipt_email_task
+                    send_donation_receipt_email_task.delay(str(self.id))
+                except Exception as e:
+                    logger.error(f"Failed to queue donation receipt email task: {e}")
+            
+            transaction.on_commit(send_receipt)
+
     def __str__(self):
         member_name = f"{self.member.first_name} {self.member.last_name}" if self.member else "Guest visitor"
         return f"Donation {self.amount} {self.currency} by {member_name}"

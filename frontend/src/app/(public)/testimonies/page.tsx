@@ -7,6 +7,7 @@ import { MessageSquare, Plus, Search, Filter, HelpCircle } from "lucide-react";
 import { useTestimonies } from "@/features/testimonies";
 import { TestimonyCard } from "@/features/testimonies/components/testimony-card";
 import type { TestimonyCategory } from "@/features/testimonies";
+import { useTranslation } from "@/hooks/use-translation";
 
 const CATEGORIES: (TestimonyCategory | "all")[] = [
   "all",
@@ -22,6 +23,7 @@ const CATEGORIES: (TestimonyCategory | "all")[] = [
 ];
 
 export default function PublicTestimoniesWallPage() {
+  const { t } = useTranslation();
   const { testimonies, incrementViews } = useTestimonies();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<TestimonyCategory | "all">("all");
@@ -76,10 +78,10 @@ export default function PublicTestimoniesWallPage() {
           <MessageSquare className="h-6 w-6" />
         </motion.div>
         <h1 className="font-display text-3xl font-extrabold text-primary-foreground sm:text-4xl">
-          Public Testimonies Wall
+          {t("public.testimonies.title")}
         </h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Praise reports and stories of God's goodness, healing, and restoration in the lives of our church family.
+          {t("public.testimonies.subtitle")}
         </p>
         <div className="pt-2">
           <Link
@@ -87,7 +89,7 @@ export default function PublicTestimoniesWallPage() {
             className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,0.2)]"
           >
             <Plus className="h-4 w-4" />
-            <span>Share Your Testimony</span>
+            <span>{t("public.testimonies.submit_btn")}</span>
           </Link>
         </div>
       </div>

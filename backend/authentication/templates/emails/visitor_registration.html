@@ -1,0 +1,39 @@
+{% extends "emails/base.html" %}
+
+{% block header_title %}New Visitor Registration{% endblock %}
+
+{% block content %}
+<p>Hello <span class="highlight">{{ admin_name }}</span>,</p>
+
+<p>A new visitor has registered on the Church Nexus platform and is currently pending review and approval.</p>
+
+<div class="card">
+    <h3 style="margin-top: 0; color: #60A5FA; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 8px;">Visitor Details</h3>
+    <table class="details-table">
+        <tr>
+            <td class="label">Name</td>
+            <td class="value">{{ visitor_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Email</td>
+            <td class="value">{{ visitor_email }}</td>
+        </tr>
+        <tr>
+            <td class="label">Branch</td>
+            <td class="value">{{ branch_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Registered At</td>
+            <td class="value">{{ timestamp }}</td>
+        </tr>
+    </table>
+</div>
+
+<p>To review and approve this visitor account, please click the button below to go to the administration panel:</p>
+
+<div style="text-align: center;">
+    <a href="{{ approval_url }}" class="btn">Review & Approve</a>
+</div>
+
+<p>Thank you,<br>The Church Nexus System</p>
+{% endblock %}
