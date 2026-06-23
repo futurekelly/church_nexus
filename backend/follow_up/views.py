@@ -39,7 +39,13 @@ class VisitorProfileViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = VisitorProfile.objects.filter(is_archived=False)
+        show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
+        
+        if user.role == 'super_admin' and show_archived:
+            queryset = VisitorProfile.objects.all()
+        else:
+            queryset = VisitorProfile.objects.filter(is_archived=False)
+            
         if user.role != 'super_admin':
             queryset = queryset.filter(branch=user.branch)
         
@@ -65,13 +71,23 @@ class VisitorProfileViewSet(viewsets.ModelViewSet):
         
         # Auto-create the follow-up ticket
         notes = self.request.data.get('notes') or "Visitor registered manually."
+        source = self.request.data.get('source') or 'Manual'
         FollowUpTicket.objects.create(
             branch=branch,
             visitor=visitor,
             status='New',
-            source='Manual',
+            source=source,
             notes=notes
         )
+
+    @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.is_archived = True
+        instance.archived_at = timezone.now()
+        instance.archived_by = request.user
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FollowUpTicketViewSet(viewsets.ModelViewSet):

@@ -243,8 +243,12 @@ class TestFollowUpAPI:
         ticket = FollowUpTicket.objects.create(
             branch=self.branch_a,
             visitor=vis,
-            status="Following Up"
+            status="New"
         )
+        ticket.status = "Contacted"
+        ticket.save()
+        ticket.status = "Following Up"
+        ticket.save()
         
         url = reverse('ticket-integrate', kwargs={'pk': ticket.id})
         response = self.client.post(url, {"notes": "Promotion class completed"})
@@ -273,8 +277,18 @@ class TestFollowUpAPI:
         vis3 = VisitorProfile.objects.create(branch=self.branch_a, first_name="V3", last_name="V", gender="male")
 
         tkt1 = FollowUpTicket.objects.create(branch=self.branch_a, visitor=vis1, status="New", assigned_pastor=self.pastor_a)
-        tkt2 = FollowUpTicket.objects.create(branch=self.branch_a, visitor=vis2, status="Contacted", assigned_pastor=self.pastor_a)
-        tkt3 = FollowUpTicket.objects.create(branch=self.branch_a, visitor=vis3, status="Integrated", integrated_at=timezone.now())
+        
+        tkt2 = FollowUpTicket.objects.create(branch=self.branch_a, visitor=vis2, status="New", assigned_pastor=self.pastor_a)
+        tkt2.status = "Contacted"
+        tkt2.save()
+        
+        tkt3 = FollowUpTicket.objects.create(branch=self.branch_a, visitor=vis3, status="New")
+        tkt3.status = "Contacted"
+        tkt3.save()
+        tkt3.status = "Following Up"
+        tkt3.save()
+        tkt3.status = "Integrated"
+        tkt3.save()
 
         self.client.force_authenticate(user=self.pastor_a)
         url = reverse('analytics')
@@ -287,3 +301,90 @@ class TestFollowUpAPI:
         assert response.data['conversion_rate'] == 33.3 # 1 out of 3 total
         assert len(response.data['tickets_by_pastor']) == 1
         assert response.data['tickets_by_pastor'][0]['ticket_count'] == 2 # tkt1 and tkt2 assigned to pastor_a
+
+    def test_cannot_create_ticket_with_non_new_status(self):
+        self.client.force_authenticate(user=self.pastor_a)
+        vis = VisitorProfile.objects.create(
+            branch=self.branch_a,
+            first_name="Jane",
+            last_name="Doe",
+            phone_number="+254700000000",
+            gender="female"
+        )
+        # Verify model clean fails
+        with pytest.raises(ValidationError):
+            FollowUpTicket.objects.create(
+                branch=self.branch_a,
+                visitor=vis,
+                status="Following Up"
+            )
+        
+        # Verify serializer/API validation fails
+        url = reverse('ticket-list')
+        data = {
+            "visitor": vis.id,
+            "status": "Following Up",
+            "source": "Manual",
+            "notes": "Invalid initial status"
+        }
+        response = self.client.post(url, data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "status" in response.data or "non_field_errors" in response.data
+
+    @pytest.mark.django_db(transaction=True)
+    def test_assigned_pastor_notification_trigger(self):
+        from unittest.mock import patch
+        self.client.force_authenticate(user=self.pastor_a)
+        vis = VisitorProfile.objects.create(branch=self.branch_a, first_name="A", last_name="Vis", gender="male")
+        
+        with patch('follow_up.tasks.send_ticket_assignment_notification_task.delay') as mock_delay:
+            # Creating a ticket with assigned_pastor should trigger delay
+            tkt = FollowUpTicket.objects.create(
+                branch=self.branch_a,
+                visitor=vis,
+                assigned_pastor=self.pastor_a
+            )
+            assert mock_delay.call_count == 1
+            mock_delay.assert_called_with(str(tkt.id))
+            
+            # Updating the ticket status without changing pastor should NOT trigger it again
+            mock_delay.reset_mock()
+            tkt.status = "Contacted"
+            tkt.save()
+            assert mock_delay.call_count == 0
+            
+            # Updating pastor should trigger it
+            pastor_new = UserFactory(role='pastor', branch=self.branch_a)
+            tkt.assigned_pastor = pastor_new
+            tkt.save()
+            assert mock_delay.call_count == 1
+            mock_delay.assert_called_with(str(tkt.id))
+
+    def test_visitor_soft_delete(self):
+        # Create visitor
+        vis = VisitorProfile.objects.create(branch=self.branch_a, first_name="ToDelete", last_name="Vis", gender="male")
+        
+        # Authenticate
+        self.client.force_authenticate(user=self.pastor_a)
+        
+        # Call DELETE
+        url = reverse('visitor-detail', kwargs={'pk': vis.id})
+        response = self.client.delete(url)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        
+        # Verify soft deleted in DB
+        vis.refresh_from_db()
+        assert vis.is_archived is True
+        assert vis.archived_at is not None
+        assert vis.archived_by == self.pastor_a
+        
+        # Verify excluded from normal list
+        list_url = reverse('visitor-list')
+        res_list = self.client.get(list_url)
+        assert len(res_list.data) == 0
+        
+        # Super admin retrieval with show_archived=true
+        self.client.force_authenticate(user=self.super_admin)
+        res_admin = self.client.get(list_url + "?show_archived=true")
+        assert len(res_admin.data) == 1
+        assert res_admin.data[0]['id'] == str(vis.id)

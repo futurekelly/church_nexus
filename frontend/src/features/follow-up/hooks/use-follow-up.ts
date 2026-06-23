@@ -167,9 +167,121 @@ export function useFollowUp() {
     return null;
   }, [fetchData]);
 
-  // Re-fetch attendance trigger (no-op or sync trigger)
+  // Synchronize attendance-generated follow-up tickets from localStorage to backend
   const importAttendanceTickets = useCallback(async () => {
-    await fetchData();
+    if (typeof window === "undefined") return;
+    const localRaw = localStorage.getItem("church-attendance-follow-up-tickets");
+    if (!localRaw) return;
+    
+    let localTickets: any[] = [];
+    try {
+      localTickets = JSON.parse(localRaw);
+    } catch (err) {
+      console.error("Failed to parse local attendance tickets:", err);
+      return;
+    }
+    
+    if (localTickets.length === 0) return;
+    
+    setIsLoading(true);
+    try {
+      // Load current lists from backend for duplicate checks
+      const [tRes, vRes] = await Promise.all([
+        apiGet<any[]>("/api/follow-up/tickets/"),
+        apiGet<any[]>("/api/follow-up/visitors/"),
+      ]);
+      
+      if (isApiError(tRes) || isApiError(vRes)) {
+        throw new Error("Failed to load backend lists for synchronization checks.");
+      }
+      
+      const backendTickets = tRes.data;
+      const backendVisitors = vRes.data;
+      
+      let syncedCount = 0;
+      const remainingLocalTickets: any[] = [];
+      
+      for (const localTkt of localTickets) {
+        const memberId = localTkt.member_id;
+        
+        // 1. Check if an active ticket for this member is already present on the backend
+        const duplicateTicket = backendTickets.some((t: any) => 
+          t.visitor_details?.member === memberId && !t.is_completed
+        );
+        
+        if (duplicateTicket) {
+          // Already synced, skip this local ticket
+          continue;
+        }
+        
+        // 2. Check if a VisitorProfile exists for this member
+        let visitor = backendVisitors.find((v: any) => v.member === memberId);
+        
+        const timestamp = new Date(localTkt.session_date).toLocaleDateString();
+        const syncNotes = `Auto-generated follow-up lead from Attendance Session "${localTkt.session_title}" on ${timestamp}. Reason: ${localTkt.reason}`;
+        
+        if (!visitor) {
+          // Fetch member details from backend to create visitor profile
+          const memRes = await apiGet<any>(`/api/members/${memberId}/`);
+          if (isApiError(memRes)) {
+            console.error(`Member with ID ${memberId} not found on backend. Skipping sync.`);
+            continue;
+          }
+          const member = memRes.data;
+          
+          const visPayload = {
+            first_name: member.first_name,
+            last_name: member.last_name,
+            email: member.email || "",
+            phone_number: member.phone_number || "",
+            gender: member.gender === "female" || member.gender === "male" ? member.gender : "female",
+            member: member.id,
+            first_time_visitor: false,
+            invited_by: "Attendance System",
+            source: "Attendance Absentee",
+            notes: syncNotes
+          };
+          
+          const createVisRes = await apiPost<any>("/api/follow-up/visitors/", visPayload);
+          if (isApiError(createVisRes)) {
+            console.error(`Failed to create visitor profile for member ${memberId}:`, createVisRes.message);
+            remainingLocalTickets.push(localTkt);
+            continue;
+          }
+          syncedCount++;
+        } else {
+          // Profile exists but ticket is not active, spawn new ticket
+          const tktPayload = {
+            visitor: visitor.id,
+            status: "New",
+            source: "Attendance Absentee",
+            notes: syncNotes
+          };
+          
+          const createTktRes = await apiPost<any>("/api/follow-up/tickets/", tktPayload);
+          if (isApiError(createTktRes)) {
+            console.error(`Failed to spawn ticket for visitor ${visitor.id}:`, createTktRes.message);
+            remainingLocalTickets.push(localTkt);
+            continue;
+          }
+          syncedCount++;
+        }
+      }
+      
+      // Update local storage with remaining (un-synced) tickets
+      localStorage.setItem("church-attendance-follow-up-tickets", JSON.stringify(remainingLocalTickets));
+      
+      if (syncedCount > 0) {
+        toast.success(`Successfully synchronized ${syncedCount} follow-up lead(s) from attendance.`);
+      }
+      // Re-fetch all data to ensure local states are completely in-sync
+      await fetchData();
+    } catch (err: any) {
+      console.error("Failed to synchronize attendance tickets:", err);
+      toast.error("Failed to synchronize local attendance tickets.");
+    } finally {
+      setIsLoading(false);
+    }
   }, [fetchData]);
 
   return {

@@ -112,6 +112,7 @@ class FollowUpTicket(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_status = self.status
+        self._original_assigned_pastor_id = self.assigned_pastor_id
 
     def clean(self):
         super().clean()
@@ -124,7 +125,7 @@ class FollowUpTicket(models.Model):
                 })
 
         # Validate FSM status transitions if the ticket is already saved in the DB
-        if self.pk:
+        if not self._state.adding:
             old_status = self._original_status
             new_status = self.status
             
@@ -144,9 +145,23 @@ class FollowUpTicket(models.Model):
                 allowed_next_states = valid_transitions.get(old_status, [])
                 if new_status not in allowed_next_states:
                     raise ValidationError(f"Invalid transition from '{old_status}' to '{new_status}'. Allowed states are: {', '.join(allowed_next_states)}")
+        else:
+            # On creation, the status MUST be 'New'
+            if self.status != 'New':
+                raise ValidationError({
+                    'status': "A new follow-up ticket must be initialized with status 'New'."
+                })
 
     def save(self, *args, **kwargs):
         self.full_clean()
+        
+        pastor_changed = False
+        if not self._state.adding:
+            if self.assigned_pastor_id != self._original_assigned_pastor_id:
+                pastor_changed = True
+        else:
+            if self.assigned_pastor_id:
+                pastor_changed = True
         
         # Update completeness flags based on status
         if self.status == 'Integrated':
@@ -162,6 +177,12 @@ class FollowUpTicket(models.Model):
             
         super().save(*args, **kwargs)
         self._original_status = self.status
+        self._original_assigned_pastor_id = self.assigned_pastor_id
+
+        if pastor_changed and self.assigned_pastor:
+            from django.db import transaction
+            from follow_up.tasks import send_ticket_assignment_notification_task
+            transaction.on_commit(lambda: send_ticket_assignment_notification_task.delay(str(self.id)))
 
     def __str__(self):
         return f"Ticket for {self.visitor.first_name} {self.visitor.last_name} - {self.status}"
