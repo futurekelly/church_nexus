@@ -1,0 +1,39 @@
+{% extends "emails/base.html" %}
+
+{% block header_title %}New Testimony Submitted{% endblock %}
+
+{% block content %}
+<p>Hello <span class="highlight">{{ moderator_name }}</span>,</p>
+
+<p>A new testimony has been submitted on the Church Nexus platform and is currently pending review and approval.</p>
+
+<div class="card">
+    <h3 style="margin-top: 0; color: #60A5FA; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 8px;">Testimony Details</h3>
+    <table class="details-table">
+        <tr>
+            <td class="label">Title</td>
+            <td class="value">{{ testimony_title }}</td>
+        </tr>
+        <tr>
+            <td class="label">Submitted By</td>
+            <td class="value">{{ author_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Category</td>
+            <td class="value">{{ category }}</td>
+        </tr>
+        <tr>
+            <td class="label">Branch</td>
+            <td class="value">{{ branch_name }}</td>
+        </tr>
+    </table>
+</div>
+
+<p>To review and approve/reject this testimony, please click the button below to go to the moderation page:</p>
+
+<div style="text-align: center;">
+    <a href="{{ review_url }}" class="btn">Review Testimony</a>
+</div>
+
+<p>Thank you,<br>The Church Nexus System</p>
+{% endblock %}

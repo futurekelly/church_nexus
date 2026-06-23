@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 
 export function usePermissions() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const pathname = usePathname();
 
   const permissions = useMemo(
@@ -30,8 +30,21 @@ export function usePermissions() {
 
   const canAccessCurrentRoute = useMemo(() => {
     if (!role) return false;
+    
+    // Allow members to view their own member profile detail page
+    const isSelfProfileRoute = pathname.startsWith("/dashboard/members/") && 
+                               !pathname.endsWith("/edit") && 
+                               !pathname.endsWith("/create");
+    if (isSelfProfileRoute && role === "member") {
+      const profileId = pathname.split("/").pop();
+      const userMemberId = user?.member_id ?? user?.memberId ?? null;
+      if (profileId && userMemberId && String(profileId) === String(userMemberId)) {
+        return true;
+      }
+    }
+    
     return canAccessRoute(role, pathname);
-  }, [role, pathname]);
+  }, [role, pathname, user]);
 
   const visibleNavItems = useMemo(() => {
     if (!role) return [];

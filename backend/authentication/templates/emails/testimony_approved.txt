@@ -1,0 +1,16 @@
+Hello {{ author_name }},
+
+We are excited to inform you that your testimony has been approved by the moderation team and is now published on the testimonies wall.
+
+Approved Testimony:
+-------------------
+Title: {{ testimony_title }}
+Status: Approved & Published
+
+Thank you for sharing what God has done. Your story will inspire and encourage many others in our congregation.
+
+You can view your published testimony on the testimonies wall here:
+{{ wall_url }}
+
+God bless you,
+The Church Nexus Team

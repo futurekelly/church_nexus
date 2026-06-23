@@ -1,0 +1,35 @@
+{% extends "emails/base.html" %}
+
+{% block header_title %}Testimony Status Update{% endblock %}
+
+{% block content %}
+<p>Hello <span class="highlight">{{ author_name }}</span>,</p>
+
+<p>Thank you for submitting your testimony to the Church Nexus platform. The moderation team has reviewed your submission.</p>
+
+<p>We wanted to let you know that your testimony has been declined for publication on the public wall.</p>
+
+<div class="card">
+    <h3 style="margin-top: 0; color: #EF4444; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 8px;">Submission Status</h3>
+    <table class="details-table">
+        <tr>
+            <td class="label">Title</td>
+            <td class="value">{{ testimony_title }}</td>
+        </tr>
+        <tr>
+            <td class="label">Status</td>
+            <td class="value" style="color: #EF4444;">Declined</td>
+        </tr>
+        {% if rejection_reason %}
+        <tr>
+            <td class="label">Reason</td>
+            <td class="value">{{ rejection_reason }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<p>If you have any questions or would like to revise your testimony, please feel free to reach out to the church administration office.</p>
+
+<p>Thank you,<br>The Church Nexus Team</p>
+{% endblock %}

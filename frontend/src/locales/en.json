@@ -231,7 +231,8 @@
       "preview_numbers": "Congregation numbers count",
       "active_lang": "Active Language",
       "country_code": "Country Code",
-      "selected_timezone": "Selected Timezone"
+      "selected_timezone": "Selected Timezone",
+      "save_success": "Localization settings saved successfully!"
     }
   }
 }

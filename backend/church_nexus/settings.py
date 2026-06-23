@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'finance',
     'documents',
     'analytics',
+    'testimonies',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'

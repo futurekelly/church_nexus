@@ -1,0 +1,16 @@
+Hello {{ author_name }},
+
+Thank you for submitting your testimony to the Church Nexus platform. The moderation team has reviewed your submission.
+
+We wanted to let you know that your testimony has been declined for publication on the public wall.
+
+Submission Status:
+------------------
+Title: {{ testimony_title }}
+Status: Declined
+{% if rejection_reason %}Reason: {{ rejection_reason }}{% endif %}
+
+If you have any questions or would like to revise your testimony, please feel free to reach out to the church administration office.
+
+Thank you,
+The Church Nexus Team

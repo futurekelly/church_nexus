@@ -231,7 +231,8 @@
       "preview_numbers": "Idadi ya wanachama",
       "active_lang": "Lugha Inayotumika",
       "country_code": "Msimbo wa Nchi",
-      "selected_timezone": "Majira ya Saa Yaliyochaguliwa"
+      "selected_timezone": "Majira ya Saa Yaliyochaguliwa",
+      "save_success": "Mipangilio ya lugha na nambari imehifadhiwa kikamilifu!"
     }
   }
 }

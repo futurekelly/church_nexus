@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Globe, ArrowLeft, Check, Lock } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { useAppPermissions } from "@/hooks/use-app-permissions";
 import { useLocalizationSettings } from "@/features/settings/hooks/use-localization-settings";
-import type { LocalizationSettings, SupportedLanguage, SupportedCurrency, SupportedCountry } from "@/features/settings";
+import type { LocalizationSettings } from "@/features/settings";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ export default function LocalizationSettingsPage() {
   const { settings: permissions } = useAppPermissions();
   const { settings, updateLocalizationSettings } = useLocalizationSettings();
 
-  const { register, handleSubmit, watch } = useForm<LocalizationSettings>({
+  const { register, handleSubmit, watch, reset } = useForm<LocalizationSettings>({
     defaultValues: {
       default_language: settings.default_language,
       default_currency: settings.default_currency,
@@ -30,6 +31,11 @@ export default function LocalizationSettingsPage() {
       timezone: settings.timezone,
     }
   });
+
+  // Keep form fields synced when settings load/update from localStorage
+  useEffect(() => {
+    reset(settings);
+  }, [settings, reset]);
 
   const watchLanguage = watch("default_language");
   const watchCurrency = watch("default_currency");
@@ -52,7 +58,12 @@ export default function LocalizationSettingsPage() {
   }
 
   const onSubmit = (data: LocalizationSettings) => {
-    updateLocalizationSettings(data);
+    try {
+      updateLocalizationSettings(data);
+      toast.success(t("settings.localization.save_success", { defaultValue: "Localization settings saved successfully!" }));
+    } catch (err) {
+      toast.error(t("common.error_occurred", { defaultValue: "An error occurred. Please try again." }));
+    }
   };
 
   // Previews based on current form status

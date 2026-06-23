@@ -1,0 +1,33 @@
+{% extends "emails/base.html" %}
+
+{% block header_title %}Testimony Approved!{% endblock %}
+
+{% block content %}
+<p>Hello <span class="highlight">{{ author_name }}</span>,</p>
+
+<p>We are excited to inform you that your testimony has been approved by the moderation team and is now published on the testimonies wall.</p>
+
+<div class="card">
+    <h3 style="margin-top: 0; color: #10B981; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 8px;">Approved Testimony</h3>
+    <table class="details-table">
+        <tr>
+            <td class="label">Title</td>
+            <td class="value">{{ testimony_title }}</td>
+        </tr>
+        <tr>
+            <td class="label">Status</td>
+            <td class="value" style="color: #10B981;">Approved & Published</td>
+        </tr>
+    </table>
+</div>
+
+<p>Thank you for sharing what God has done. Your story will inspire and encourage many others in our congregation.</p>
+
+<p>You can view your published testimony on the testimonies wall here:</p>
+
+<div style="text-align: center;">
+    <a href="{{ wall_url }}" class="btn">View Testimonies Wall</a>
+</div>
+
+<p>God bless you,<br>The Church Nexus Team</p>
+{% endblock %}

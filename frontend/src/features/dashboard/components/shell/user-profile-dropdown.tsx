@@ -75,7 +75,7 @@ export function UserProfileDropdown() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={prefersReducedMotion ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="glass-panel absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border/60 shadow-glass"
+            className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-surface shadow-2xl animate-slide-up ring-1 ring-primary/20"
           >
             <div className="border-b border-border/50 px-4 py-3">
               <p className="text-sm font-semibold text-primary-foreground">

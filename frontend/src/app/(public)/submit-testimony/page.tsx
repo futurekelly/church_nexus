@@ -59,14 +59,16 @@ export default function SubmitTestimonyPage() {
 
   const watchAnonymous = watch("is_anonymous");
 
-  const onSubmit = (values: TestimonyFormValues) => {
+  const onSubmit = async (values: TestimonyFormValues) => {
     setIsSubmitting(true);
-    // Simulate API delay
-    setTimeout(() => {
-      addTestimony(values);
-      setIsSubmitting(false);
+    try {
+      await addTestimony(values);
       setSuccess(true);
-    }, 800);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -279,7 +281,7 @@ export default function SubmitTestimonyPage() {
             <CheckCircle className="h-12 w-12 text-emerald-400 mx-auto mb-4" />
             <h3 className="font-display text-lg font-bold text-primary-foreground">Submission Received!</h3>
             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-              Thank you for sharing your story. Your testimony has been submitted for review and will appear on the public testimonies wall once approved by a pastor or church administrator.
+              Your testimony has been submitted and is awaiting review.
             </p>
             <div className="mt-6 flex justify-center gap-3">
               <button

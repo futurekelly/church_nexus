@@ -1,4 +1,4 @@
-export type TestimonyStatus = "Pending" | "Approved" | "Archived";
+export type TestimonyStatus = "Pending" | "Approved" | "Rejected" | "Archived";
 
 export type TestimonyCategory =
   | "Healing"
@@ -17,11 +17,13 @@ export interface Testimony {
   user_id: string | null;
   author_name: string;
   author_email?: string;
+  is_anonymous?: boolean;
   title: string;
   content: string;
   category: TestimonyCategory;
   status: TestimonyStatus;
   is_featured: boolean;
+  rejection_reason?: string;
   views: number;
   image_url?: string;
   video_url?: string;

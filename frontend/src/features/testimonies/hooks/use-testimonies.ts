@@ -1,90 +1,184 @@
 "use client";
 
-import { useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Testimony, TestimonyFormValues } from "../types/testimonies.types";
-import { MOCK_TESTIMONIES } from "../data/mock-testimonies";
-import { useLocalStorageState } from "@/hooks/use-local-storage-state";
+import { API_ENDPOINTS } from "@/constants/api-endpoints";
+import { apiGet, apiPost, apiPatch } from "@/services/api-client";
 import { useAuth } from "@/hooks/use-auth";
-
-const TESTIMONIES_KEY = "church-mock-testimonies";
 
 export function useTestimonies() {
   const { user } = useAuth();
-  const [testimonies, setTestimonies] = useLocalStorageState<Testimony[]>(
-    TESTIMONIES_KEY,
-    MOCK_TESTIMONIES
-  );
+  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTestimonies = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await apiGet<Testimony[]>(API_ENDPOINTS.TESTIMONIES);
+      if (res.success) {
+        setTestimonies(res.data);
+      } else {
+        setError(res.message || "Failed to load testimonies");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load testimonies");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTestimonies();
+  }, [fetchTestimonies]);
 
   const addTestimony = useCallback(
-    (values: TestimonyFormValues) => {
-      const nextId = `test-${Date.now()}`;
-      const authorName = values.is_anonymous ? "Anonymous Partner" : values.author_name;
-
-      const newTestimony: Testimony = {
-        id: nextId,
-        branch_id: "branch-001", // Default branch ID
-        user_id: user ? String(user.id) : null,
-        author_name: authorName,
-        author_email: values.is_anonymous ? undefined : values.author_email,
-        title: values.title,
-        content: values.content,
-        category: values.category,
-        status: "Pending", // All public submissions default to Pending
-        is_featured: false,
-        views: 0,
-        image_url: values.image_url,
-        video_url: values.video_url,
-        created_at: new Date().toISOString(),
-      };
-
-      setTestimonies((prev) => [newTestimony, ...prev]);
-      return newTestimony;
+    async (values: TestimonyFormValues) => {
+      setError(null);
+      try {
+        const res = await apiPost<Testimony>(API_ENDPOINTS.TESTIMONIES, values);
+        if (res.success) {
+          setTestimonies((prev) => [res.data, ...prev]);
+          return res.data;
+        } else {
+          throw new Error(res.message || "Failed to submit testimony");
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to submit testimony";
+        setError(msg);
+        throw new Error(msg);
+      }
     },
-    [user, setTestimonies]
+    []
   );
 
   const approveTestimony = useCallback(
-    (id: string) => {
-      setTestimonies((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, status: "Approved" as const } : t))
-      );
+    async (id: string) => {
+      setError(null);
+      try {
+        const res = await apiPatch<Testimony>(`${API_ENDPOINTS.TESTIMONIES}${id}/`, {
+          status: "Approved",
+        });
+        if (res.success) {
+          setTestimonies((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, status: "Approved" as const } : t))
+          );
+          return res.data;
+        } else {
+          throw new Error(res.message || "Failed to approve testimony");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to approve testimony");
+        throw err;
+      }
     },
-    [setTestimonies]
+    []
+  );
+
+  const rejectTestimony = useCallback(
+    async (id: string, reason?: string) => {
+      setError(null);
+      try {
+        const res = await apiPatch<Testimony>(`${API_ENDPOINTS.TESTIMONIES}${id}/`, {
+          status: "Rejected",
+          rejection_reason: reason || "",
+        });
+        if (res.success) {
+          setTestimonies((prev) =>
+            prev.map((t) =>
+              t.id === id
+                ? { ...t, status: "Rejected" as const, rejection_reason: reason || "" }
+                : t
+            )
+          );
+          return res.data;
+        } else {
+          throw new Error(res.message || "Failed to reject testimony");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to reject testimony");
+        throw err;
+      }
+    },
+    []
   );
 
   const archiveTestimony = useCallback(
-    (id: string) => {
-      setTestimonies((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, status: "Archived" as const } : t))
-      );
+    async (id: string) => {
+      setError(null);
+      try {
+        const res = await apiPatch<Testimony>(`${API_ENDPOINTS.TESTIMONIES}${id}/`, {
+          status: "Archived",
+        });
+        if (res.success) {
+          setTestimonies((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, status: "Archived" as const } : t))
+          );
+          return res.data;
+        } else {
+          throw new Error(res.message || "Failed to archive testimony");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to archive testimony");
+        throw err;
+      }
     },
-    [setTestimonies]
+    []
   );
 
   const toggleFeatureTestimony = useCallback(
-    (id: string) => {
-      setTestimonies((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, is_featured: !t.is_featured } : t))
-      );
+    async (id: string) => {
+      setError(null);
+      const target = testimonies.find((t) => t.id === id);
+      if (!target) return;
+
+      try {
+        const res = await apiPatch<Testimony>(`${API_ENDPOINTS.TESTIMONIES}${id}/`, {
+          is_featured: !target.is_featured,
+        });
+        if (res.success) {
+          setTestimonies((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, is_featured: !t.is_featured } : t))
+          );
+          return res.data;
+        } else {
+          throw new Error(res.message || "Failed to toggle featured status");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to toggle featured status");
+        throw err;
+      }
     },
-    [setTestimonies]
+    [testimonies]
   );
 
   const incrementViews = useCallback(
-    (id: string) => {
-      setTestimonies((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, views: t.views + 1 } : t))
-      );
+    async (id: string) => {
+      try {
+        const res = await apiPost<void>(`${API_ENDPOINTS.TESTIMONIES}${id}/increment-view/`);
+        if (res.success) {
+          setTestimonies((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, views: t.views + 1 } : t))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to increment testimony views:", err);
+      }
     },
-    [setTestimonies]
+    []
   );
 
   return {
     testimonies,
+    isLoading,
+    error,
     addTestimony,
     approveTestimony,
+    rejectTestimony,
     archiveTestimony,
     toggleFeatureTestimony,
     incrementViews,
+    refetch: fetchTestimonies,
   };
 }

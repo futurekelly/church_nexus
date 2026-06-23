@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Plus, Search, Filter, HelpCircle } from "lucide-react";
+import { MessageSquare, Plus, Search, Filter, HelpCircle, Loader2, AlertCircle } from "lucide-react";
 import { useTestimonies } from "@/features/testimonies";
 import { TestimonyCard } from "@/features/testimonies/components/testimony-card";
 import type { TestimonyCategory } from "@/features/testimonies";
@@ -24,7 +24,7 @@ const CATEGORIES: (TestimonyCategory | "all")[] = [
 
 export default function PublicTestimoniesWallPage() {
   const { t } = useTranslation();
-  const { testimonies, incrementViews } = useTestimonies();
+  const { testimonies, isLoading, error, incrementViews } = useTestimonies();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<TestimonyCategory | "all">("all");
 
@@ -131,7 +131,18 @@ export default function PublicTestimoniesWallPage() {
       </div>
 
       {/* Testimonies Grid */}
-      {filteredTestimonies.length > 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-2" />
+          <p className="text-xs text-muted-foreground">Loading testimonies...</p>
+        </div>
+      ) : error && testimonies.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <AlertCircle className="h-10 w-10 text-rose-500 mb-3" />
+          <h3 className="text-base font-bold text-primary-foreground font-display">Failed to Load</h3>
+          <p className="text-xs text-muted-foreground mt-1 max-w-xs">{error}</p>
+        </div>
+      ) : filteredTestimonies.length > 0 ? (
         <motion.div
           layout
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start"

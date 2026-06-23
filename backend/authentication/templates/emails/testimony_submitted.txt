@@ -1,0 +1,16 @@
+Hello {{ moderator_name }},
+
+A new testimony has been submitted on the Church Nexus platform and is currently pending review and approval.
+
+Testimony Details:
+------------------
+Title: {{ testimony_title }}
+Submitted By: {{ author_name }}
+Category: {{ category }}
+Branch: {{ branch_name }}
+
+To review and approve/reject this testimony, please visit the moderation page:
+{{ review_url }}
+
+Thank you,
+The Church Nexus System

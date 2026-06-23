@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS: `${API_VERSION}/notifications/`,
   ANALYTICS: `${API_VERSION}/analytics/dashboard/`,
   SETTINGS: `${API_VERSION}/settings/`,
+  TESTIMONIES: `${API_VERSION}/testimonies/`,
 } as const;
 
 export const API_BASE_URL =

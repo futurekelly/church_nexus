@@ -94,3 +94,107 @@ def send_donation_receipt_email_task(self, donation_id):
     except Exception as e:
         logger.error(f"Failed sending donation receipt email task for {donation_id}: {e}")
         raise e
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3}
+)
+def send_testimony_submitted_email_task(self, testimony_id):
+    logger.info(f"Executing send_testimony_submitted_email_task for testimony {testimony_id}")
+    from testimonies.models import Testimony
+    from authentication.models import EmailLog, User
+    from django.conf import settings
+
+    try:
+        testimony = Testimony.objects.get(pk=testimony_id)
+    except Testimony.DoesNotExist:
+        logger.error(f"Testimony {testimony_id} not found in database.")
+        return
+
+    # Find moderators belonging to the same branch
+    if testimony.branch:
+        moderators = User.objects.filter(
+            branch=testimony.branch,
+            role__in=['church_admin', 'pastor']
+        ) | User.objects.filter(role='super_admin')
+    else:
+        moderators = User.objects.filter(role='super_admin')
+
+    # Send an email alert to each moderator
+    for mod in moderators:
+        if not mod.email:
+            continue
+            
+        try:
+            log = EmailLog.objects.create(
+                recipient=mod.email,
+                subject=f"[Church Nexus] New Testimony Submitted - {testimony.title}",
+                email_type="testimony_submitted",
+                status="PENDING"
+            )
+            
+            review_url = f"{settings.FRONTEND_URL}/dashboard/testimonies"
+            context = {
+                'moderator_name': f"{mod.first_name} {mod.last_name}".strip() or mod.email,
+                'author_name': testimony.author_name,
+                'testimony_title': testimony.title,
+                'category': testimony.category,
+                'branch_name': testimony.branch.branch_name if testimony.branch else "Global / No Branch",
+                'review_url': review_url
+            }
+            send_templated_email(str(log.id), context)
+        except Exception as e:
+            logger.error(f"Failed sending testimony submitted email alert to moderator {mod.email}: {e}")
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3}
+)
+def send_testimony_moderation_email_task(self, testimony_id):
+    logger.info(f"Executing send_testimony_moderation_email_task for testimony {testimony_id}")
+    from testimonies.models import Testimony
+    from authentication.models import EmailLog
+    from django.conf import settings
+
+    try:
+        testimony = Testimony.objects.get(pk=testimony_id)
+    except Testimony.DoesNotExist:
+        logger.error(f"Testimony {testimony_id} not found in database.")
+        return
+
+    recipient_email = testimony.author_email
+    if not recipient_email and testimony.author_user:
+        recipient_email = testimony.author_user.email
+        
+    if not recipient_email:
+        logger.warning(f"No recipient email found for testimony {testimony_id} author notification.")
+        return
+
+    status_lower = testimony.status.lower()
+    email_type = f"testimony_{status_lower}"
+    subject = f"[Church Nexus] Your testimony has been {status_lower}!"
+
+    try:
+        log = EmailLog.objects.create(
+            recipient=recipient_email,
+            subject=subject,
+            email_type=email_type,
+            status="PENDING"
+        )
+        
+        context = {
+            'author_name': testimony.author_name,
+            'testimony_title': testimony.title,
+            'status': testimony.status,
+            'rejection_reason': testimony.rejection_reason,
+            'wall_url': f"{settings.FRONTEND_URL}/testimonies"
+        }
+        send_templated_email(str(log.id), context)
+    except Exception as e:
+        logger.error(f"Failed sending testimony moderation status email to {recipient_email}: {e}")
+        raise e
+
