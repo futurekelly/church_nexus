@@ -79,6 +79,9 @@ urlpatterns = [
     path('api/', include('donations.urls')),
     path('api/', include('analytics.urls')),
     path('api/testimonies/', include('testimonies.urls')),
+    path('api/follow-up/', include('follow_up.urls')),
+    path('api/sermons/', include('sermons.urls')),
+    path('api/kids-kingdom/', include('kids_kingdom.urls')),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,35 @@
+{% extends "emails/base.html" %}
+
+{% block header_title %}New Follow-Up Ticket Assigned{% endblock %}
+
+{% block content %}
+<p>Hello <span class="highlight">{{ pastor_name }}</span>,</p>
+
+<p>You have been assigned to follow up on a visitor profile in Church Nexus.</p>
+
+<div class="card">
+    <h3 style="margin-top: 0; color: #60A5FA; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 8px;">Follow-up Details</h3>
+    <table class="details-table">
+        <tr>
+            <td class="label">Visitor Name</td>
+            <td class="value">{{ visitor_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Source</td>
+            <td class="value">{{ ticket_source }}</td>
+        </tr>
+        <tr>
+            <td class="label">Notes</td>
+            <td class="value">{{ ticket_notes }}</td>
+        </tr>
+    </table>
+</div>
+
+<p>Please click the button below to view the visitor card and log your touchpoints:</p>
+
+<div style="text-align: center;">
+    <a href="{{ action_url }}" class="btn">View Follow-Up Ticket</a>
+</div>
+
+<p>Thank you,<br>The Church Nexus System</p>
+{% endblock %}

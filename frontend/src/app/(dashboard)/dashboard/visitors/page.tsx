@@ -197,7 +197,7 @@ export default function VisitorsListPage() {
               {paginatedVisitors.map((vis) => {
                 // Find matching ticket for this visitor to extract status colors and links
                 const matchingTicket = tickets.find((t) => t.visitor_id === vis.id);
-                const status = matchingTicket?.status || "New Visitor";
+                const status = matchingTicket?.status || "New";
                 const colors = FOLLOW_UP_STATUS_COLORS[status];
 
                 return (

@@ -1,0 +1,29 @@
+{% extends "emails/base.html" %}
+
+{% block header_title %}Welcome to Our Church Community!{% endblock %}
+
+{% block content %}
+<p>Dear <span class="highlight">{{ visitor_name }}</span>,</p>
+
+<p>We are absolutely thrilled to welcome you to the <span class="highlight">{{ branch_name }}</span> family!</p>
+
+<p>You have been successfully registered as an Active Member of our community. We are excited to walk alongside you in your spiritual journey, help you connect with others, and discover the ministries that match your gifts.</p>
+
+<div class="card">
+    <h3 style="margin-top: 0; color: #60A5FA; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 8px;">Integration Details</h3>
+    <table class="details-table">
+        <tr>
+            <td class="label">Branch Name</td>
+            <td class="value">{{ branch_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Integration Date</td>
+            <td class="value">{{ join_date }}</td>
+        </tr>
+    </table>
+</div>
+
+<p>If you have any questions or would like to join a cell group, please do not hesitate to reach out to us.</p>
+
+<p>God bless you,<br>The {{ branch_name }} Team</p>
+{% endblock %}

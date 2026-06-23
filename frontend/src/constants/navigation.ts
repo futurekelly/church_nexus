@@ -2,6 +2,7 @@ import { DASHBOARD_ROUTES } from "@/constants/routes";
 import { PERMISSIONS, type Permission } from "@/lib/permissions";
 import type { LucideIcon } from "lucide-react";
 import {
+  Baby,
   BarChart3,
   Bell,
   BookOpen,
@@ -125,6 +126,13 @@ export const SIDEBAR_NAV_ITEMS: NavItem[] = [
     href: DASHBOARD_ROUTES.CELEBRATIONS,
     icon: PartyPopper,
     permission: PERMISSIONS.CELEBRATIONS_VIEW,
+    group: "community",
+  },
+  {
+    label: "Kids Kingdom",
+    href: DASHBOARD_ROUTES.KIDS_KINGDOM,
+    icon: Baby,
+    permission: PERMISSIONS.KIDS_KINGDOM_VIEW,
     group: "community",
   },
   {

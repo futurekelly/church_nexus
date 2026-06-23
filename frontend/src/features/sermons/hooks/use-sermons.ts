@@ -1,75 +1,113 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
-import { MOCK_SERMONS } from "../data/mock-sermons";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Sermon, SermonFilters, SermonSortConfig } from "../types/sermon.types";
-import { useLocalStorageState } from "@/hooks/use-local-storage-state";
-
-const LOCAL_STORAGE_KEY = "church-mock-sermons";
+import { apiGet, apiPost, apiPatch, isApiError } from "@/services/api-client";
+import { toast } from "sonner";
 
 /**
- * Singleton state hook for Sermons data using localstorage.
- * Syncs reactive changes across all instances using the shared useLocalStorageState.
+ * Mapper utility to normalize API responses to frontend TS types.
+ * Resolves null or missing database values to safe defaults (e.g. empty strings).
+ */
+const mapSermonToFrontend = (s: any): Sermon => ({
+  id: s.id,
+  title: s.title,
+  description: s.description,
+  scripture_reference: s.scripture_reference || "",
+  sermon_date: s.sermon_date,
+  status: s.status,
+  thumbnail: s.thumbnail || "",
+  video_url: s.video_url || "",
+  audio_url: s.audio_url || "",
+  speaker: s.speaker,
+  category: s.category,
+  featured: s.featured,
+  notes: s.notes || "",
+  tags: s.tags || [],
+  created_at: s.created_at,
+  updated_at: s.updated_at,
+});
+
+/**
+ * Hook to manage Sermons data using backend APIs.
  */
 export function useSermons() {
-  const [sermons, setSermons] = useLocalStorageState<Sermon[]>(
-    LOCAL_STORAGE_KEY,
-    MOCK_SERMONS
-  );
+  const [sermons, setSermons] = useState<Sermon[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const fetchSermons = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiGet<any[]>("/api/sermons/");
+      if (!isApiError(response)) {
+        setSermons(response.data.map(mapSermonToFrontend));
+      } else {
+        toast.error(`Failed to load sermons: ${response.message}`);
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch sermons:", err);
+      toast.error("Failed to sync sermons data with backend.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSermons();
+  }, [fetchSermons]);
 
   const addSermon = useCallback(
-    (newSermon: Omit<Sermon, "id" | "created_at" | "updated_at">) => {
-      const sermon: Sermon = {
-        ...newSermon,
-        id: `se-${Date.now()}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      setSermons((prev) => {
-        let updatedList = [...prev];
-        if (newSermon.featured) {
-          updatedList = updatedList.map((s) =>
-            s.featured ? { ...s, featured: false } : s
-          );
+    async (newSermon: Omit<Sermon, "id" | "created_at" | "updated_at">) => {
+      setIsLoading(true);
+      try {
+        const response = await apiPost<any>("/api/sermons/", newSermon);
+        if (!isApiError(response)) {
+          toast.success("Sermon created successfully.");
+          await fetchSermons();
+          return mapSermonToFrontend(response.data);
+        } else {
+          toast.error(`Failed to create sermon: ${response.message}`);
         }
-        return [sermon, ...updatedList];
-      });
-
-      return sermon;
+      } catch (err: any) {
+        console.error("Failed to add sermon:", err);
+        const detail = err.response?.data?.message || err.message;
+        toast.error(`Failed to create sermon: ${detail}`);
+      } finally {
+        setIsLoading(false);
+      }
+      return null;
     },
-    [setSermons]
+    [fetchSermons]
   );
 
   const updateSermon = useCallback(
-    (id: string, updatedFields: Partial<Sermon>) => {
-      setSermons((prev) => {
-        let updatedList = [...prev];
-        if (updatedFields.featured) {
-          // Unfeature others
-          updatedList = updatedList.map((s) =>
-            s.featured ? { ...s, featured: false } : s
-          );
+    async (id: string, updatedFields: Partial<Sermon>) => {
+      setIsLoading(true);
+      try {
+        const response = await apiPatch<any>(`/api/sermons/${id}/`, updatedFields);
+        if (!isApiError(response)) {
+          toast.success("Sermon updated successfully.");
+          await fetchSermons();
+          return mapSermonToFrontend(response.data);
+        } else {
+          toast.error(`Failed to update sermon: ${response.message}`);
         }
-
-        return updatedList.map((s) =>
-          s.id === id
-            ? {
-                ...s,
-                ...updatedFields,
-                updated_at: new Date().toISOString(),
-              }
-            : s
-        );
-      });
+      } catch (err: any) {
+        console.error("Failed to update sermon:", err);
+        const detail = err.response?.data?.message || err.message;
+        toast.error(`Failed to update sermon: ${detail}`);
+      } finally {
+        setIsLoading(false);
+      }
+      return null;
     },
-    [setSermons]
+    [fetchSermons]
   );
 
   const deleteSermon = useCallback(
-    (id: string) => {
-      // Soft-delete: change status to Archived
-      updateSermon(id, { status: "Archived", featured: false });
+    async (id: string) => {
+      // Soft-delete behavior matching localstorage logic
+      await updateSermon(id, { status: "Archived", featured: false });
     },
     [updateSermon]
   );
@@ -83,15 +121,17 @@ export function useSermons() {
 
   return {
     sermons,
+    isLoading,
     addSermon,
     updateSermon,
     deleteSermon,
     getSermonById,
+    refetch: fetchSermons
   };
 }
 
 /**
- * Helper hook to filter, search, sort, and paginate sermons
+ * Helper hook to filter, search, sort, and paginate sermons from backend
  */
 export function useFilteredSermons(
   filters: SermonFilters,
@@ -101,10 +141,12 @@ export function useFilteredSermons(
 ) {
   const {
     sermons,
+    isLoading,
     addSermon,
     updateSermon,
     deleteSermon,
     getSermonById,
+    refetch
   } = useSermons();
 
   const filteredSermons = useMemo(() => {
@@ -117,7 +159,7 @@ export function useFilteredSermons(
         (s) =>
           s.title.toLowerCase().includes(q) ||
           s.description.toLowerCase().includes(q) ||
-          s.scripture_reference.toLowerCase().includes(q) ||
+          (s.scripture_reference && s.scripture_reference.toLowerCase().includes(q)) ||
           s.speaker.toLowerCase().includes(q)
       );
     }
@@ -139,8 +181,8 @@ export function useFilteredSermons(
 
     // Sorting
     result.sort((a, b) => {
-      let aVal: string | number = a[sortConfig.key];
-      let bVal: string | number = b[sortConfig.key];
+      let aVal: string | number = a[sortConfig.key] || "";
+      let bVal: string | number = b[sortConfig.key] || "";
 
       if (sortConfig.key === "sermon_date") {
         aVal = new Date(a.sermon_date).getTime();
@@ -177,5 +219,8 @@ export function useFilteredSermons(
     updateSermon,
     deleteSermon,
     getSermonById,
+    isLoading,
+    refetch
   };
 }
+

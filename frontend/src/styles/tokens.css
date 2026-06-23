@@ -1,4 +1,8 @@
 :root {
+  --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-jakarta: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
   --background: 222 47% 5%;
   --surface: 222 35% 9%;
   /* #12161F per UI_GUIDELINES.md */

@@ -1,0 +1,82 @@
+import base64
+from django.core.files.base import ContentFile
+from rest_framework import serializers
+from django.core.exceptions import ValidationError as DjangoValidationError
+from .models import Sermon
+
+class SermonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sermon
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at', 'created_by')
+        extra_kwargs = {
+            'branch': {'required': False}
+        }
+
+    def to_internal_value(self, data):
+        # Create a mutable copy of the query/data dict if needed
+        data = data.copy() if hasattr(data, 'copy') else data
+        
+        # Handle thumbnail base64 or SVG data URI strings
+        if 'thumbnail' in data and isinstance(data['thumbnail'], str) and data['thumbnail']:
+            thumbnail_str = data['thumbnail']
+            if thumbnail_str.startswith('data:image'):
+                if ';base64,' in thumbnail_str:
+                    try:
+                        header, image_data = thumbnail_str.split(';base64,')
+                        file_ext = header.split('/')[-1]
+                        # Handle double slashes or options if any
+                        if '+' in file_ext:
+                            file_ext = file_ext.split('+')[0]
+                        decoded_file = base64.b64decode(image_data)
+                        data['thumbnail'] = ContentFile(decoded_file, name=f"thumbnail.{file_ext}")
+                    except Exception:
+                        data['thumbnail'] = None
+                elif 'utf8,' in thumbnail_str or ';utf8,' in thumbnail_str:
+                    try:
+                        divider = 'utf8,' if 'utf8,' in thumbnail_str else ';utf8,'
+                        _, svg_content = thumbnail_str.split(divider)
+                        decoded_file = svg_content.encode('utf-8')
+                        data['thumbnail'] = ContentFile(decoded_file, name="thumbnail.svg")
+                    except Exception:
+                        data['thumbnail'] = None
+                else:
+                    data['thumbnail'] = None
+            elif thumbnail_str.startswith('http://') or thumbnail_str.startswith('https://'):
+                # It's an absolute URL (already saved), so don't re-upload/validate as a file
+                # In DRF, if a file field is updated with its existing URL, we can remove it or bypass it
+                # If they passed an existing URL, we remove it from data to prevent validation errors,
+                # letting Django keep the current file.
+                if self.instance and self.instance.thumbnail and thumbnail_str.endswith(self.instance.thumbnail.name):
+                    data.pop('thumbnail', None)
+                else:
+                    data['thumbnail'] = None
+                    
+        return super().to_internal_value(data)
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        user = request.user if (request and request.user) else None
+        
+        # Populate branch automatically if not provided
+        if not attrs.get('branch') and user:
+            if user.role != 'super_admin':
+                attrs['branch'] = user.branch
+            else:
+                raise serializers.ValidationError({"branch": "A branch assignment is required for Super Admins."})
+
+        # Run model clean validation
+        if self.instance:
+            temp_instance = Sermon.objects.get(pk=self.instance.pk)
+            for attr, value in attrs.items():
+                setattr(temp_instance, attr, value)
+        else:
+            temp_instance = Sermon(**attrs)
+
+        try:
+            temp_instance.clean()
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message_dict)
+
+        return attrs
+

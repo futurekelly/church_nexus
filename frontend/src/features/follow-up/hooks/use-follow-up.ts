@@ -1,286 +1,182 @@
 "use client";
 
-import { useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { VisitorProfile, FollowUpTicket, ContactHistoryLog, FollowUpStatus, InteractionType } from "../types/follow-up.types";
-import { MOCK_VISITOR_PROFILES, MOCK_FOLLOW_UP_TICKETS, MOCK_CONTACT_LOGS } from "../data/mock-visitors";
-import { MOCK_MEMBERS } from "@/features/members/data/mock-members";
-import type { Member } from "@/features/members/types/member.types";
-import { useLocalStorageState } from "@/hooks/use-local-storage-state";
-
-const VISITORS_KEY = "church-mock-visitors";
-const TICKETS_KEY = "church-follow-up-tickets";
-const LOGS_KEY = "church-visitor-contact-logs";
-const MEMBERS_KEY = "church-mock-members";
-const ATTENDANCE_TICKETS_KEY = "church-attendance-follow-up-tickets";
+import { apiGet, apiPost, apiPatch, isApiError } from "@/services/api-client";
+import { toast } from "sonner";
 
 export function useFollowUp() {
-  const [visitors, setVisitors] = useLocalStorageState<VisitorProfile[]>(
-    VISITORS_KEY,
-    MOCK_VISITOR_PROFILES
-  );
-  const [tickets, setTickets] = useLocalStorageState<FollowUpTicket[]>(
-    TICKETS_KEY,
-    MOCK_FOLLOW_UP_TICKETS
-  );
-  const [logs, setLogs] = useLocalStorageState<ContactHistoryLog[]>(
-    LOGS_KEY,
-    MOCK_CONTACT_LOGS
-  );
+  const [visitors, setVisitors] = useState<VisitorProfile[]>([]);
+  const [tickets, setTickets] = useState<FollowUpTicket[]>([]);
+  const [logs, setLogs] = useState<ContactHistoryLog[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Mapper utilities
+  const mapTicketToFrontend = useCallback((t: any): FollowUpTicket => ({
+    id: t.id,
+    visitor_id: t.visitor,
+    visitor_name: t.visitor_details ? `${t.visitor_details.first_name} ${t.visitor_details.last_name}` : "Unknown Visitor",
+    status: t.status as FollowUpStatus,
+    source: t.source,
+    assigned_pastor: t.assigned_pastor_details ? `${t.assigned_pastor_details.first_name} ${t.assigned_pastor_details.last_name}` : undefined,
+    notes: t.notes || "",
+    created_at: t.created_at,
+    updated_at: t.updated_at,
+    is_completed: t.is_completed,
+    converted_member_id: t.visitor_details?.member || undefined,
+  }), []);
+
+  const mapLogToFrontend = useCallback((l: any): ContactHistoryLog => ({
+    id: l.id,
+    visitor_id: l.visitor,
+    interaction_type: l.interaction_type as InteractionType,
+    notes: l.notes,
+    contact_date: l.contact_date,
+    contacted_by: l.contacted_by_details ? `${l.contacted_by_details.first_name} ${l.contacted_by_details.last_name}`.trim() : "Pastor",
+  }), []);
+
+  // Fetch all data from API
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [vRes, tRes, lRes] = await Promise.all([
+        apiGet<any[]>("/api/follow-up/visitors/"),
+        apiGet<any[]>("/api/follow-up/tickets/"),
+        apiGet<any[]>("/api/follow-up/logs/"),
+      ]);
+
+      if (!isApiError(vRes)) {
+        setVisitors(vRes.data);
+      }
+      if (!isApiError(tRes)) {
+        setTickets(tRes.data.map(mapTicketToFrontend));
+      }
+      if (!isApiError(lRes)) {
+        setLogs(lRes.data.map(mapLogToFrontend));
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch follow-up data:", err);
+      toast.error("Failed to sync follow-up data with backend.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [mapTicketToFrontend, mapLogToFrontend]);
+
+  // Initial load
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Add a new visitor profile manually + create a New Visitor ticket
-  const addVisitor = useCallback((
+  const addVisitor = useCallback(async (
     profile: Omit<VisitorProfile, "id" | "membership_number" | "date_joined">,
     notes: string
   ) => {
-    const newId = `vis-${Date.now()}`;
-    const newVisitor: VisitorProfile = {
-      ...profile,
-      id: newId,
-      membership_number: `VST-2026-${Math.floor(100 + Math.random() * 900)}`,
-      date_joined: new Date().toISOString(),
-      notes: notes || profile.notes || "",
-    };
-
-    const newTicket: FollowUpTicket = {
-      id: `tkt-${Date.now()}`,
-      visitor_id: newId,
-      visitor_name: `${profile.first_name} ${profile.last_name}`,
-      status: "New Visitor",
-      source: "Manual",
-      notes: notes || "Visitor registered manually.",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_completed: false,
-    };
-
-    setVisitors((prev) => [newVisitor, ...prev]);
-    setTickets((prev) => [newTicket, ...prev]);
-    return newVisitor;
-  }, [setVisitors, setTickets]);
+    setIsLoading(true);
+    try {
+      const payload = {
+        ...profile,
+        notes: notes || ""
+      };
+      const response = await apiPost<any>("/api/follow-up/visitors/", payload);
+      if (!isApiError(response)) {
+        toast.success("Visitor registered successfully.");
+        await fetchData(); // Reload all board lists
+        return response.data as VisitorProfile;
+      } else {
+        toast.error(`Registration failed: ${response.message}`);
+      }
+    } catch (err: any) {
+      console.error("Failed to add visitor:", err);
+      const detail = err.response?.data?.email || err.message;
+      toast.error(`Registration failed: ${detail}`);
+    } finally {
+      setIsLoading(false);
+    }
+    return null;
+  }, [fetchData]);
 
   // Update follow-up ticket status
-  const updateTicketStatus = useCallback((ticketId: string, status: FollowUpStatus) => {
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          return {
-            ...t,
-            status,
-            updated_at: new Date().toISOString(),
-            is_completed: status === "Active Member",
-          };
-        }
-        return t;
-      })
-    );
-  }, [setTickets]);
+  const updateTicketStatus = useCallback(async (ticketId: string, status: FollowUpStatus) => {
+    try {
+      const response = await apiPatch<any>(`/api/follow-up/tickets/${ticketId}/`, { status });
+      if (!isApiError(response)) {
+        toast.success(`Ticket advanced to ${status}.`);
+        setTickets((prev) =>
+          prev.map((t) => (t.id === ticketId ? mapTicketToFrontend(response.data) : t))
+        );
+      } else {
+        toast.error(`Status update failed: ${response.message}`);
+      }
+    } catch (err: any) {
+      console.error("Failed to update status:", err);
+      toast.error("Invalid status transition or permission denied.");
+    }
+  }, [mapTicketToFrontend]);
 
   // Log contact history interaction note
-  const logInteraction = useCallback((
+  const logInteraction = useCallback(async (
     visitorId: string,
     interaction_type: InteractionType,
     notes: string,
     contacted_by: string
   ) => {
-    const newLog: ContactHistoryLog = {
-      id: `log-${Date.now()}`,
-      visitor_id: visitorId,
-      interaction_type,
-      notes,
-      contact_date: new Date().toISOString(),
-      contacted_by: contacted_by || "Pastor",
-    };
-
-    setLogs((prev) => [newLog, ...prev]);
-
-    // Also find the ticket for this visitor and update its status to "Contacted"
-    setTickets((prevTickets) =>
-      prevTickets.map((t) => {
-        if (t.visitor_id === visitorId) {
-          return {
-            ...t,
-            status: "Contacted" as const,
-            updated_at: new Date().toISOString(),
-          };
-        }
-        return t;
-      })
-    );
-
-    return newLog;
-  }, [setLogs, setTickets]);
-
-  const importAttendanceTickets = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const attendanceTicketsJSON = localStorage.getItem(ATTENDANCE_TICKETS_KEY);
-    if (!attendanceTicketsJSON) return;
+    const ticket = tickets.find((t) => t.visitor_id === visitorId && !t.is_completed);
+    if (!ticket) {
+      toast.error("No active follow-up ticket found for this visitor.");
+      return null;
+    }
 
     try {
-      const attendanceTickets = JSON.parse(attendanceTicketsJSON);
-      if (!Array.isArray(attendanceTickets) || attendanceTickets.length === 0) return;
-
-      let importedCount = 0;
-      let newVisitors = [...visitors];
-      let newTickets = [...tickets];
-
-      attendanceTickets.forEach((tkt) => {
-        const alreadyExists = newTickets.some(
-          (t) => t.source === "Attendance Absentee" && t.notes.includes(tkt.id)
-        );
-        if (alreadyExists) return;
-
-        const visitorId = `vis-mem-${tkt.member_id}`;
-        let visitorProfile = newVisitors.find((v) => v.id === visitorId);
-        if (!visitorProfile) {
-          visitorProfile = {
-            id: visitorId,
-            membership_number: `VST-ATT-${Math.floor(100 + Math.random() * 900)}`,
-            first_name: tkt.member_name.split(" ")[0] || "Absentee",
-            last_name: tkt.member_name.split(" ").slice(1).join(" ") || "Member",
-            email: tkt.email || '',
-            phone_number: "",
-            gender: "male",
-            date_joined: new Date().toISOString(),
-            first_time_visitor: false,
-            notes: `Auto-generated from absentee check-in session: ${tkt.session_title}.`,
-          };
-          newVisitors.push(visitorProfile);
-        }
-
-        const newTicket: FollowUpTicket = {
-          id: `tkt-att-${Date.now()}-${tkt.id}`,
-          visitor_id: visitorId,
-          visitor_name: tkt.member_name,
-          status: "New Visitor",
-          source: "Attendance Absentee",
-          notes: `Absentee ticket ${tkt.id} from ${tkt.session_title} on ${new Date(tkt.session_date).toLocaleDateString()}. Reason: ${tkt.reason}`,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_completed: false,
-        };
-
-        newTickets.unshift(newTicket);
-        importedCount++;
-      });
-
-      if (importedCount > 0) {
-        setVisitors(newVisitors);
-        setTickets(newTickets);
-        localStorage.removeItem(ATTENDANCE_TICKETS_KEY);
+      const payload = {
+        interaction_type,
+        notes,
+        contact_date: new Date().toISOString()
+      };
+      
+      const response = await apiPost<any>(`/api/follow-up/tickets/${ticket.id}/log-interaction/`, payload);
+      if (!isApiError(response)) {
+        toast.success("Touchpoint logged successfully.");
+        await fetchData(); // Reload to refresh timeline and update ticket column
+        return mapLogToFrontend(response.data);
+      } else {
+        toast.error(`Log touchpoint failed: ${response.message}`);
       }
-    } catch (err) {
-      console.warn("Importing attendance tickets failed", err);
+    } catch (err: any) {
+      console.error("Failed to log interaction:", err);
+      toast.error("Failed to log touchpoint.");
     }
-  }, [visitors, tickets, setVisitors, setTickets]);
+    return null;
+  }, [tickets, fetchData, mapLogToFrontend]);
 
   // Convert follow-up ticket/visitor to active member
-  const convertToActiveMember = useCallback((ticketId: string) => {
-    const currentTickets = tickets;
-    const currentVisitors = visitors;
-
-    const ticket = currentTickets.find((t) => t.id === ticketId);
-    if (!ticket) return null;
-
-    const visitor = currentVisitors.find((v) => v.id === ticket.visitor_id);
-    if (!visitor) return null;
-
-    const storedMembers = typeof window !== "undefined" ? localStorage.getItem(MEMBERS_KEY) : null;
-    const currentMembers: Member[] = storedMembers ? JSON.parse(storedMembers) : MOCK_MEMBERS;
-
-    const emailLower = visitor.email.toLowerCase();
-    const nameMatch = (first: string, last: string) => 
-      first.toLowerCase() === visitor.first_name.toLowerCase() && 
-      last.toLowerCase() === visitor.last_name.toLowerCase();
-
-    const existingMember = currentMembers.find(
-      (m) => m.email.toLowerCase() === emailLower || nameMatch(m.first_name, m.last_name)
-    );
-
-    let finalMemberId = "";
-
-    if (existingMember) {
-      finalMemberId = existingMember.id;
-    } else {
-      finalMemberId = `m0${currentMembers.length + 1}`;
-      const newMember: Member = {
-        id: finalMemberId,
-        branch_id: "branch-001",
-        family_id: null,
-        membership_number: `MBR-2026-${String(Math.floor(100 + Math.random() * 900)).padStart(6, "0")}`,
-        first_name: visitor.first_name,
-        last_name: visitor.last_name,
-        profile_photo: null,
-        gender: visitor.gender,
-        date_of_birth: "1995-01-01",
-        marriage_anniversary_date: null,
-        marital_status: "Single",
-        occupation: null,
-        education_level: null,
-        national_id_passport: null,
-        email: visitor.email,
-        phone_number: visitor.phone_number,
-        address: "Nairobi, Kenya",
-        status: "Active",
-        member_type: "Regular",
-        baptism_status: "Not Baptized",
-        baptism_date: null,
-        baptism_place: null,
-        baptism_officiant: null,
-        salvation_status: "Born Again",
-        salvation_date: new Date().toISOString().split("T")[0],
-        join_date: new Date().toISOString().split("T")[0],
-        date_joined: new Date().toISOString().split("T")[0],
-        emergency_name: null,
-        emergency_relationship: null,
-        emergency_phone: null,
-        pastoral_notes: null,
-        notes: `Converted from visitor follow-up ticket. Notes: ${visitor.notes || ""}`,
-        role: "member",
-        ministries: [],
-        custom_fields: {},
-        communication_preferences: { email: true, sms: true, in_app: true },
-        donor_status: "Non-Donor",
-        recurring_giving_opt_in: false,
-        is_archived: false,
-        archived_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const updatedMembers = [...currentMembers, newMember];
-      localStorage.setItem(MEMBERS_KEY, JSON.stringify(updatedMembers));
-      
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("local-storage-update", {
-            detail: { key: MEMBERS_KEY, newValue: updatedMembers },
-          })
-        );
+  const convertToActiveMember = useCallback(async (ticketId: string) => {
+    try {
+      const response = await apiPost<any>(`/api/follow-up/tickets/${ticketId}/integrate/`, {});
+      if (!isApiError(response)) {
+        toast.success("Visitor promoted to Active Member successfully.");
+        await fetchData();
+        return response.data.member_id;
+      } else {
+        toast.error(`Promotion failed: ${response.message}`);
       }
+    } catch (err: any) {
+      console.error("Failed to integrate visitor:", err);
+      toast.error("Promotion failed. Please check permissions or data validity.");
     }
+    return null;
+  }, [fetchData]);
 
-    const updatedTickets = currentTickets.map((t) => {
-      if (t.id === ticketId) {
-        return {
-          ...t,
-          status: "Active Member" as const,
-          is_completed: true,
-          converted_member_id: finalMemberId,
-          updated_at: new Date().toISOString(),
-        };
-      }
-      return t;
-    });
-
-    setTickets(updatedTickets);
-
-    return finalMemberId;
-  }, [tickets, visitors, setTickets]);
+  // Re-fetch attendance trigger (no-op or sync trigger)
+  const importAttendanceTickets = useCallback(async () => {
+    await fetchData();
+  }, [fetchData]);
 
   return {
     visitors,
     tickets,
     logs,
+    isLoading,
     addVisitor,
     updateTicketStatus,
     logInteraction,

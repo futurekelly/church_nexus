@@ -51,6 +51,8 @@ export const PERMISSIONS = {
   DOCUMENTS_VIEW: "documents:view",
   DOCUMENTS_MANAGE: "documents:manage",
   DOCUMENTS_TEMPLATES_EDIT: "documents:templates:edit",
+  KIDS_KINGDOM_VIEW: "kids_kingdom:view",
+  KIDS_KINGDOM_MANAGE: "kids_kingdom:manage",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -98,6 +100,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.MEMBERS_MANAGE,
     PERMISSIONS.DOCUMENTS_VIEW,
     PERMISSIONS.DOCUMENTS_MANAGE,
+    PERMISSIONS.KIDS_KINGDOM_VIEW,
+    PERMISSIONS.KIDS_KINGDOM_MANAGE,
   ],
   [ROLES.CHURCH_ADMIN]: [
     PERMISSIONS.DASHBOARD_VIEW,
@@ -143,6 +147,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.DOCUMENTS_VIEW,
     PERMISSIONS.DOCUMENTS_MANAGE,
     PERMISSIONS.DOCUMENTS_TEMPLATES_EDIT,
+    PERMISSIONS.KIDS_KINGDOM_VIEW,
+    PERMISSIONS.KIDS_KINGDOM_MANAGE,
   ],
   [ROLES.TREASURER]: [
     PERMISSIONS.DASHBOARD_VIEW,
@@ -290,6 +296,9 @@ const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/settings/payments": PERMISSIONS.PAYMENTS_MANAGE,
   "/dashboard/settings/church-profile": PERMISSIONS.SETTINGS_MANAGE,
   "/dashboard/users": PERMISSIONS.USERS_MANAGE,
+
+  // Kids Kingdom
+  "/dashboard/kids-kingdom": PERMISSIONS.KIDS_KINGDOM_VIEW,
 };
 
 export function hasPermission(role: Role, permission: Permission): boolean {

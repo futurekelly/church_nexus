@@ -55,6 +55,7 @@ export const DASHBOARD_ROUTES = {
   SETTINGS_LOCALIZATION: "/dashboard/settings/localization",
   SETTINGS_PAYMENTS: "/dashboard/settings/payments",
   SETTINGS_CHURCH_PROFILE: "/dashboard/settings/church-profile",
+  KIDS_KINGDOM: "/dashboard/kids-kingdom",
   USERS: "/dashboard/users",
 } as const;
 

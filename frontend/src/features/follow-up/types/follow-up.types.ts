@@ -3,10 +3,11 @@
 // ─────────────────────────────────────────────────────────────────
 
 export type FollowUpStatus = 
-  | "New Visitor" 
+  | "New" 
   | "Contacted" 
-  | "Scheduled Visit" 
-  | "Active Member";
+  | "Following Up" 
+  | "Integrated" 
+  | "Inactive";
 
 export type InteractionType = "Call" | "Email" | "Meeting" | "Visit";
 
@@ -38,7 +39,7 @@ export interface FollowUpTicket {
   created_at: string; // ISO date string
   updated_at: string; // ISO date string
   is_completed: boolean; // True when transitioned or archived
-  converted_member_id?: string; // Links to MOCK_MEMBERS id if converted
+  converted_member_id?: string; // Links to members id if converted
 }
 
 export interface ContactHistoryLog {
@@ -57,10 +58,11 @@ export interface FollowUpFilters {
 }
 
 export const FOLLOW_UP_STATUSES: FollowUpStatus[] = [
-  "New Visitor",
+  "New",
   "Contacted",
-  "Scheduled Visit",
-  "Active Member",
+  "Following Up",
+  "Integrated",
+  "Inactive",
 ];
 
 export const INTERACTION_TYPES: InteractionType[] = ["Call", "Email", "Meeting", "Visit"];
@@ -83,10 +85,11 @@ export const SPIRITUAL_BACKGROUND_OPTIONS = [
 ];
 
 export const FOLLOW_UP_STATUS_COLORS: Record<FollowUpStatus, { bg: string; text: string; dot: string }> = {
-  "New Visitor": { bg: "bg-indigo-500/10", text: "text-indigo-400", dot: "bg-indigo-400" },
+  "New": { bg: "bg-indigo-500/10", text: "text-indigo-400", dot: "bg-indigo-400" },
   "Contacted": { bg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-400" },
-  "Scheduled Visit": { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400" },
-  "Active Member": { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400" },
+  "Following Up": { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400" },
+  "Integrated": { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400" },
+  "Inactive": { bg: "bg-rose-500/10", text: "text-rose-400", dot: "bg-rose-400" },
 };
 
 export const DEFAULT_FOLLOW_UP_FILTERS: FollowUpFilters = {

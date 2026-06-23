@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { UserCheck, PhoneCall, CalendarRange, UserCheck2 } from "lucide-react";
+import { UserCheck, PhoneCall, CalendarRange, UserCheck2, XCircle } from "lucide-react";
 import type { FollowUpTicket, FollowUpStatus } from "../types/follow-up.types";
 import { FOLLOW_UP_STATUSES, FOLLOW_UP_STATUS_COLORS } from "../types/follow-up.types";
 import { VisitorCard } from "./visitor-card";
@@ -15,10 +15,11 @@ interface KanbanBoardProps {
 }
 
 const COLUMN_ICONS: Record<FollowUpStatus, React.ReactNode> = {
-  "New Visitor": <UserCheck className="h-4 w-4 text-indigo-400" />,
+  "New": <UserCheck className="h-4 w-4 text-indigo-400" />,
   "Contacted": <PhoneCall className="h-4 w-4 text-blue-400" />,
-  "Scheduled Visit": <CalendarRange className="h-4 w-4 text-amber-400" />,
-  "Active Member": <UserCheck2 className="h-4 w-4 text-emerald-400" />,
+  "Following Up": <CalendarRange className="h-4 w-4 text-amber-400" />,
+  "Integrated": <UserCheck2 className="h-4 w-4 text-emerald-400" />,
+  "Inactive": <XCircle className="h-4 w-4 text-rose-400" />,
 };
 
 export function KanbanBoard({
@@ -28,7 +29,7 @@ export function KanbanBoard({
   canManage,
 }: KanbanBoardProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-start">
       {FOLLOW_UP_STATUSES.map((status) => {
         const colTickets = tickets.filter((t) => t.status === status);
         const colors = FOLLOW_UP_STATUS_COLORS[status];

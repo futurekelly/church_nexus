@@ -84,7 +84,7 @@ export default function FollowUpDetailPage() {
   };
 
   const statusColors = FOLLOW_UP_STATUS_COLORS[ticket.status];
-  const isCompleted = ticket.status === "Active Member";
+  const isCompleted = ticket.status === "Integrated";
 
   return (
     <div className="space-y-6">

@@ -16,12 +16,13 @@ export default function EditSermonPage() {
 
   const sermon = getSermonById(id);
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = async (values: any) => {
     if (!sermon) return;
     try {
-      updateSermon(sermon.id, values);
-      toast.success("Sermon updated successfully!");
-      router.push(`/dashboard/sermons/${sermon.id}`);
+      const updated = await updateSermon(sermon.id, values);
+      if (updated) {
+        router.push(`/dashboard/sermons/${sermon.id}`);
+      }
     } catch {
       toast.error("Failed to update sermon. Please try again.");
     }

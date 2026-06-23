@@ -1,0 +1,13 @@
+Hello {{ pastor_name }},
+
+You have been assigned to follow up on a visitor profile in Church Nexus.
+
+Follow-up Details:
+- Visitor Name: {{ visitor_name }}
+- Source: {{ ticket_source }}
+- Notes: {{ ticket_notes }}
+
+Please view the visitor card and log your touchpoints here: {{ action_url }}
+
+Thank you,
+The Church Nexus System

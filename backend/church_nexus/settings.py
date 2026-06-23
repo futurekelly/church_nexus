@@ -65,6 +65,9 @@ INSTALLED_APPS = [
     'documents',
     'analytics',
     'testimonies',
+    'follow_up',
+    'sermons',
+    'kids_kingdom',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'

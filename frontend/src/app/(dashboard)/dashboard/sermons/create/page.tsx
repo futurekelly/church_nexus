@@ -13,11 +13,12 @@ export default function CreateSermonPage() {
   const { sermons: sermonPermissions } = useAppPermissions();
   const canCreate = sermonPermissions.canCreate;
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = async (values: any) => {
     try {
-      const newSermon = addSermon(values);
-      toast.success("Sermon created successfully!");
-      router.push(`/dashboard/sermons/${newSermon.id}`);
+      const newSermon = await addSermon(values);
+      if (newSermon) {
+        router.push(`/dashboard/sermons/${newSermon.id}`);
+      }
     } catch {
       toast.error("Failed to create sermon. Please try again.");
     }

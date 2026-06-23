@@ -1,0 +1,14 @@
+Dear {{ visitor_name }},
+
+Welcome to the {{ branch_name }} family!
+
+You have been successfully integrated as an Active Member of our community. We are excited to walk alongside you in your spiritual journey and help you connect.
+
+Integration Details:
+- Branch: {{ branch_name }}
+- Date: {{ join_date }}
+
+If you have any questions or would like to join a home group, please let us know.
+
+God bless you,
+The {{ branch_name }} Team

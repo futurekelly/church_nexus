@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Phone, Mail, Calendar, ArrowRight, UserPlus, ShieldAlert, Award } from "lucide-react";
 import { motion } from "framer-motion";
 import type { FollowUpTicket, FollowUpStatus } from "../types/follow-up.types";
-import { FOLLOW_UP_STATUSES, INVITED_BY_OPTIONS } from "../types/follow-up.types";
+import { FOLLOW_UP_STATUSES } from "../types/follow-up.types";
 import { cn } from "@/lib/utils";
 
 interface VisitorCardProps {
@@ -20,10 +20,10 @@ export function VisitorCard({
   onTransitionMember,
   canManage,
 }: VisitorCardProps) {
-  const isCompleted = ticket.status === "Active Member";
+  const isCompleted = ticket.status === "Integrated" || ticket.status === "Inactive";
 
   const handleStatusClick = (next: FollowUpStatus) => {
-    if (next === "Active Member") {
+    if (next === "Integrated") {
       onTransitionMember(ticket.id);
     } else {
       onMoveStatus(ticket.id, next);
@@ -99,13 +99,15 @@ export function VisitorCard({
                 onClick={() => handleStatusClick(st)}
                 className={cn(
                   "rounded-lg py-1 px-2 text-[10px] font-semibold text-center border transition-all truncate",
-                  st === "Active Member"
+                  st === "Integrated"
                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-white"
+                    : st === "Inactive"
+                    ? "bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500 hover:text-white"
                     : "bg-slate-900/60 text-slate-400 border-border/30 hover:bg-slate-800 hover:text-primary-foreground"
                 )}
                 aria-label={`Advance ${ticket.visitor_name} to ${st}`}
               >
-                {st === "Active Member" ? "Make Member" : st}
+                {st === "Integrated" ? "Integrate Member" : st}
               </button>
             ))}
           </div>
