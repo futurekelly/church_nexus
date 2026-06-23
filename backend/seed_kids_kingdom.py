@@ -63,10 +63,10 @@ for cd in classrooms_data:
 
 # --- Create Children ---
 children_data = [
-    {"first_name": "Daniel", "last_name": "Mwangi", "birth_date": date.today() - timedelta(days=365*4), "gender": "male", "parent_idxs": [0, 1], "allergy_alerts": "Peanuts", "special_needs": ""},
-    {"first_name": "Faith", "last_name": "Mwangi", "birth_date": date.today() - timedelta(days=365*7), "gender": "female", "parent_idxs": [0, 1], "allergy_alerts": "", "special_needs": ""},
-    {"first_name": "Samuel", "last_name": "Ochieng", "birth_date": date.today() - timedelta(days=int(365*1.5)), "gender": "male", "parent_idxs": [2, 3], "allergy_alerts": "", "special_needs": "Asthma inhaler needed"},
-    {"first_name": "Joy", "last_name": "Ochieng", "birth_date": date.today() - timedelta(days=365*11), "gender": "female", "parent_idxs": [2, 3], "allergy_alerts": "Gluten", "special_needs": ""},
+    {"first_name": "Daniel", "last_name": "Mwangi", "birth_date": date.today() - timedelta(days=365 * 4), "gender": "male", "parent_idxs": [0, 1], "allergy_alerts": "Peanuts", "special_needs": ""},
+    {"first_name": "Faith", "last_name": "Mwangi", "birth_date": date.today() - timedelta(days=365 * 7), "gender": "female", "parent_idxs": [0, 1], "allergy_alerts": "", "special_needs": ""},
+    {"first_name": "Samuel", "last_name": "Ochieng", "birth_date": date.today() - timedelta(days=int(365 * 1.5)), "gender": "male", "parent_idxs": [2, 3], "allergy_alerts": "", "special_needs": "Asthma inhaler needed"},
+    {"first_name": "Joy", "last_name": "Ochieng", "birth_date": date.today() - timedelta(days=365 * 11), "gender": "female", "parent_idxs": [2, 3], "allergy_alerts": "Gluten", "special_needs": ""},
 ]
 
 for cd in children_data:

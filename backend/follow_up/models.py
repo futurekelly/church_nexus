@@ -131,7 +131,7 @@ class FollowUpTicket(models.Model):
             if old_status != new_status:
                 # Integrated is a terminal state
                 if old_status == 'Integrated':
-                    raise ValidationError(f"Cannot transition out of terminal state 'Integrated'.")
+                    raise ValidationError("Cannot transition out of terminal state 'Integrated'.")
                 
                 # Transition rules mapping
                 valid_transitions = {
