@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin  # noqa: F401
 from testimonies.models import Testimony
 
 @admin.register(Testimony)

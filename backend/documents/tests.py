@@ -7,11 +7,10 @@ from decimal import Decimal
 import os
 from django.conf import settings
 
-from branches.models import Branch
 from authentication.factories import BranchFactory, UserFactory
 from members.factories import MemberFactory
 from donations.models import Donation
-from documents.models import DocumentTemplate, GeneratedDocument, DownloadToken, DocumentAuditLog
+from documents.models import DocumentTemplate, GeneratedDocument, DocumentAuditLog
 from documents.tasks import generate_document_task
 
 @pytest.mark.django_db

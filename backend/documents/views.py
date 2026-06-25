@@ -8,7 +8,7 @@ import os
 from django.conf import settings
 
 from documents.models import DocumentTemplate, GeneratedDocument, DownloadToken, DocumentAuditLog
-from documents.serializers import DocumentTemplateSerializer, GeneratedDocumentSerializer, DocumentAuditLogSerializer
+from documents.serializers import DocumentTemplateSerializer, GeneratedDocumentSerializer
 from documents.tasks import generate_document_task
 
 class IsAdminOrSuperAdmin(permissions.BasePermission):

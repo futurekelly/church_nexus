@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from branches.models import Branch, Inquiry
 from branches.serializers import BranchSerializer, InquirySerializer

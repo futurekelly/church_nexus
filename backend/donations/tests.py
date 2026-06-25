@@ -1,16 +1,13 @@
 import pytest
 from decimal import Decimal
 from django.utils import timezone
-from django.core.exceptions import ValidationError
-from rest_framework.test import APIClient
-from rest_framework import status
-from datetime import date, timedelta
+from datetime import timedelta
 
 from branches.models import Branch
 from authentication.models import User
 from members.models import Member
-from donations.models import Donation, Expense, Pledge
-from finance.models import FinancialPeriod, Account, FinancialTransaction, LedgerEntry
+from donations.models import Donation, Expense
+from finance.models import FinancialPeriod, Account
 
 @pytest.fixture
 def setup_data(db):

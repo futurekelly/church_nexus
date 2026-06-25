@@ -3,7 +3,6 @@ from django.dispatch import receiver
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from datetime import timedelta
 from decimal import Decimal
 from donations.models import Donation, Expense
 from finance.models import FinancialPeriod, Account, FinancialTransaction, LedgerEntry, ReferenceSequence

@@ -29,7 +29,7 @@ We have successfully implemented and verified the production-ready **Visitor Fol
 
 ### Backend Automated Test Suite
 Run command: `venv\Scripts\pytest follow_up/tests.py -v`
-Result: **12 / 12 Tests Passed**
+Result: **15 / 15 Tests Passed**
 
 - **`test_visitor_profile_membership_number_generation`**: Passed.
 - **`test_follow_up_ticket_default_status`**: Passed.
@@ -43,12 +43,15 @@ Result: **12 / 12 Tests Passed**
 - **`test_log_interaction_updates_status`**: Passed.
 - **`test_integrate_promotion_workflow`**: Passed.
 - **`test_analytics_kpis`**: Passed.
+- **`test_cannot_create_ticket_with_non_new_status`**: Passed.
+- **`test_assigned_pastor_notification_trigger`**: Passed.
+- **`test_visitor_soft_delete`**: Passed.
 
 ### Frontend Compilation Verification
 Run command: `npm run typecheck` & `npm run build`
-Result: **Build compiled cleanly without any TypeScript errors.**
-- Verified type safety across `page.tsx` and all components.
-- Verified Next.js successfully generated static pages and optimized routes.
+Result: **Build compiled cleanly without any TypeScript or Next.js build errors.**
+- Verified type safety across `page.tsx`, hook files, and all components.
+- Verified Next.js successfully generated static pages, client chunks, and optimized routes.
 
 ---
 

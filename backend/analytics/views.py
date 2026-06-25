@@ -1,10 +1,10 @@
-from rest_framework import viewsets, status, permissions
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from datetime import datetime, timedelta, date
 from decimal import Decimal
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 
 from branches.models import Branch

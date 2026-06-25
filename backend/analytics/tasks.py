@@ -7,10 +7,11 @@ from django.db import transaction
 
 from branches.models import Branch
 from members.models import Member
-from donations.models import Donation, Expense
+from donations.models import Donation
 from events.models import Event, EventRegistration
 from documents.models import GeneratedDocument
 from analytics.models import PerformanceKPISnapshot
+from finance.models import FinancialPeriod
 
 def get_period_dates(period):
     now = timezone.now()

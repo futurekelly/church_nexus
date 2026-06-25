@@ -6,10 +6,8 @@ from django.db import transaction
 from django.conf import settings
 from django.utils import timezone
 from django.template import Template, Context
-from django.db.models import Sum
 
-from documents.models import GeneratedDocument, DocumentTemplate, DownloadToken
-from branches.models import Branch
+from documents.models import GeneratedDocument, DocumentTemplate
 from members.models import Member
 from donations.models import Donation
 
@@ -160,7 +158,7 @@ def generate_document_task(document_id):
             from weasyprint import HTML
             HTML(string=full_html).write_pdf(file_path)
             pdf_generated = True
-        except Exception as e:
+        except Exception:
             # Falls back to writing HTML file named as .pdf or mock text stream for test environment
             with open(file_path, 'wb') as f:
                 f.write(full_html.encode('utf-8'))
