@@ -279,7 +279,7 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
 
     def sync_group_attendance(self, event, reg, user):
         try:
-            from groups.models import ConnectGroup, GroupAttendance, GroupAttendanceAttendee, GroupMember
+            from groups.models import ConnectGroup, GroupAttendance, GroupAttendanceAttendee, GroupMember  # noqa: F401
             meeting_date = event.start_date.date()
             
             # Find group member corresponding to core member

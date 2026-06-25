@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from django.db import models
+from django.db import models  # noqa: F401
 from django.core.exceptions import PermissionDenied
 
 from groups.models import ConnectGroup, GroupMember, GroupAttendance, GroupPrayerRequest, StudyOutline

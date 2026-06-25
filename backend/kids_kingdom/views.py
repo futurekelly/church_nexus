@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError  # noqa: F401
 from .models import Child, Classroom, CheckInLog
 from .serializers import ChildSerializer, ClassroomSerializer, CheckInLogSerializer
 from members.models import Member

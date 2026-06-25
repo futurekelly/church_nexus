@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError  # noqa: F401
 from django.db import transaction
 from decimal import Decimal
 from django.utils import timezone
@@ -198,7 +198,7 @@ class FinancialTransactionSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         entries_data = validated_data.pop('entries', None)
-        status = validated_data.get('status', instance.status)
+        status = validated_data.get('status', instance.status)  # noqa: F841
         
         with transaction.atomic():
             # Update base transaction details

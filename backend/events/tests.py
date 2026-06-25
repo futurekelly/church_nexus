@@ -4,11 +4,11 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from branches.models import Branch
-from events.models import Event, EventRegistration, EventCheckIn, EventResource, ResourceBooking
+from branches.models import Branch  # noqa: F401
+from events.models import Event, EventRegistration, EventCheckIn, EventResource, ResourceBooking  # noqa: F401
 from authentication.factories import BranchFactory, UserFactory
 from members.factories import MemberFactory
-from events.factories import (
+from events.factories import (  # noqa: F401
     EventFactory,
     EventRegistrationFactory,
     EventCheckInFactory,
@@ -130,7 +130,7 @@ class TestEventsAPI:
         end2 = now + timezone.timedelta(days=1, hours=11)
 
         # Successful booking 1 (Approved status)
-        booking1 = ResourceBookingFactory(
+        booking1 = ResourceBookingFactory(  # noqa: F841
             event=self.event_a1,
             resource=resource,
             start_time=start1,

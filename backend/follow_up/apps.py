@@ -6,5 +6,5 @@ class FollowUpConfig(AppConfig):
     name = 'follow_up'
 
     def ready(self):
-        import follow_up.signals
+        import follow_up.signals  # noqa: F401
 

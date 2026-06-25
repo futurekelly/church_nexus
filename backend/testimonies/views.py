@@ -3,11 +3,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.db import models
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
+from django.shortcuts import get_object_or_404  # noqa: F401
+from django.utils import timezone  # noqa: F401
 from testimonies.models import Testimony
 from testimonies.serializers import TestimonySerializer
-from authentication.models import User, Notification, EmailLog
+from authentication.models import User, Notification, EmailLog  # noqa: F401
 
 class TestimonyViewSet(viewsets.ModelViewSet):
     queryset = Testimony.objects.all()

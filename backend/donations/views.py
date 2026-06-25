@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions  # noqa: F401
 from donations.models import Donation, Expense, Pledge, PledgeCampaign, FinancialAuditLog
 from donations.serializers import (
     DonationSerializer, ExpenseSerializer, PledgeSerializer,

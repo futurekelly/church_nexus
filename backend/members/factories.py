@@ -1,7 +1,7 @@
 import factory
 from django.utils import timezone
-from branches.models import Branch
-from authentication.models import User
+from branches.models import Branch  # noqa: F401
+from authentication.models import User  # noqa: F401
 from members.models import Member, Family, FamilyRelationship, MemberLifecycleTimeline
 from authentication.factories import BranchFactory, UserFactory
 

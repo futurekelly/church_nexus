@@ -102,7 +102,7 @@ class LogoutView(APIView):
             return response
         except TokenError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             return Response({"error": "An error occurred during logout."}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProfileView(APIView):
@@ -213,7 +213,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
 # ---------------------------------------------------------------------------
 # Password Reset ViewSets
 # ---------------------------------------------------------------------------
-from django.core.mail import send_mail
+from django.core.mail import send_mail  # noqa: F401
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str

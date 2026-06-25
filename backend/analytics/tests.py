@@ -10,7 +10,7 @@ from authentication.models import User
 from members.models import Member
 from donations.models import Donation, Expense
 from events.models import Event, EventRegistration
-from analytics.models import PerformanceKPISnapshot
+from analytics.models import PerformanceKPISnapshot  # noqa: F401
 
 @pytest.fixture
 def setup_analytics_data(db):

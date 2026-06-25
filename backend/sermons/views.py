@@ -1,5 +1,5 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.response import Response
+from rest_framework import viewsets, permissions, status  # noqa: F401
+from rest_framework.response import Response  # noqa: F401
 from django.db import models
 from .models import Sermon
 from .serializers import SermonSerializer

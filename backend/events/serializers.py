@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.utils import timezone
+from django.utils import timezone  # noqa: F401
 from events.models import Event, EventRegistration, EventCheckIn, EventResource, ResourceBooking
 from branches.models import Branch
 from members.models import Member

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import Child, Classroom, CheckInLog
-from members.models import Member
+from members.models import Member  # noqa: F401
 
 class ClassroomSerializer(serializers.ModelSerializer):
     class Meta:

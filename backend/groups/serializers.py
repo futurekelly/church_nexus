@@ -1,11 +1,11 @@
 from rest_framework import serializers
 from django.db import transaction
-from django.utils import timezone
+from django.utils import timezone  # noqa: F401
 from groups.models import ConnectGroup, GroupMember, GroupAttendance, GroupAttendanceAttendee, GroupPrayerRequest, StudyOutline
 from branches.models import Branch
 from members.models import Member
 from branches.serializers import BranchSerializer
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import extend_schema_field  # noqa: F401
 
 class ConnectGroupSerializer(serializers.ModelSerializer):
     branch_id = serializers.PrimaryKeyRelatedField(

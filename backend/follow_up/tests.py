@@ -276,7 +276,7 @@ class TestFollowUpAPI:
         vis2 = VisitorProfile.objects.create(branch=self.branch_a, first_name="V2", last_name="V", gender="female")
         vis3 = VisitorProfile.objects.create(branch=self.branch_a, first_name="V3", last_name="V", gender="male")
 
-        tkt1 = FollowUpTicket.objects.create(branch=self.branch_a, visitor=vis1, status="New", assigned_pastor=self.pastor_a)
+        tkt1 = FollowUpTicket.objects.create(branch=self.branch_a, visitor=vis1, status="New", assigned_pastor=self.pastor_a)  # noqa: F841
         
         tkt2 = FollowUpTicket.objects.create(branch=self.branch_a, visitor=vis2, status="New", assigned_pastor=self.pastor_a)
         tkt2.status = "Contacted"

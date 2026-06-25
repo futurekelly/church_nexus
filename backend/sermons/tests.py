@@ -1,10 +1,10 @@
 import pytest
 from django.urls import reverse
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files.uploadedfile import SimpleUploadedFile  # noqa: F401
 from rest_framework import status
 from rest_framework.test import APIClient
-from django.utils import timezone
+from django.utils import timezone  # noqa: F401
 from .models import Sermon
 from authentication.factories import BranchFactory, UserFactory
 

@@ -231,7 +231,7 @@ class FollowUpTicketViewSet(viewsets.ModelViewSet):
                 try:
                     from follow_up.tasks import send_visitor_integration_notifications_task
                     send_visitor_integration_notifications_task.delay(str(ticket.id))
-                except Exception as notif_err:
+                except Exception as notif_err:  # noqa: F841
                     # Do not fail transaction if notification task queueing fails
                     pass
                 

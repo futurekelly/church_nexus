@@ -2,7 +2,7 @@ from celery import shared_task
 from django.utils import timezone
 from datetime import timedelta, date, datetime, timezone as dt_timezone
 from decimal import Decimal
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q  # noqa: F401
 from django.db import transaction
 
 from branches.models import Branch

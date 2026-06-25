@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from branches.models import Branch
+from branches.models import Branch  # noqa: F401
 from authentication.models import User
 from authentication.factories import BranchFactory, UserFactory
 from donations.models import Donation
@@ -79,7 +79,7 @@ class TestAuthenticationAPI:
 
     def test_jwt_login_success(self):
         branch = BranchFactory()
-        user = UserFactory(email="testlogin@test.com", password="SecurePassword123!", role="member", branch=branch)
+        user = UserFactory(email="testlogin@test.com", password="SecurePassword123!", role="member", branch=branch)  # noqa: F841
         
         url = reverse('token_obtain_pair')
         response = self.client.post(url, {
@@ -106,7 +106,7 @@ class TestAuthenticationAPI:
 
     def test_jwt_refresh_success(self):
         branch = BranchFactory()
-        user = UserFactory(email="testrefresh@test.com", password="SecurePassword123!", role="member", branch=branch)
+        user = UserFactory(email="testrefresh@test.com", password="SecurePassword123!", role="member", branch=branch)  # noqa: F841
         
         # Log in
         login_url = reverse('token_obtain_pair')
@@ -126,7 +126,7 @@ class TestAuthenticationAPI:
 
     def test_jwt_profile_success(self):
         branch = BranchFactory(id="branch-nyc", branch_code="NYC01", branch_name="New York Branch")
-        user = UserFactory(email="profileuser@test.com", password="SecurePassword123!", role="pastor", branch=branch)
+        user = UserFactory(email="profileuser@test.com", password="SecurePassword123!", role="pastor", branch=branch)  # noqa: F841
         
         # Log in
         login_url = reverse('token_obtain_pair')
@@ -153,7 +153,7 @@ class TestAuthenticationAPI:
 
     def test_jwt_logout_success_and_blacklisted(self):
         branch = BranchFactory()
-        user = UserFactory(email="logoutuser@test.com", password="SecurePassword123!", role="member", branch=branch)
+        user = UserFactory(email="logoutuser@test.com", password="SecurePassword123!", role="member", branch=branch)  # noqa: F841
         
         # Log in
         login_url = reverse('token_obtain_pair')
@@ -186,7 +186,7 @@ class TestAuthenticationAPI:
 
     def test_jwt_token_replay_prevention(self):
         branch = BranchFactory()
-        user = UserFactory(email="replay@test.com", password="SecurePassword123!", role="member", branch=branch)
+        user = UserFactory(email="replay@test.com", password="SecurePassword123!", role="member", branch=branch)  # noqa: F841
         
         # Log in
         login_url = reverse('token_obtain_pair')
@@ -200,7 +200,7 @@ class TestAuthenticationAPI:
         refresh_url = reverse('token_refresh')
         refresh_response_1 = self.client.post(refresh_url)
         assert refresh_response_1.status_code == status.HTTP_200_OK
-        refresh_token_2 = refresh_response_1.cookies['refresh_token'].value
+        refresh_token_2 = refresh_response_1.cookies['refresh_token'].value  # noqa: F841
         
         # Attempt to reuse refresh_token_1 (must fail due to blacklisting)
         self.client.cookies.clear()
@@ -310,7 +310,7 @@ class TestAuthenticationAPI:
 
     def test_jwt_register_duplicate_email(self):
         branch = BranchFactory()
-        user = UserFactory(email="duplicate@test.com", password="SecurePassword123!", role="member", branch=branch)
+        user = UserFactory(email="duplicate@test.com", password="SecurePassword123!", role="member", branch=branch)  # noqa: F841
         
         url = reverse('token_register')
         response = self.client.post(url, {

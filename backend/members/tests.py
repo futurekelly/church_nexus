@@ -4,10 +4,10 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from branches.models import Branch
-from members.models import Member, Family, FamilyRelationship, MemberLifecycleTimeline
+from branches.models import Branch  # noqa: F401
+from members.models import Member, Family, FamilyRelationship, MemberLifecycleTimeline  # noqa: F401
 from authentication.factories import BranchFactory, UserFactory
-from members.factories import MemberFactory, FamilyFactory, FamilyRelationshipFactory, MemberLifecycleTimelineFactory
+from members.factories import MemberFactory, FamilyFactory, FamilyRelationshipFactory, MemberLifecycleTimelineFactory  # noqa: F401
 
 @pytest.mark.django_db
 class TestMemberAPI:
@@ -107,7 +107,7 @@ class TestMemberAPI:
         self.client.force_authenticate(user=self.pastor_a)
         
         # Establish A1 -> Parent -> A2
-        relationship = FamilyRelationshipFactory(
+        relationship = FamilyRelationshipFactory(  # noqa: F841
             from_member=self.member_a1,
             to_member=self.member_a2,
             relationship_type='Parent'

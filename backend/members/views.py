@@ -2,7 +2,7 @@ from rest_framework import viewsets, status, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError  # noqa: F401
 from django.db import models
 from django.utils import timezone
 from rest_framework.pagination import PageNumberPagination

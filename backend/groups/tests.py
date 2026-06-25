@@ -1,14 +1,14 @@
 import pytest
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone  # noqa: F401
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from branches.models import Branch
-from groups.models import ConnectGroup, GroupMember, GroupAttendance, GroupAttendanceAttendee, GroupPrayerRequest, StudyOutline
+from branches.models import Branch  # noqa: F401
+from groups.models import ConnectGroup, GroupMember, GroupAttendance, GroupAttendanceAttendee, GroupPrayerRequest, StudyOutline  # noqa: F401
 from authentication.factories import BranchFactory, UserFactory
 from members.factories import MemberFactory
-from groups.factories import (
+from groups.factories import (  # noqa: F401
     ConnectGroupFactory,
     GroupMemberFactory,
     GroupAttendanceFactory,

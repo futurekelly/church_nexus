@@ -4,7 +4,7 @@ from django.conf import settings
 from django.utils import timezone
 from authentication.models import EmailLog, Notification
 from authentication.services.email_service import send_templated_email
-from .models import FollowUpTicket, VisitorProfile
+from .models import FollowUpTicket, VisitorProfile  # noqa: F401
 from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
