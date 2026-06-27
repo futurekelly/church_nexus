@@ -14,7 +14,8 @@ import {
   Unlock,
   KeyRound,
   FileCheck,
-  X
+  X,
+  Pencil
 } from "lucide-react";
 import { SectionHeader } from "@/features/dashboard/components/widgets/section-header";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export default function KidsKingdomPage() {
 
   // Dialog State
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [editingChild, setEditingChild] = useState<Child | null>(null);
   const [activeCheckInChild, setActiveCheckInChild] = useState<Child | null>(null);
   const [activeCheckOutLog, setActiveCheckOutLog] = useState<CheckInLog | null>(null);
   const [checkoutCode, setCheckoutCode] = useState("");
@@ -45,6 +47,14 @@ export default function KidsKingdomPage() {
     const created = await addChild(values);
     if (created) {
       setIsRegisterOpen(false);
+    }
+  };
+
+  const handleEditSubmit = async (values: any) => {
+    if (!editingChild) return;
+    const updated = await updateChild(editingChild.id, values);
+    if (updated) {
+      setEditingChild(null);
     }
   };
 
@@ -324,24 +334,35 @@ export default function KidsKingdomPage() {
                               </div>
                             </td>
                             <td className="px-5 py-4 text-right">
-                              {isCurrentlyCheckedIn ? (
-                                <span className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-400 inline-block">
-                                  Checked In
-                                </span>
-                              ) : (
+                              <div className="flex items-center justify-end gap-2">
                                 <button
-                                  onClick={() => {
-                                    if (!child.parent_details || child.parent_details.length === 0) {
-                                      toast.error("Please edit the child profile and link at least one parent member before check-in.");
-                                      return;
-                                    }
-                                    setActiveCheckInChild(child);
-                                  }}
-                                  className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-indigo-500"
+                                  type="button"
+                                  onClick={() => setEditingChild(child)}
+                                  className="inline-flex items-center gap-1 rounded-xl border border-border/50 bg-card/60 px-2.5 py-1.5 text-xs font-bold text-muted-foreground transition-all hover:bg-card/90 hover:text-white"
                                 >
-                                  Check In
+                                  <Pencil className="h-3 w-3" />
+                                  Edit
                                 </button>
-                              )}
+
+                                {isCurrentlyCheckedIn ? (
+                                  <span className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-400 inline-block">
+                                    Checked In
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      if (!child.parent_details || child.parent_details.length === 0) {
+                                        toast.error("Please edit the child profile and link at least one parent member before check-in.");
+                                        return;
+                                      }
+                                      setActiveCheckInChild(child);
+                                    }}
+                                    className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-indigo-500"
+                                  >
+                                    Check In
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -410,6 +431,17 @@ export default function KidsKingdomPage() {
           </div>
         )}
 
+        {/* Edit Child Modal */}
+        {editingChild && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            <ChildRegistryForm
+              child={editingChild}
+              onSubmit={handleEditSubmit}
+              onClose={() => setEditingChild(null)}
+            />
+          </div>
+        )}
+
         {/* Check In Modal */}
         {activeCheckInChild && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
@@ -418,6 +450,7 @@ export default function KidsKingdomPage() {
               classrooms={classrooms}
               onCheckIn={handleCheckInSubmit}
               onClose={() => setActiveCheckInChild(null)}
+              onEditChild={(childToEdit) => setEditingChild(childToEdit)}
             />
           </div>
         )}

@@ -75,12 +75,14 @@ class ChildSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"branch": "A branch assignment is required for Super Admins."})
 
         # Run model clean
+        attrs_copy = attrs.copy()
+        attrs_copy.pop('parents', None)
         if self.instance:
             temp_instance = Child.objects.get(pk=self.instance.pk)
-            for attr, value in attrs.items():
+            for attr, value in attrs_copy.items():
                 setattr(temp_instance, attr, value)
         else:
-            temp_instance = Child(**attrs)
+            temp_instance = Child(**attrs_copy)
 
         try:
             temp_instance.clean()

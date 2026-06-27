@@ -30,11 +30,19 @@ export default function SermonDetailPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   
-  const { getSermonById } = useSermons();
+  const { getSermonById, isLoading } = useSermons();
   const { sermons: sermonPermissions } = useAppPermissions();
   const { canEdit, canViewLibrary } = sermonPermissions;
 
   const sermon = getSermonById(id);
+
+  if (isLoading && !sermon) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!sermon) {
     return (

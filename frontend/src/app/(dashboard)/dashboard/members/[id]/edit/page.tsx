@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 import { MemberForm } from "@/features/members/components/member-form";
 import { useMembers } from "@/features/members/hooks/use-members";
 import { useAppPermissions } from "@/hooks/use-app-permissions";
@@ -11,9 +13,10 @@ import type { MemberFormValues } from "@/features/members/types/member.types";
 export default function EditMemberPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { getMemberById } = useMembers();
+  const { getMemberById, updateMember } = useMembers();
   const { members } = useAppPermissions();
   const canEdit = members.canEdit;
+  const [isLoading, setIsLoading] = useState(false);
 
   const member = getMemberById(id);
 
@@ -68,10 +71,19 @@ export default function EditMemberPage() {
     role: member.role,
   };
 
-  const handleSubmit = (values: MemberFormValues) => {
-    // In production: call PATCH /api/members/:id here
-    console.info("Updating member:", member.id, values);
-    router.push(`/dashboard/members/${member.id}`);
+  const handleSubmit = async (values: MemberFormValues) => {
+    setIsLoading(true);
+    try {
+      const updated = await updateMember(member.id, values);
+      if (updated) {
+        toast.success("Member profile updated successfully");
+        router.push(`/dashboard/members/${member.id}`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update member profile");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -104,6 +116,7 @@ export default function EditMemberPage() {
         member={member}
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
+        isLoading={isLoading}
       />
     </div>
   );

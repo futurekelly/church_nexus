@@ -135,9 +135,10 @@ export function ChildRegistryForm({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="w-full max-w-xl overflow-hidden rounded-3xl border border-border/50 bg-slate-900/90 p-6 backdrop-blur-xl shadow-2xl"
+      className="w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden rounded-3xl border border-border/50 bg-slate-900/95 p-6 backdrop-blur-xl shadow-2xl"
     >
-      <div className="flex items-center justify-between border-b border-border/10 pb-4 mb-6">
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center justify-between border-b border-border/10 pb-4 mb-4">
         <div>
           <h3 className="text-lg font-bold text-primary-foreground">
             {isEdit ? "Edit Child Profile" : "Register Child"}
@@ -155,145 +156,148 @@ export function ChildRegistryForm({
         </button>
       </div>
 
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
-        {/* Name Fields */}
-        <div className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* Scrollable form body */}
+        <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+          {/* Name Fields */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="first_name" className={labelClass}>First Name</label>
+              <input
+                id="first_name"
+                type="text"
+                placeholder="e.g. John"
+                className={inputClass}
+                {...register("first_name")}
+              />
+              {errors.first_name && (
+                <p className={errorClass}>{errors.first_name.message}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="last_name" className={labelClass}>Last Name</label>
+              <input
+                id="last_name"
+                type="text"
+                placeholder="e.g. Doe"
+                className={inputClass}
+                {...register("last_name")}
+              />
+              {errors.last_name && (
+                <p className={errorClass}>{errors.last_name.message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Date & Gender */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="birth_date" className={labelClass}>Birth Date</label>
+              <input
+                id="birth_date"
+                type="date"
+                className={inputClass}
+                {...register("birth_date")}
+              />
+              {errors.birth_date && (
+                <p className={errorClass}>{errors.birth_date.message}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="gender" className={labelClass}>Gender</label>
+              <select
+                id="gender"
+                className={inputClass}
+                {...register("gender")}
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.gender && (
+                <p className={errorClass}>{errors.gender.message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Health logs */}
+          <div className="space-y-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400">
+              <AlertTriangle className="h-4 w-4" />
+              Safety & Allergy Warnings
+            </div>
+            <div>
+              <label htmlFor="allergy_alerts" className={labelClass}>Allergy Alerts</label>
+              <input
+                id="allergy_alerts"
+                type="text"
+                placeholder="e.g. Peanuts, Gluten (leave blank if none)"
+                className={cn(inputClass, "border-red-500/20 focus:border-red-500/50 focus:ring-red-500/10")}
+                {...register("allergy_alerts")}
+              />
+            </div>
+            <div>
+              <label htmlFor="special_needs" className={labelClass}>Special Needs / Medical Notes</label>
+              <input
+                id="special_needs"
+                type="text"
+                placeholder="e.g. Asthma inhaler, ADHD support notes"
+                className={cn(inputClass, "border-red-500/20 focus:border-red-500/50 focus:ring-red-500/10")}
+                {...register("special_needs")}
+              />
+            </div>
+          </div>
+
+          {/* General notes */}
           <div>
-            <label htmlFor="first_name" className={labelClass}>First Name</label>
-            <input
-              id="first_name"
-              type="text"
-              placeholder="e.g. John"
+            <label htmlFor="notes" className={labelClass}>Check-In Notes / General Outline</label>
+            <textarea
+              id="notes"
+              rows={2}
+              placeholder="Any pick-up instructions or general notes..."
               className={inputClass}
-              {...register("first_name")}
+              {...register("notes")}
             />
-            {errors.first_name && (
-              <p className={errorClass}>{errors.first_name.message}</p>
-            )}
           </div>
-          <div>
-            <label htmlFor="last_name" className={labelClass}>Last Name</label>
-            <input
-              id="last_name"
-              type="text"
-              placeholder="e.g. Doe"
-              className={inputClass}
-              {...register("last_name")}
-            />
-            {errors.last_name && (
-              <p className={errorClass}>{errors.last_name.message}</p>
-            )}
-          </div>
-        </div>
 
-        {/* Date & Gender */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="birth_date" className={labelClass}>Birth Date</label>
-            <input
-              id="birth_date"
-              type="date"
-              className={inputClass}
-              {...register("birth_date")}
-            />
-            {errors.birth_date && (
-              <p className={errorClass}>{errors.birth_date.message}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="gender" className={labelClass}>Gender</label>
-            <select
-              id="gender"
-              className={inputClass}
-              {...register("gender")}
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-            {errors.gender && (
-              <p className={errorClass}>{errors.gender.message}</p>
+          {/* Parent Linkage */}
+          <div className="space-y-2">
+            <label className={labelClass}>Link Parent / Guardian</label>
+            <div className="max-h-36 overflow-y-auto rounded-xl border border-border/40 bg-slate-950/40 p-2 space-y-1.5">
+              {isSearchingMembers ? (
+                <p className="p-3 text-center text-xs text-muted-foreground animate-pulse">Loading church member lists...</p>
+              ) : members.length === 0 ? (
+                <p className="p-3 text-center text-xs text-muted-foreground">No members found. Please register members first.</p>
+              ) : (
+                members.map((member) => {
+                  const isSelected = selectedParents.includes(member.id);
+                  return (
+                    <button
+                      key={member.id}
+                      type="button"
+                      onClick={() => handleParentToggle(member.id)}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs transition-all",
+                        isSelected
+                          ? "bg-indigo-600/20 border border-indigo-500/30 text-indigo-300"
+                          : "hover:bg-card/40 border border-transparent text-muted-foreground"
+                      )}
+                    >
+                      <span>{member.first_name} {member.last_name}</span>
+                      <span className="text-[10px] text-muted-foreground/60">{member.phone_number || member.phone || "No Phone"}</span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+            {errors.selectedParents && (
+              <p className={errorClass}>{errors.selectedParents.message}</p>
             )}
           </div>
         </div>
 
-        {/* Health logs */}
-        <div className="space-y-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400">
-            <AlertTriangle className="h-4 w-4" />
-            Safety & Allergy Warnings
-          </div>
-          <div>
-            <label htmlFor="allergy_alerts" className={labelClass}>Allergy Alerts</label>
-            <input
-              id="allergy_alerts"
-              type="text"
-              placeholder="e.g. Peanuts, Gluten (leave blank if none)"
-              className={cn(inputClass, "border-red-500/20 focus:border-red-500/50 focus:ring-red-500/10")}
-              {...register("allergy_alerts")}
-            />
-          </div>
-          <div>
-            <label htmlFor="special_needs" className={labelClass}>Special Needs / Medical Notes</label>
-            <input
-              id="special_needs"
-              type="text"
-              placeholder="e.g. Asthma inhaler, ADHD support notes"
-              className={cn(inputClass, "border-red-500/20 focus:border-red-500/50 focus:ring-red-500/10")}
-              {...register("special_needs")}
-            />
-          </div>
-        </div>
-
-        {/* General notes */}
-        <div>
-          <label htmlFor="notes" className={labelClass}>Check-In Notes / General Outline</label>
-          <textarea
-            id="notes"
-            rows={2}
-            placeholder="Any pick-up instructions or general notes..."
-            className={inputClass}
-            {...register("notes")}
-          />
-        </div>
-
-        {/* Parent Linkage */}
-        <div className="space-y-2">
-          <label className={labelClass}>Link Parent / Guardian</label>
-          <div className="max-h-36 overflow-y-auto rounded-xl border border-border/40 bg-slate-950/40 p-2 space-y-1.5">
-            {isSearchingMembers ? (
-              <p className="p-3 text-center text-xs text-muted-foreground animate-pulse">Loading church member lists...</p>
-            ) : members.length === 0 ? (
-              <p className="p-3 text-center text-xs text-muted-foreground">No members found. Please register members first.</p>
-            ) : (
-              members.map((member) => {
-                const isSelected = selectedParents.includes(member.id);
-                return (
-                  <button
-                    key={member.id}
-                    type="button"
-                    onClick={() => handleParentToggle(member.id)}
-                    className={cn(
-                      "flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs transition-all",
-                      isSelected
-                        ? "bg-indigo-600/20 border border-indigo-500/30 text-indigo-300"
-                        : "hover:bg-card/40 border border-transparent text-muted-foreground"
-                    )}
-                  >
-                    <span>{member.first_name} {member.last_name}</span>
-                    <span className="text-[10px] text-muted-foreground/60">{member.phone_number || member.phone || "No Phone"}</span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-          {errors.selectedParents && (
-            <p className={errorClass}>{errors.selectedParents.message}</p>
-          )}
-        </div>
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-3 border-t border-border/10 pt-4 mt-6">
+        {/* Fixed Footer Actions */}
+        <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-border/10 pt-4 mt-4">
           <button
             type="button"
             onClick={onClose}

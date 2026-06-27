@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { Sermon, SermonFilters, SermonSortConfig } from "../types/sermon.types";
 import { apiGet, apiPost, apiPatch, isApiError } from "@/services/api-client";
 import { toast } from "sonner";
@@ -30,17 +30,69 @@ const mapSermonToFrontend = (s: any): Sermon => ({
 
 /**
  * Hook to manage Sermons data using backend APIs.
+ * Supports server-side filtering, sorting, and pagination.
  */
-export function useSermons() {
+export function useSermons(options?: {
+  filters?: SermonFilters;
+  sortConfig?: SermonSortConfig;
+  page?: number;
+  pageSize?: number;
+}) {
   const [sermons, setSermons] = useState<Sermon[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const fetchedIds = useRef<Set<string>>(new Set());
+
+  // Stringify options to use as a stable dependency for useEffect
+  const serializedOptions = JSON.stringify(options);
 
   const fetchSermons = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiGet<any[]>("/api/sermons/");
+      const params = new URLSearchParams();
+
+      // Attempt to resolve branch ID from local storage
+      let branchId = "";
+      try {
+        const storedBranches = localStorage.getItem("church-settings-branches");
+        if (storedBranches) {
+          const parsed = JSON.parse(storedBranches);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            branchId = parsed[0].id;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse branches from localStorage", e);
+      }
+      if (!branchId) {
+        branchId = "branch-001";
+      }
+      params.append("branch", branchId);
+
+      if (options?.page) {
+        params.append("page", String(options.page));
+      }
+      if (options?.pageSize) {
+        params.append("page_size", String(options.pageSize));
+      }
+      if (options?.filters) {
+        const { search, category, status, speaker } = options.filters;
+        if (search) params.append("search", search);
+        if (category && category !== "all") params.append("category", category);
+        if (status && status !== "all") params.append("status", status);
+        if (speaker && speaker !== "all") params.append("speaker", speaker);
+      }
+      if (options?.sortConfig) {
+        params.append("sort_key", options.sortConfig.key);
+        params.append("sort_dir", options.sortConfig.direction);
+      }
+
+      const response = await apiGet<any>(`/api/sermons/?${params.toString()}`);
       if (!isApiError(response)) {
-        setSermons(response.data.map(mapSermonToFrontend));
+        const rawData = response.data;
+        const results = rawData && Array.isArray(rawData.results) ? rawData.results : [];
+        setSermons(results.map(mapSermonToFrontend));
+        setTotalItems(rawData && typeof rawData.count === "number" ? rawData.count : results.length);
       } else {
         toast.error(`Failed to load sermons: ${response.message}`);
       }
@@ -50,7 +102,7 @@ export function useSermons() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [serializedOptions]);
 
   useEffect(() => {
     fetchSermons();
@@ -114,24 +166,46 @@ export function useSermons() {
 
   const getSermonById = useCallback(
     (id: string) => {
-      return sermons.find((s) => s.id === id) || null;
+      const found = sermons.find((s) => s.id === id);
+      if (found) return found;
+
+      // If not found and we haven't fetched it yet, fetch it from backend
+      if (id && !fetchedIds.current.has(id)) {
+        fetchedIds.current.add(id);
+        apiGet<any>(`/api/sermons/${id}/`)
+          .then((response) => {
+            if (!isApiError(response) && response.data) {
+              const fetchedSermon = mapSermonToFrontend(response.data);
+              setSermons((prev) => {
+                if (prev.some((s) => s.id === fetchedSermon.id)) return prev;
+                return [...prev, fetchedSermon];
+              });
+            }
+          })
+          .catch((err) => {
+            console.error(`Failed to fetch sermon ${id}:`, err);
+          });
+      }
+      return null;
     },
     [sermons]
   );
 
   return {
     sermons,
+    totalItems,
     isLoading,
     addSermon,
     updateSermon,
     deleteSermon,
     getSermonById,
-    refetch: fetchSermons
+    refetch: fetchSermons,
   };
 }
 
 /**
- * Helper hook to filter, search, sort, and paginate sermons from backend
+ * Helper hook to filter, search, sort, and paginate sermons from backend.
+ * Now acts as a wrapper forwarding state to server-side paginated useSermons hook.
  */
 export function useFilteredSermons(
   filters: SermonFilters,
@@ -141,77 +215,56 @@ export function useFilteredSermons(
 ) {
   const {
     sermons,
+    totalItems,
     isLoading,
     addSermon,
     updateSermon,
     deleteSermon,
     getSermonById,
-    refetch
-  } = useSermons();
+    refetch,
+  } = useSermons({
+    filters,
+    sortConfig,
+    page,
+    pageSize,
+  });
 
-  const filteredSermons = useMemo(() => {
-    let result = [...sermons];
+  const [featuredSermon, setFeaturedSermon] = useState<Sermon | null>(null);
 
-    // Search query (Title, description, scripture reference, speaker)
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      result = result.filter(
-        (s) =>
-          s.title.toLowerCase().includes(q) ||
-          s.description.toLowerCase().includes(q) ||
-          (s.scripture_reference && s.scripture_reference.toLowerCase().includes(q)) ||
-          s.speaker.toLowerCase().includes(q)
-      );
-    }
-
-    // Category filter
-    if (filters.category !== "all") {
-      result = result.filter((s) => s.category === filters.category);
-    }
-
-    // Status filter
-    if (filters.status !== "all") {
-      result = result.filter((s) => s.status === filters.status);
-    }
-
-    // Speaker filter
-    if (filters.speaker !== "all") {
-      result = result.filter((s) => s.speaker === filters.speaker);
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      let aVal: string | number = a[sortConfig.key] || "";
-      let bVal: string | number = b[sortConfig.key] || "";
-
-      if (sortConfig.key === "sermon_date") {
-        aVal = new Date(a.sermon_date).getTime();
-        bVal = new Date(b.sermon_date).getTime();
+  // Fetch featured sermon separately to ensure it is always loaded correctly
+  useEffect(() => {
+    let branchId = "";
+    try {
+      const storedBranches = localStorage.getItem("church-settings-branches");
+      if (storedBranches) {
+        const parsed = JSON.parse(storedBranches);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          branchId = parsed[0].id;
+        }
       }
+    } catch {}
+    if (!branchId) branchId = "branch-001";
 
-      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
+    apiGet<any>(`/api/sermons/?featured=true&branch=${branchId}`)
+      .then((res) => {
+        if (!isApiError(res) && res.data) {
+          const results = Array.isArray(res.data) ? res.data : res.data.results;
+          if (Array.isArray(results) && results.length > 0) {
+            setFeaturedSermon(mapSermonToFrontend(results[0]));
+          } else {
+            setFeaturedSermon(null);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch featured sermon:", err);
+      });
+  }, []);
 
-    return result;
-  }, [sermons, filters, sortConfig]);
-
-  const totalItems = filteredSermons.length;
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  const paginatedSermons = useMemo(() => {
-    const startIdx = (page - 1) * pageSize;
-    return filteredSermons.slice(startIdx, startIdx + pageSize);
-  }, [filteredSermons, page, pageSize]);
-
-  // Featured Sermon
-  const featuredSermon = useMemo(() => {
-    return sermons.find((s) => s.featured && s.status === "Published") || null;
-  }, [sermons]);
-
   return {
-    sermons: paginatedSermons,
+    sermons,
     totalItems,
     totalPages,
     featuredSermon,
@@ -220,7 +273,6 @@ export function useFilteredSermons(
     deleteSermon,
     getSermonById,
     isLoading,
-    refetch
+    refetch,
   };
 }
-

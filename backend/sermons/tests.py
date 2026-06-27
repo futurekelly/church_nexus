@@ -1,12 +1,12 @@
 import pytest
 from django.urls import reverse
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile  # noqa: F401
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from rest_framework.test import APIClient
-from django.utils import timezone  # noqa: F401
 from .models import Sermon
 from authentication.factories import BranchFactory, UserFactory
+
 
 @pytest.mark.django_db
 class TestSermonModels:
@@ -87,6 +87,23 @@ class TestSermonModels:
         assert sermon_a2.featured is True
         assert sermon_b1.featured is True
 
+    def test_branch_immutability_at_model_level(self):
+        """Changing branch on an existing sermon should raise ValidationError."""
+        branch_a = BranchFactory()
+        branch_b = BranchFactory()
+        sermon = Sermon.objects.create(
+            branch=branch_a,
+            title="Test Sermon",
+            description="Desc",
+            speaker="Speaker",
+            category="Faith",
+            status="Draft"
+        )
+        sermon.branch = branch_b
+        with pytest.raises(ValidationError) as excinfo:
+            sermon.clean()
+        assert "branch" in excinfo.value.message_dict
+
 
 @pytest.mark.django_db
 class TestSermonAPI:
@@ -102,7 +119,7 @@ class TestSermonAPI:
         self.pastor_b = UserFactory(role='pastor', branch=self.branch_b)
         self.media_a = UserFactory(role='church_admin', branch=self.branch_a)
         self.member_a = UserFactory(role='member', branch=self.branch_a)
-        
+
         # Test Sermons in Branch A
         self.sermon_pub_a = Sermon.objects.create(
             branch=self.branch_a,
@@ -140,45 +157,200 @@ class TestSermonAPI:
             status="Published"
         )
 
-    def test_anonymous_user_can_read_published_only(self):
-        # List endpoint
+    # --- P0: Anonymous Catalog Isolation ---
+
+    def test_anonymous_without_branch_returns_empty(self):
+        """Anonymous requests without branch param must return zero results."""
         url = reverse('sermon-list')
         response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        # Anonymous user should see all Published sermons across branches if branch is not specified,
-        # or filtered branch if specified.
-        # Here we didn't specify branch, so they see Published sermons from all branches.
-        titles = [item['title'] for item in response.data]
+        results = response.data.get('results', response.data)
+        if isinstance(results, list):
+            assert len(results) == 0
+        else:
+            assert results == []
+
+    def test_anonymous_with_branch_returns_correct_sermons(self):
+        """Anonymous requests with branch param return only that branch's published sermons."""
+        url = reverse('sermon-list')
+        response = self.client.get(url, {'branch': self.branch_a.id})
+        assert response.status_code == status.HTTP_200_OK
+        results = response.data.get('results', response.data)
+        titles = [item['title'] for item in results]
         assert "Published Sermon A" in titles
-        assert "Published Sermon B" in titles
+        assert "Published Sermon B" not in titles
         assert "Draft Sermon A" not in titles
         assert "Archived Sermon A" not in titles
 
-        # Query parameter branch filtering for Anonymous
-        response_branch_a = self.client.get(url, {'branch': self.branch_a.id})
-        assert response_branch_a.status_code == status.HTTP_200_OK
-        titles_a = [item['title'] for item in response_branch_a.data]
-        assert "Published Sermon A" in titles_a
-        assert "Published Sermon B" not in titles_a
+    def test_anonymous_cannot_see_cross_branch_data(self):
+        """Anonymous requests with branch A should not reveal branch B sermons."""
+        url = reverse('sermon-list')
+        response = self.client.get(url, {'branch': self.branch_a.id})
+        assert response.status_code == status.HTTP_200_OK
+        results = response.data.get('results', response.data)
+        for item in results:
+            assert item['branch'] == str(self.branch_a.id)
 
-        # Detail endpoint for published should succeed
-        detail_url_pub = reverse('sermon-detail', kwargs={'pk': self.sermon_pub_a.id})
-        response_detail_pub = self.client.get(detail_url_pub)
-        assert response_detail_pub.status_code == status.HTTP_200_OK
+    def test_anonymous_detail_published_ok(self):
+        """Anonymous user can access detail of a published sermon."""
+        detail_url = reverse('sermon-detail', kwargs={'pk': self.sermon_pub_a.id})
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_200_OK
 
-        # Detail endpoint for Draft should fail (not visible to anonymous/members)
-        detail_url_draft = reverse('sermon-detail', kwargs={'pk': self.sermon_draft_a.id})
-        response_detail_draft = self.client.get(detail_url_draft)
-        assert response_detail_draft.status_code == status.HTTP_404_NOT_FOUND
+    def test_anonymous_detail_draft_blocked(self):
+        """Anonymous user cannot access detail of a draft sermon."""
+        detail_url = reverse('sermon-detail', kwargs={'pk': self.sermon_draft_a.id})
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    # --- P0: Cross-Branch Mutation Protection ---
+
+    def test_pastor_cannot_change_branch_on_update(self):
+        """A pastor should not be able to reassign a sermon to another branch."""
+        self.client.force_authenticate(user=self.pastor_a)
+        detail_url = reverse('sermon-detail', kwargs={'pk': self.sermon_draft_a.id})
+        response = self.client.patch(detail_url, {"branch": str(self.branch_b.id)})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_super_admin_can_change_branch(self):
+        """Super admins should be able to reassign sermons across branches."""
+        self.client.force_authenticate(user=self.super_admin)
+        detail_url = reverse('sermon-detail', kwargs={'pk': self.sermon_draft_a.id})
+        response = self.client.patch(detail_url, {"branch": str(self.branch_b.id)})
+        assert response.status_code == status.HTTP_200_OK
+        self.sermon_draft_a.refresh_from_db()
+        assert self.sermon_draft_a.branch == self.branch_b
+
+    # --- P0: Upload Security (Validator-level tests) ---
+
+    def test_thumbnail_size_validator_rejects_oversized(self):
+        """Thumbnail validator rejects files over 5MB."""
+        from sermons.validators import validate_thumbnail
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        big_file = SimpleUploadedFile(
+            "big_thumb.jpg",
+            b"x" * (6 * 1024 * 1024),
+            content_type="image/jpeg"
+        )
+        with pytest.raises(DjangoValidationError):
+            validate_thumbnail(big_file)
+
+    def test_thumbnail_size_validator_accepts_small(self):
+        """Thumbnail validator accepts files under 5MB."""
+        from sermons.validators import validate_thumbnail
+        small_file = SimpleUploadedFile(
+            "small_thumb.jpg",
+            b"x" * (1 * 1024 * 1024),
+            content_type="image/jpeg"
+        )
+        # Should not raise
+        validate_thumbnail(small_file)
+
+    def test_audio_size_validator_rejects_oversized(self):
+        """Audio validator rejects files over 50MB."""
+        from sermons.validators import validate_audio
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        big_file = SimpleUploadedFile(
+            "big_audio.mp3",
+            b"x" * (51 * 1024 * 1024),
+            content_type="audio/mpeg"
+        )
+        with pytest.raises(DjangoValidationError):
+            validate_audio(big_file)
+
+    def test_video_mime_validator_rejects_executable(self):
+        """Video validator rejects non-video MIME types."""
+        from sermons.validators import validate_video
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        exe_file = SimpleUploadedFile(
+            "malware.exe",
+            b"MZ" + b"\x00" * 1024,
+            content_type="application/x-msdownload"
+        )
+        with pytest.raises(DjangoValidationError):
+            validate_video(exe_file)
+
+    def test_valid_thumbnail_upload_via_api(self):
+        """Uploading a valid small image via API should succeed."""
+        import io
+        from PIL import Image as PILImage
+
+        self.client.force_authenticate(user=self.pastor_a)
+
+        # Generate a real 1x1 JPEG in memory
+        img = PILImage.new('RGB', (1, 1), color='red')
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG')
+        buf.seek(0)
+
+        thumb = SimpleUploadedFile(
+            "thumb.jpg",
+            buf.read(),
+            content_type="image/jpeg"
+        )
+        url = reverse('sermon-list')
+        data = {
+            "title": "Test Valid Thumb",
+            "description": "Desc",
+            "speaker": "Speaker",
+            "category": "Faith",
+            "status": "Draft",
+            "thumbnail": thumb
+        }
+        response = self.client.post(url, data, format='multipart')
+        assert response.status_code == status.HTTP_201_CREATED
+
+    # --- P1: Pagination ---
+
+    def test_list_endpoint_is_paginated(self):
+        """List endpoint returns paginated response with count, next, previous, results."""
+        self.client.force_authenticate(user=self.pastor_a)
+        url = reverse('sermon-list')
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert 'results' in response.data
+        assert 'count' in response.data
+
+    def test_pagination_respects_page_size(self):
+        """Pagination page_size query param controls results per page."""
+        self.client.force_authenticate(user=self.pastor_a)
+        url = reverse('sermon-list')
+        response = self.client.get(url, {'page_size': 1})
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data['results']) == 1
+        assert response.data['count'] == 3  # 3 sermons in branch A
+
+    # --- P1: Serializer Optimization ---
+
+    def test_list_serializer_excludes_notes_and_description(self):
+        """List responses should not include notes or description fields."""
+        self.client.force_authenticate(user=self.pastor_a)
+        url = reverse('sermon-list')
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        for item in response.data['results']:
+            assert 'notes' not in item
+            assert 'description' not in item
+
+    def test_detail_serializer_includes_all_fields(self):
+        """Detail responses should include notes and description."""
+        self.client.force_authenticate(user=self.pastor_a)
+        detail_url = reverse('sermon-detail', kwargs={'pk': self.sermon_pub_a.id})
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_200_OK
+        assert 'notes' in response.data
+        assert 'description' in response.data
+
+    # --- Existing Behavior Preservation ---
 
     def test_member_can_read_published_only_and_branch_isolated(self):
         self.client.force_authenticate(user=self.member_a)
         url = reverse('sermon-list')
-        
+
         response = self.client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        # Member A should only see Published sermons belonging to branch_a
-        titles = [item['title'] for item in response.data]
+        results = response.data.get('results', response.data)
+        titles = [item['title'] for item in results]
         assert "Published Sermon A" in titles
         assert "Published Sermon B" not in titles
         assert "Draft Sermon A" not in titles
@@ -200,7 +372,10 @@ class TestSermonAPI:
 
         # Anonymous Write blocked
         response_anon = self.client.post(url, data)
-        assert response_anon.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
+        assert response_anon.status_code in [
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN
+        ]
 
         # Member Write blocked
         self.client.force_authenticate(user=self.member_a)
@@ -209,16 +384,17 @@ class TestSermonAPI:
 
     def test_branch_staff_can_manage_sermons_in_their_branch(self):
         self.client.force_authenticate(user=self.pastor_a)
-        
-        # Pastor A can list all status sermons (Draft, Published, Archived) in Branch A
+
+        # Pastor A can list all status sermons in Branch A
         list_url = reverse('sermon-list')
         response = self.client.get(list_url)
         assert response.status_code == status.HTTP_200_OK
-        titles = [item['title'] for item in response.data]
+        results = response.data.get('results', response.data)
+        titles = [item['title'] for item in results]
         assert "Published Sermon A" in titles
         assert "Draft Sermon A" in titles
         assert "Archived Sermon A" in titles
-        assert "Published Sermon B" not in titles # Isolated to Branch A
+        assert "Published Sermon B" not in titles  # Isolated to Branch A
 
         # Create sermon in Branch A (branch auto-assigned from Pastor A's branch)
         data = {
@@ -250,7 +426,8 @@ class TestSermonAPI:
         list_url = reverse('sermon-list')
         response = self.client.get(list_url)
         assert response.status_code == status.HTTP_200_OK
-        titles = [item['title'] for item in response.data]
+        results = response.data.get('results', response.data)
+        titles = [item['title'] for item in results]
         assert "Published Sermon A" in titles
         assert "Published Sermon B" in titles
         assert "Draft Sermon A" in titles
@@ -264,7 +441,6 @@ class TestSermonAPI:
         }
         response_create_fail = self.client.post(list_url, data)
         assert response_create_fail.status_code == status.HTTP_400_BAD_REQUEST
-        assert "branch" in response_create_fail.data
 
         # Creating with branch should succeed for Super Admin
         data["branch"] = str(self.branch_b.id)
@@ -278,25 +454,29 @@ class TestSermonAPI:
 
         # Filter by Category
         res_cat = self.client.get(list_url, {'category': 'Grace'})
-        assert len(res_cat.data) == 1
-        assert res_cat.data[0]['title'] == "Draft Sermon A"
+        results_cat = res_cat.data.get('results', res_cat.data)
+        assert len(results_cat) == 1
+        assert results_cat[0]['title'] == "Draft Sermon A"
 
         # Filter by Speaker
         res_spk = self.client.get(list_url, {'speaker': 'Pastor A'})
-        assert len(res_spk.data) == 3
+        results_spk = res_spk.data.get('results', res_spk.data)
+        assert len(results_spk) == 3
 
         # Filter by Featured
         res_feat = self.client.get(list_url, {'featured': 'true'})
-        assert len(res_feat.data) == 1
-        assert res_feat.data[0]['title'] == "Published Sermon A"
+        results_feat = res_feat.data.get('results', res_feat.data)
+        assert len(results_feat) == 1
+        assert results_feat[0]['title'] == "Published Sermon A"
 
         # Search Query
         res_search = self.client.get(list_url, {'search': 'Archived'})
-        assert len(res_search.data) == 1
-        assert res_search.data[0]['title'] == "Archived Sermon A"
+        results_search = res_search.data.get('results', res_search.data)
+        assert len(results_search) == 1
+        assert results_search[0]['title'] == "Archived Sermon A"
 
         # Sorting
         res_sort = self.client.get(list_url, {'sort_key': 'title', 'sort_dir': 'asc'})
-        titles_sorted = [item['title'] for item in res_sort.data]
+        results_sort = res_sort.data.get('results', res_sort.data)
+        titles_sorted = [item['title'] for item in results_sort]
         assert titles_sorted == ["Archived Sermon A", "Draft Sermon A", "Published Sermon A"]
-

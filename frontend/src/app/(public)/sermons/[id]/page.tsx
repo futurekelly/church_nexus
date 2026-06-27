@@ -27,11 +27,23 @@ export default function PublicSermonDetailPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
 
-  const { getSermonById } = useSermons();
+  const { getSermonById, isLoading } = useSermons();
   const sermon = getSermonById(id);
 
   // Verification: Sermons must exist and be Published to be visible publicly
   const isSermonVisible = sermon && sermon.status === "Published";
+
+  if (isLoading && !sermon) {
+    return (
+      <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
+        <PublicNavbar />
+        <main className="flex-grow flex items-center justify-center py-24">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+        </main>
+        <PublicFooter />
+      </div>
+    );
+  }
 
   if (!isSermonVisible) {
     return (

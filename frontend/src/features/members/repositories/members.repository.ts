@@ -43,6 +43,19 @@ function setStoredItems<T>(key: string, items: T[]): void {
   }
 }
 
+function mapMemberFromBackend(item: any): Member {
+  const dateVal = item.join_date || item.date_joined || new Date().toISOString().split("T")[0];
+  return {
+    ...item,
+    address: item.address ?? "",
+    join_date: dateVal,
+    date_joined: dateVal,
+    role: item.role || item.member_type || "Regular",
+    ministries: item.ministries || [],
+    notes: item.notes || item.pastoral_notes || "",
+  };
+}
+
 export const MembersRepository = {
   /**
    * Fetches members scoped by branch, filters, and computed aggregations from backend API.
@@ -59,22 +72,39 @@ export const MembersRepository = {
     if (filters.page) params.page = filters.page;
     if (filters.pageSize) params.page_size = filters.pageSize;
 
-    const response = await apiGet<PaginatedResponse<Member>>("/api/members/", { params });
+    const response = await apiGet<PaginatedResponse<any>>("/api/members/", { params });
     if (isApiError(response)) {
       throw new Error(response.message || "Failed to fetch members from backend API.");
     }
-    return response.data;
+    const rawData = response.data;
+    let results: Member[] = [];
+    if (rawData) {
+      if (Array.isArray(rawData.results)) {
+        results = rawData.results.map(mapMemberFromBackend);
+      } else if (Array.isArray(rawData)) {
+        results = rawData.map(mapMemberFromBackend);
+      }
+    }
+    return {
+      count: rawData?.count ?? results.length,
+      page: rawData?.page ?? 1,
+      page_size: rawData?.page_size ?? 20,
+      total_pages: rawData?.total_pages ?? 1,
+      next: rawData?.next ?? null,
+      previous: rawData?.previous ?? null,
+      results
+    };
   },
 
   /**
    * Fetches single member profile from backend API.
    */
   async getMemberById(id: string, context: { branchId: string; role: string }): Promise<Member | null> {
-    const response = await apiGet<Member>(`/api/members/${id}/`);
-    if (isApiError(response)) {
+    const response = await apiGet<any>(`/api/members/${id}/`);
+    if (isApiError(response) || !response.data) {
       return null;
     }
-    return response.data;
+    return mapMemberFromBackend(response.data);
   },
 
   /**
@@ -89,11 +119,11 @@ export const MembersRepository = {
       join_date: data.join_date || data.date_joined || new Date().toISOString().split("T")[0]
     };
     
-    const response = await apiPost<Member>("/api/members/", payload);
-    if (isApiError(response)) {
+    const response = await apiPost<any>("/api/members/", payload);
+    if (isApiError(response) || !response.data) {
       throw new Error(response.message || "Failed to create member on the backend.");
     }
-    return response.data;
+    return mapMemberFromBackend(response.data);
   },
 
   /**
@@ -107,14 +137,15 @@ export const MembersRepository = {
   ): Promise<Member> {
     const payload = {
       ...updates,
+      join_date: updates.join_date || updates.date_joined,
       status_notes: notes || "Profile update status change"
     };
 
-    const response = await apiPut<Member>(`/api/members/${id}/`, payload);
-    if (isApiError(response)) {
+    const response = await apiPut<any>(`/api/members/${id}/`, payload);
+    if (isApiError(response) || !response.data) {
       throw new Error(response.message || "Failed to update member on the backend.");
     }
-    return response.data;
+    return mapMemberFromBackend(response.data);
   },
 
   /**

@@ -71,7 +71,7 @@ export function useMembers() {
 
   // Mutations
   const addMember = useCallback(
-    async (data: Omit<Member, "id" | "membership_number" | "created_at" | "updated_at" | "total_giving" | "last_giving_date" | "active_pledges" | "age_group" | "membership_duration" | "attendance_score" | "is_archived" | "archived_at">) => {
+    async (data: any) => {
       const created = await MembersRepository.createMember(data, changedBy);
       await fetchState();
       return created;

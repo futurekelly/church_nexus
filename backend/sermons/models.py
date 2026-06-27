@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from .validators import validate_thumbnail, validate_audio, validate_video
 
 class Sermon(models.Model):
     STATUS_CHOICES = (
@@ -33,11 +34,11 @@ class Sermon(models.Model):
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='Draft', db_index=True)
     
     # Media Attachments
-    thumbnail = models.ImageField(upload_to='sermons/thumbnails/', null=True, blank=True)
+    thumbnail = models.ImageField(upload_to='sermons/thumbnails/', null=True, blank=True, validators=[validate_thumbnail])
     video_url = models.URLField(max_length=500, null=True, blank=True)
     audio_url = models.URLField(max_length=500, null=True, blank=True)
-    video_file = models.FileField(upload_to='sermons/videos/', null=True, blank=True)
-    audio_file = models.FileField(upload_to='sermons/audio/', null=True, blank=True)
+    video_file = models.FileField(upload_to='sermons/videos/', null=True, blank=True, validators=[validate_video])
+    audio_file = models.FileField(upload_to='sermons/audio/', null=True, blank=True, validators=[validate_audio])
     
     speaker = models.CharField(max_length=255, db_index=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, db_index=True)
@@ -64,6 +65,18 @@ class Sermon(models.Model):
             raise ValidationError({
                 'featured': 'Only Published sermons can be marked as Featured.'
             })
+
+        # Multi-tenant isolation: prevent non-super-admins from mutating the branch ownership
+        if not self._state.adding:
+            try:
+                db_instance = Sermon.objects.get(pk=self.pk)
+                if db_instance.branch_id != self.branch_id:
+                    if not getattr(self, '_bypass_branch_immutable', False):
+                        raise ValidationError({
+                            'branch': 'Branch ownership is immutable once set.'
+                        })
+            except Sermon.DoesNotExist:
+                pass
 
     def save(self, *args, **kwargs):
         self.full_clean()

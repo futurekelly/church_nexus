@@ -43,7 +43,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                     value=refresh_token,
                     httponly=True,
                     secure=not settings.DEBUG,
-                    samesite='Strict',
+                    samesite='Lax',
                     path='/api/auth/',
                     max_age=int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
                 )
@@ -67,7 +67,7 @@ class CookieTokenRefreshView(TokenRefreshView):
                     value=new_refresh,
                     httponly=True,
                     secure=not settings.DEBUG,
-                    samesite='Strict',
+                    samesite='Lax',
                     path='/api/auth/',
                     max_age=int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
                 )
@@ -144,10 +144,11 @@ class RegisterView(APIView):
                 value=str(refresh),
                 httponly=True,
                 secure=not settings.DEBUG,
-                samesite='Strict',
+                samesite='Lax',
                 path='/api/auth/',
                 max_age=int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
             )
+            return response
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

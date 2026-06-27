@@ -10,11 +10,19 @@ import { SectionHeader } from "@/features/dashboard/components/widgets/section-h
 export default function EditSermonPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { getSermonById, updateSermon } = useSermons();
+  const { getSermonById, updateSermon, isLoading } = useSermons();
   const { sermons: sermonPermissions } = useAppPermissions();
   const canEdit = sermonPermissions.canEdit;
 
   const sermon = getSermonById(id);
+
+  if (isLoading && !sermon) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   const handleFormSubmit = async (values: any) => {
     if (!sermon) return;

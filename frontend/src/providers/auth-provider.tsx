@@ -33,36 +33,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  // Initialize immediately on render so child components rendering during the same cycle never see uninitialized client
+  initializeApiClient({
+    getAccessToken,
+    refreshTokens: async (): Promise<AuthTokens | null> => {
+      try {
+        const response = await apiPost<{ access: string }>(
+          API_ENDPOINTS.AUTH.REFRESH,
+          {},
+          { skipAuth: true } as never,
+        );
+
+        if (isApiError(response) || !response.data?.access) return null;
+
+        const newTokens: AuthTokens = {
+          access_token: response.data.access,
+          refresh_token: "",
+        };
+
+        setTokens(newTokens);
+        setAccessTokenCookie(newTokens.access_token);
+        return newTokens;
+      } catch {
+        return null;
+      }
+    },
+    clearSession: () => {
+      clearAccessTokenCookie();
+      clearSession();
+    },
+  });
+
   useEffect(() => {
-    initializeApiClient({
-      getAccessToken,
-      refreshTokens: async (): Promise<AuthTokens | null> => {
-        try {
-          const response = await apiPost<{ access: string }>(
-            API_ENDPOINTS.AUTH.REFRESH,
-            {},
-            { skipAuth: true } as never,
-          );
-
-          if (isApiError(response) || !response.data?.access) return null;
-
-          const newTokens: AuthTokens = {
-            access_token: response.data.access,
-            refresh_token: "",
-          };
-
-          setTokens(newTokens);
-          setAccessTokenCookie(newTokens.access_token);
-          return newTokens;
-        } catch {
-          return null;
-        }
-      },
-      clearSession: () => {
-        clearAccessTokenCookie();
-        clearSession();
-      },
-    });
+    // Re-bind on hydration / state changes if needed
   }, [clearSession, setTokens]);
 
   // Silent refresh on hydration / page reload
@@ -83,19 +86,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
             };
             setTokens(newTokens);
             setAccessTokenCookie(newTokens.access_token);
-          } else {
-            clearAccessTokenCookie();
-            clearSession();
           }
         } catch {
-          clearAccessTokenCookie();
-          clearSession();
+          // Keep session intact on transient background network glitches
         }
       }
     }
 
     performSilentRefresh();
-  }, [isHydrated, isAuthenticated, setTokens, clearSession]);
+  }, [isHydrated, isAuthenticated, setTokens]);
 
   useEffect(() => {
     if (isHydrated) {

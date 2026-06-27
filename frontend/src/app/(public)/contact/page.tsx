@@ -80,7 +80,7 @@ export default function ContactPage() {
                     <h3 className="font-medium text-primary-foreground">Address</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Headquarters Branch<br />
-                      100 Church St, New York, NY 10001
+                      100 Church St, kisutu , mlalakuwa 10001
                     </p>
                   </div>
                 </div>
@@ -133,7 +133,7 @@ export default function ContactPage() {
                       id="name"
                       type="text"
                       className="w-full rounded-lg border border-border bg-card/50 px-4 py-2.5 text-sm text-primary-foreground transition-colors focus:border-primary focus:outline-none"
-                      placeholder="John Doe"
+                      placeholder="Alfred Denis"
                       {...register("name")}
                     />
                     {errors.name && <p className="text-xs text-warning">{errors.name.message}</p>}
@@ -145,7 +145,7 @@ export default function ContactPage() {
                       id="email"
                       type="email"
                       className="w-full rounded-lg border border-border bg-card/50 px-4 py-2.5 text-sm text-primary-foreground transition-colors focus:border-primary focus:outline-none"
-                      placeholder="john@example.com"
+                      placeholder="alfred@example.com"
                       {...register("email")}
                     />
                     {errors.email && <p className="text-xs text-warning">{errors.email.message}</p>}

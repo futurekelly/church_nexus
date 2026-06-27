@@ -115,19 +115,79 @@ export function initializeApiClient(config: ApiClientConfig): AxiosInstance {
 
 export function getApiClient(): AxiosInstance {
   if (!clientInstance) {
-    throw new Error(
-      "API client not initialized. Call initializeApiClient() in AuthProvider.",
-    );
+    clientInstance = createAxiosInstance({
+      getAccessToken: () => {
+        if (typeof window === "undefined") return null;
+        try {
+          const stored = localStorage.getItem("auth-storage");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            return parsed.state?.tokens?.access_token || null;
+          }
+        } catch (e) {
+          return null;
+        }
+        return null;
+      },
+      refreshTokens: async () => null,
+      clearSession: () => {},
+    });
   }
   return clientInstance;
+}
+
+function formatApiError(error: unknown): ApiErrorResponse {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    const data = error.response.data as any;
+    if (typeof data === "object" && data !== null) {
+      let msg = data.message || data.detail;
+      if ((!msg || msg === "Validation failed.") && data.errors && typeof data.errors === "object") {
+        const errObj = data.errors;
+        const keys = Object.keys(errObj);
+        if (keys.length > 0) {
+          const firstKey = keys[0];
+          const firstErr = Array.isArray(errObj[firstKey]) ? errObj[firstKey][0] : errObj[firstKey];
+          msg = firstKey === "error" || firstKey === "detail" ? String(firstErr) : `${firstKey}: ${typeof firstErr === 'object' ? JSON.stringify(firstErr) : firstErr}`;
+        }
+      }
+      if (!msg || msg === "Validation failed.") {
+        const keys = Object.keys(data);
+        if (keys.length > 0) {
+          const firstKey = keys[0];
+          const firstErr = Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
+          msg = `${firstKey}: ${typeof firstErr === 'object' ? JSON.stringify(firstErr) : firstErr}`;
+        } else {
+          msg = "An unexpected error occurred.";
+        }
+      }
+      return {
+        success: false,
+        message: msg,
+        errors: data.errors || data,
+      };
+    } else if (typeof data === "string") {
+      return {
+        success: false,
+        message: data,
+      };
+    }
+  }
+  return {
+    success: false,
+    message: getErrorMessage(error),
+  };
 }
 
 export async function apiGet<T>(
   url: string,
   config?: AxiosRequestConfig,
 ): Promise<ApiResponse<T>> {
-  const response = await getApiClient().get<ApiResponse<T>>(url, config);
-  return response.data;
+  try {
+    const response = await getApiClient().get<ApiResponse<T>>(url, config);
+    return response.data;
+  } catch (error) {
+    return formatApiError(error);
+  }
 }
 
 export type ApiRequestConfig = AxiosRequestConfig & { skipAuth?: boolean };
@@ -137,8 +197,12 @@ export async function apiPost<T>(
   body?: unknown,
   config?: ApiRequestConfig,
 ): Promise<ApiResponse<T>> {
-  const response = await getApiClient().post<ApiResponse<T>>(url, body, config);
-  return response.data;
+  try {
+    const response = await getApiClient().post<ApiResponse<T>>(url, body, config);
+    return response.data;
+  } catch (error) {
+    return formatApiError(error);
+  }
 }
 
 export async function apiPut<T>(
@@ -146,8 +210,12 @@ export async function apiPut<T>(
   body?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<ApiResponse<T>> {
-  const response = await getApiClient().put<ApiResponse<T>>(url, body, config);
-  return response.data;
+  try {
+    const response = await getApiClient().put<ApiResponse<T>>(url, body, config);
+    return response.data;
+  } catch (error) {
+    return formatApiError(error);
+  }
 }
 
 export async function apiPatch<T>(
@@ -155,22 +223,30 @@ export async function apiPatch<T>(
   body?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<ApiResponse<T>> {
-  const response = await getApiClient().patch<ApiResponse<T>>(url, body, config);
-  return response.data;
+  try {
+    const response = await getApiClient().patch<ApiResponse<T>>(url, body, config);
+    return response.data;
+  } catch (error) {
+    return formatApiError(error);
+  }
 }
 
 export async function apiDelete<T>(
   url: string,
   config?: AxiosRequestConfig,
 ): Promise<ApiResponse<T>> {
-  const response = await getApiClient().delete<ApiResponse<T>>(url, config);
-  return response.data;
+  try {
+    const response = await getApiClient().delete<ApiResponse<T>>(url, config);
+    return response.data;
+  } catch (error) {
+    return formatApiError(error);
+  }
 }
 
 export function isApiError<T>(
   response: ApiResponse<T>,
 ): response is ApiErrorResponse {
-  return !response.success;
+  return !response || response.success === false;
 }
 
 export function getErrorMessage(error: unknown): string {

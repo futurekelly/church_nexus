@@ -14,11 +14,10 @@ class SermonSerializer(serializers.ModelSerializer):
         }
 
     def to_internal_value(self, data):
-        # Create a mutable copy of the query/data dict if needed
-        data = data.copy() if hasattr(data, 'copy') else data
-        
         # Handle thumbnail base64 or SVG data URI strings
         if 'thumbnail' in data and isinstance(data['thumbnail'], str) and data['thumbnail']:
+            # Create a mutable copy only when we need to modify string thumbnails
+            data = data.copy() if hasattr(data, 'copy') else data
             thumbnail_str = data['thumbnail']
             if thumbnail_str.startswith('data:image'):
                 if ';base64,' in thumbnail_str:
@@ -44,14 +43,11 @@ class SermonSerializer(serializers.ModelSerializer):
                     data['thumbnail'] = None
             elif thumbnail_str.startswith('http://') or thumbnail_str.startswith('https://'):
                 # It's an absolute URL (already saved), so don't re-upload/validate as a file
-                # In DRF, if a file field is updated with its existing URL, we can remove it or bypass it
-                # If they passed an existing URL, we remove it from data to prevent validation errors,
-                # letting Django keep the current file.
                 if self.instance and self.instance.thumbnail and thumbnail_str.endswith(self.instance.thumbnail.name):
                     data.pop('thumbnail', None)
                 else:
                     data['thumbnail'] = None
-                    
+
         return super().to_internal_value(data)
 
     def validate(self, attrs):
@@ -65,9 +61,18 @@ class SermonSerializer(serializers.ModelSerializer):
             else:
                 raise serializers.ValidationError({"branch": "A branch assignment is required for Super Admins."})
 
+        # Multi-tenant isolation: prevent non-super-admins from mutating the branch ownership
+        if self.instance and 'branch' in attrs and attrs['branch'] != self.instance.branch:
+            if not user or user.role != 'super_admin':
+                raise serializers.ValidationError({"branch": "Branch ownership is immutable once set."})
+            else:
+                self.instance._bypass_branch_immutable = True
+
         # Run model clean validation
         if self.instance:
             temp_instance = Sermon.objects.get(pk=self.instance.pk)
+            if getattr(self.instance, '_bypass_branch_immutable', False):
+                temp_instance._bypass_branch_immutable = True
             for attr, value in attrs.items():
                 setattr(temp_instance, attr, value)
         else:
@@ -79,4 +84,12 @@ class SermonSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(e.message_dict)
 
         return attrs
+
+
+class SermonListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sermon
+        exclude = ('notes', 'description')
+        read_only_fields = ('created_at', 'updated_at', 'created_by')
+
 

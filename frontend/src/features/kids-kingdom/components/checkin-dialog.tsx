@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Clipboard, ShieldAlert, X } from "lucide-react";
+import { Check, Clipboard, ShieldAlert, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Child, Classroom } from "../types/kids-kingdom.types";
@@ -12,6 +12,7 @@ interface CheckInDialogProps {
   classrooms: Classroom[];
   onCheckIn: (childId: string, checkedInById: string, classroomId?: string) => Promise<any>;
   onClose: () => void;
+  onEditChild?: (child: Child) => void;
 }
 
 const selectClass = cn(
@@ -25,6 +26,7 @@ export function CheckInDialog({
   classrooms,
   onCheckIn,
   onClose,
+  onEditChild,
 }: CheckInDialogProps) {
   const [selectedParentId, setSelectedParentId] = useState<string>(
     child.parent_details && child.parent_details.length > 0 ? child.parent_details[0].id : ""
@@ -107,11 +109,26 @@ export function CheckInDialog({
                 <span className="text-xs text-indigo-400 font-bold uppercase tracking-wider">Age allocation</span>
                 <h4 className="text-sm font-bold text-white">{child.first_name} ({child.age} yrs)</h4>
               </div>
-              {child.allergy_alerts && (
-                <span className="rounded-full bg-red-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase text-red-400 border border-red-500/30">
-                  Allergies
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {child.allergy_alerts && (
+                  <span className="rounded-full bg-red-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase text-red-400 border border-red-500/30">
+                    Allergies
+                  </span>
+                )}
+                {onEditChild && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onEditChild(child);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-xl bg-card/80 border border-border/50 px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-all hover:text-white hover:bg-card"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    <span>Edit Info</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Parent Selection */}

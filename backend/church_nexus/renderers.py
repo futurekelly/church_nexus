@@ -30,11 +30,21 @@ class StandardEnvelopeRenderer(JSONRenderer):
             # Provide a top-level message if detail exists
             if isinstance(data, dict):
                 if 'detail' in data:
-                    envelope['message'] = data['detail']
+                    envelope['message'] = str(data['detail'])
                 elif 'message' in data:
-                    envelope['message'] = data['message']
+                    envelope['message'] = str(data['message'])
+                elif 'error' in data:
+                    envelope['message'] = str(data['error'])
                 else:
-                    envelope['message'] = "Validation failed."
+                    keys = list(data.keys())
+                    if keys:
+                        first_key = keys[0]
+                        first_val = data[first_key]
+                        if isinstance(first_val, list) and len(first_val) > 0:
+                            first_val = first_val[0]
+                        envelope['message'] = f"{first_key}: {first_val}"
+                    else:
+                        envelope['message'] = "Validation failed."
             else:
                 envelope['message'] = str(data)
                 
