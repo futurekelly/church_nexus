@@ -62,11 +62,34 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
         allow_null=True,
         required=False
     )
+    attendee_name = serializers.SerializerMethodField()
+    attendee_email = serializers.SerializerMethodField()
+    attendee_phone = serializers.SerializerMethodField()
 
     class Meta:
         model = EventRegistration
         fields = '__all__'
         read_only_fields = ('event', 'user', 'member', 'registration_token', 'is_archived', 'archived_at', 'archived_by', 'created_at', 'updated_at', 'created_by', 'updated_by')
+
+    def get_attendee_name(self, obj) -> str:
+        if obj.member:
+            return f"{obj.member.first_name} {obj.member.last_name}".strip()
+        if obj.user:
+            name = f"{obj.user.first_name} {obj.user.last_name}".strip()
+            return name if name else obj.user.email
+        return obj.visitor_name or "Guest Attendee"
+
+    def get_attendee_email(self, obj) -> str:
+        if obj.member and obj.member.email:
+            return obj.member.email
+        if obj.user and obj.user.email:
+            return obj.user.email
+        return obj.visitor_email or ""
+
+    def get_attendee_phone(self, obj) -> str:
+        if obj.member and hasattr(obj.member, 'phone_number') and obj.member.phone_number:
+            return obj.member.phone_number
+        return obj.visitor_phone or ""
 
     def validate(self, attrs):
         event = attrs.get('event')

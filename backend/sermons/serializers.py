@@ -2,9 +2,46 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
-from .models import Sermon
+from .models import Sermon, SermonSeries
+
+
+class SermonSeriesSerializer(serializers.ModelSerializer):
+    sermons_count = serializers.IntegerField(
+        source='sermons.count', read_only=True
+    )
+
+    class Meta:
+        model = SermonSeries
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at', 'slug')
+        extra_kwargs = {
+            'branch': {'required': False}
+        }
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        user = request.user if (request and request.user) else None
+        if not attrs.get('branch') and user:
+            if user.role != 'super_admin':
+                attrs['branch'] = user.branch
+            else:
+                msg = "A branch assignment is required for Super Admins."
+                raise serializers.ValidationError({"branch": msg})
+        return attrs
+
+
+class SermonSeriesSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SermonSeries
+        fields = ('id', 'title', 'slug', 'cover_image')
+
 
 class SermonSerializer(serializers.ModelSerializer):
+    series_details = SermonSeriesSummarySerializer(
+        source='series', read_only=True
+    )
+    hls_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Sermon
         fields = '__all__'
@@ -13,10 +50,18 @@ class SermonSerializer(serializers.ModelSerializer):
             'branch': {'required': False}
         }
 
+    def get_hls_url(self, obj):
+        if not obj or not obj.video_file:
+            return ""
+        from .storage_manager import StorageManager
+        branch_str = str(obj.branch.id) if obj.branch else "global"
+        hls_key = f"sermons/{branch_str}/hls/{obj.id}/master.m3u8"
+        return StorageManager.get_file_url(hls_key)
+
     def to_internal_value(self, data):
         # Handle thumbnail base64 or SVG data URI strings
-        if 'thumbnail' in data and isinstance(data['thumbnail'], str) and data['thumbnail']:
-            # Create a mutable copy only when we need to modify string thumbnails
+        if ('thumbnail' in data and isinstance(data['thumbnail'], str) and
+                data['thumbnail']):
             data = data.copy() if hasattr(data, 'copy') else data
             thumbnail_str = data['thumbnail']
             if thumbnail_str.startswith('data:image'):
@@ -24,26 +69,30 @@ class SermonSerializer(serializers.ModelSerializer):
                     try:
                         header, image_data = thumbnail_str.split(';base64,')
                         file_ext = header.split('/')[-1]
-                        # Handle double slashes or options if any
                         if '+' in file_ext:
                             file_ext = file_ext.split('+')[0]
                         decoded_file = base64.b64decode(image_data)
-                        data['thumbnail'] = ContentFile(decoded_file, name=f"thumbnail.{file_ext}")
+                        data['thumbnail'] = ContentFile(
+                            decoded_file, name=f"thumbnail.{file_ext}"
+                        )
                     except Exception:
                         data['thumbnail'] = None
                 elif 'utf8,' in thumbnail_str or ';utf8,' in thumbnail_str:
                     try:
-                        divider = 'utf8,' if 'utf8,' in thumbnail_str else ';utf8,'
-                        _, svg_content = thumbnail_str.split(divider)
+                        div = 'utf8,' if 'utf8,' in thumbnail_str else ';utf8,'
+                        _, svg_content = thumbnail_str.split(div)
                         decoded_file = svg_content.encode('utf-8')
-                        data['thumbnail'] = ContentFile(decoded_file, name="thumbnail.svg")
+                        data['thumbnail'] = ContentFile(
+                            decoded_file, name="thumbnail.svg"
+                        )
                     except Exception:
                         data['thumbnail'] = None
                 else:
                     data['thumbnail'] = None
-            elif thumbnail_str.startswith('http://') or thumbnail_str.startswith('https://'):
-                # It's an absolute URL (already saved), so don't re-upload/validate as a file
-                if self.instance and self.instance.thumbnail and thumbnail_str.endswith(self.instance.thumbnail.name):
+            elif (thumbnail_str.startswith('http://') or
+                  thumbnail_str.startswith('https://')):
+                if (self.instance and self.instance.thumbnail and
+                        thumbnail_str.endswith(self.instance.thumbnail.name)):
                     data.pop('thumbnail', None)
                 else:
                     data['thumbnail'] = None
@@ -53,18 +102,22 @@ class SermonSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         request = self.context.get('request')
         user = request.user if (request and request.user) else None
-        
+
         # Populate branch automatically if not provided
         if not attrs.get('branch') and user:
             if user.role != 'super_admin':
                 attrs['branch'] = user.branch
             else:
-                raise serializers.ValidationError({"branch": "A branch assignment is required for Super Admins."})
+                msg = "A branch assignment is required for Super Admins."
+                raise serializers.ValidationError({"branch": msg})
 
-        # Multi-tenant isolation: prevent non-super-admins from mutating the branch ownership
-        if self.instance and 'branch' in attrs and attrs['branch'] != self.instance.branch:
+        # Multi-tenant isolation: prevent mutation of branch ownership
+        if (self.instance and 'branch' in attrs and
+                attrs['branch'] != self.instance.branch):
             if not user or user.role != 'super_admin':
-                raise serializers.ValidationError({"branch": "Branch ownership is immutable once set."})
+                raise serializers.ValidationError({
+                    "branch": "Branch ownership is immutable once set."
+                })
             else:
                 self.instance._bypass_branch_immutable = True
 
@@ -87,9 +140,20 @@ class SermonSerializer(serializers.ModelSerializer):
 
 
 class SermonListSerializer(serializers.ModelSerializer):
+    series_details = SermonSeriesSummarySerializer(
+        source='series', read_only=True
+    )
+    hls_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Sermon
         exclude = ('notes', 'description')
         read_only_fields = ('created_at', 'updated_at', 'created_by')
 
-
+    def get_hls_url(self, obj):
+        if not obj or not obj.video_file:
+            return ""
+        from .storage_manager import StorageManager
+        branch_str = str(obj.branch.id) if obj.branch else "global"
+        hls_key = f"sermons/{branch_str}/hls/{obj.id}/master.m3u8"
+        return StorageManager.get_file_url(hls_key)

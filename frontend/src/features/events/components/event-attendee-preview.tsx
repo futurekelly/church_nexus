@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Users, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOCK_ATTENDEES } from "../data/mock-events";
+import { AttendeeDetailModal, type AttendeeDetail } from "./attendee-detail-modal";
 
 interface Attendee {
   id: string;
@@ -23,6 +24,7 @@ export function EventAttendeePreview({
   capacity,
 }: EventAttendeePreviewProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAttendee, setSelectedAttendee] = useState<AttendeeDetail | null>(null);
 
   const filteredAttendees = (MOCK_ATTENDEES as Attendee[]).filter((a) =>
     a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -91,8 +93,9 @@ export function EventAttendeePreview({
           {(MOCK_ATTENDEES as Attendee[]).slice(0, 5).map((att, index) => (
             <div
               key={att.id}
+              onClick={() => setSelectedAttendee(att)}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-full border text-xs font-bold font-mono",
+                "flex h-9 w-9 items-center justify-center rounded-full border text-xs font-bold font-mono cursor-pointer transition-transform hover:scale-110 z-10",
                 colors[index % colors.length]
               )}
               title={att.name}
@@ -136,11 +139,13 @@ export function EventAttendeePreview({
             </p>
           ) : (
             filteredAttendees.map((att, index) => (
-              <div
+              <button
+                type="button"
                 key={att.id}
-                className="flex items-center justify-between p-2 rounded-xl border border-border/10 bg-card/25"
+                onClick={() => setSelectedAttendee(att)}
+                className="flex w-full items-center justify-between p-2.5 rounded-xl border border-border/10 bg-card/25 hover:border-indigo-500/30 hover:bg-indigo-500/10 transition-all text-left group"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <div
                     className={cn(
                       "flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold font-mono",
@@ -150,20 +155,26 @@ export function EventAttendeePreview({
                     {getInitials(att.name)}
                   </div>
                   <div>
-                    <h4 className="text-xs font-semibold text-primary-foreground">
+                    <h4 className="text-xs font-semibold text-primary-foreground group-hover:text-indigo-300 transition-colors">
                       {att.name}
                     </h4>
                     <p className="text-[10px] text-muted-foreground">{att.role}</p>
                   </div>
                 </div>
-                <span className="text-[9px] text-muted-foreground font-mono">
-                  Registered {att.registerDate}
+                <span className="text-[9px] text-indigo-400 font-mono font-semibold bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20 opacity-80 group-hover:opacity-100">
+                  View Detail
                 </span>
-              </div>
+              </button>
             ))
           )}
         </div>
       </div>
+
+      <AttendeeDetailModal
+        isOpen={!!selectedAttendee}
+        onClose={() => setSelectedAttendee(null)}
+        attendee={selectedAttendee}
+      />
     </div>
   );
 }

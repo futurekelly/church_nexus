@@ -6,6 +6,7 @@ import { DashboardRouteGuard } from "@/features/dashboard/components/shell/dashb
 import { DashboardSidebar } from "@/features/dashboard/components/shell/dashboard-sidebar";
 import { DashboardTopbar } from "@/features/dashboard/components/shell/dashboard-topbar";
 import { MobileDashboardNav } from "@/features/dashboard/components/shell/mobile-dashboard-nav";
+import { CommunityJoinWidget } from "@/components/ui/community-join-widget";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import { useNotificationStore } from "@/store/notification-store";
@@ -92,6 +93,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         </div>
 
         <MobileDashboardNav />
+        <CommunityJoinWidget />
       </div>
     </DashboardRouteGuard>
   );

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "framer-motion";
-import { Save, X } from "lucide-react";
+import { Save, X, Image as ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +30,7 @@ const eventFormSchema = z
     status: z.enum(EVENT_STATUSES, {
       errorMap: () => ({ message: "Please select a valid status" }),
     }),
+    cover_image: z.string().max(500, "Cover image URL must be under 500 characters").optional().default(""),
   })
   .refine(
     (data) => {
@@ -104,6 +105,7 @@ export function EventForm({
           organizer: event.organizer,
           capacity: event.capacity,
           status: event.status,
+          cover_image: event.cover_image || "",
         }
       : {
           title: "",
@@ -115,6 +117,7 @@ export function EventForm({
           organizer: "",
           capacity: 100,
           status: "Draft",
+          cover_image: "",
         },
   });
 
@@ -330,6 +333,28 @@ export function EventForm({
               {errors.capacity && (
                 <p className={errorClass} role="alert">
                   {errors.capacity.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="cover_image" className={labelClass}>
+                Cover Image URL <span className="text-muted-foreground font-normal">(Optional)</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="cover_image"
+                  type="url"
+                  placeholder="https://images.unsplash.com/... or image link"
+                  className={cn(inputClass, "pl-10")}
+                  aria-invalid={!!errors.cover_image}
+                  {...register("cover_image")}
+                />
+                <ImageIcon className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+              </div>
+              {errors.cover_image && (
+                <p className={errorClass} role="alert">
+                  {errors.cover_image.message}
                 </p>
               )}
             </div>

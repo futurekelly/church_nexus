@@ -49,6 +49,21 @@ class EventViewSet(viewsets.ModelViewSet):
 
         queryset = Event.objects.all()
 
+        # Automated Time Magic: Auto-sync event statuses based on current timestamp
+        now = timezone.now()
+        Event.objects.filter(
+            status__in=['Draft', 'Scheduled'],
+            start_date__lte=now,
+            end_date__gt=now,
+            is_archived=False
+        ).update(status='In Progress')
+
+        Event.objects.filter(
+            status__in=['Draft', 'Scheduled', 'Published', 'Open', 'In Progress'],
+            end_date__lte=now,
+            is_archived=False
+        ).update(status='Completed')
+
         # Branch Isolation
         if user.role != 'super_admin':
             if user.branch:
@@ -95,19 +110,27 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        branch = user.branch
+        branch = getattr(user, 'branch', None)
 
-        if user.role == 'super_admin':
-            branch_id = self.request.data.get('branch')
-            if branch_id:
-                from branches.models import Branch
-                try:
-                    branch = Branch.objects.get(id=branch_id)
-                except Branch.DoesNotExist:
-                    raise serializers.ValidationError({"branch": "Invalid branch ID."})
+        req_branch_id = (
+            self.request.data.get('branch_id') or
+            self.request.data.get('branch')
+        )
+        if req_branch_id:
+            from branches.models import Branch
+            try:
+                branch = Branch.objects.get(id=req_branch_id)
+            except (Branch.DoesNotExist, Exception):
+                pass
 
         if not branch:
-            raise serializers.ValidationError({"branch": "A branch assignment is required."})
+            from branches.models import Branch
+            branch = Branch.objects.first()
+
+        if not branch:
+            raise serializers.ValidationError(
+                {"branch": "A branch assignment is required."}
+            )
 
         serializer.save(
             branch=branch,

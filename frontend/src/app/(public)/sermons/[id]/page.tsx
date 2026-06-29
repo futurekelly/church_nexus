@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { CathedralCrossLoader } from "@/components/ui/cathedral-cross-loader";
 import {
   ArrowLeft,
   Calendar,
@@ -11,6 +13,7 @@ import {
   Tags,
   AlertTriangle,
   Compass,
+  Download,
 } from "lucide-react";
 import { PublicNavbar } from "@/features/landing/components/public-navbar";
 import { PublicFooter } from "@/features/landing/components/public-footer";
@@ -18,6 +21,7 @@ import {
   useSermons,
   SermonMediaPlayer,
   SermonNotesViewer,
+  SermonDownloadModal,
   SERMON_CATEGORY_LABELS,
 } from "@/features/sermons";
 
@@ -26,6 +30,7 @@ export default function PublicSermonDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   const { getSermonById, isLoading } = useSermons();
   const sermon = getSermonById(id);
@@ -38,7 +43,7 @@ export default function PublicSermonDetailPage() {
       <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
         <PublicNavbar />
         <main className="flex-grow flex items-center justify-center py-24">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+          <CathedralCrossLoader text="Loading Broadcast..." />
         </main>
         <PublicFooter />
       </div>
@@ -93,25 +98,45 @@ export default function PublicSermonDetailPage() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
-            className="flex items-center gap-3"
+            className="flex items-center justify-between gap-3 w-full"
           >
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push("/sermons")}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/50 bg-card/60 text-muted-foreground transition-all hover:border-border/80 hover:text-primary-foreground"
+                aria-label="Go back to sermons catalog"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <div>
+                <h1 className="font-display text-xl font-bold text-white truncate max-w-md">
+                  {sermon.title}
+                </h1>
+                <p className="text-xs text-indigo-400 font-semibold mt-0.5">
+                  {SERMON_CATEGORY_LABELS[sermon.category]}
+                </p>
+              </div>
+            </div>
+
             <button
               type="button"
-              onClick={() => router.push("/sermons")}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/50 bg-card/60 text-muted-foreground transition-all hover:border-border/80 hover:text-primary-foreground"
-              aria-label="Go back to sermons catalog"
+              onClick={() => setIsDownloadOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-xs font-bold text-indigo-300 transition-all hover:bg-indigo-500/20 hover:text-white"
             >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <Download className="h-4 w-4 text-indigo-400" />
+              Download Media
             </button>
-            <div>
-              <h1 className="font-display text-xl font-bold text-white truncate max-w-md">
-                {sermon.title}
-              </h1>
-              <p className="text-xs text-indigo-400 font-semibold mt-0.5">
-                {SERMON_CATEGORY_LABELS[sermon.category]}
-              </p>
-            </div>
           </motion.div>
+
+          <SermonDownloadModal
+            isOpen={isDownloadOpen}
+            onClose={() => setIsDownloadOpen(false)}
+            title={sermon.title}
+            videoUrl={sermon.video_url}
+            audioUrl={sermon.audio_url}
+            notes={sermon.notes}
+          />
 
           {/* Main Grid Content */}
           <div className="grid gap-6 lg:grid-cols-3">
@@ -121,6 +146,7 @@ export default function PublicSermonDetailPage() {
                 videoUrl={sermon.video_url}
                 audioUrl={sermon.audio_url}
                 thumbnail={sermon.thumbnail}
+                hlsUrl={sermon.hls_url}
                 initialTab={mediaTab}
               />
 

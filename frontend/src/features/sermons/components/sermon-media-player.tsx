@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, RotateCcw, Volume2, Video, Headset } from "lucide-react";
+import {
+  Play, Pause, RotateCcw, Volume2, Video, Headset,
+  Settings, RefreshCw, AlertCircle, Loader2
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SermonMediaPlayerProps {
   videoUrl: string;
   audioUrl: string;
   thumbnail: string;
+  hlsUrl?: string;
   initialTab?: "video" | "audio";
 }
 
@@ -15,6 +19,7 @@ export function SermonMediaPlayer({
   videoUrl,
   audioUrl,
   thumbnail,
+  hlsUrl,
   initialTab = "video",
 }: SermonMediaPlayerProps) {
   const [activeTab, setActiveTab] = useState<"video" | "audio">(initialTab);
@@ -22,14 +27,23 @@ export function SermonMediaPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedQuality, setSelectedQuality] = useState<string>("Auto");
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Stop playback when switching tabs
+  const activeStreamUrl = (hlsUrl && hlsUrl.trim() !== "") ? hlsUrl : videoUrl;
+
+  // Stop playback and reset when switching tabs
   useEffect(() => {
     setIsPlaying(false);
     setCurrentTime(0);
+    setHasError(false);
+    setErrorMessage(null);
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
@@ -42,18 +56,35 @@ export function SermonMediaPlayer({
 
   // Handle Play/Pause
   const handlePlayPause = () => {
+    setHasError(false);
     if (activeTab === "video" && videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play().catch(() => {});
+        setIsLoading(true);
+        videoRef.current
+          .play()
+          .then(() => setIsLoading(false))
+          .catch((err) => {
+            setIsLoading(false);
+            setHasError(true);
+            setErrorMessage("Failed to start video playback. Click retry.");
+          });
       }
       setIsPlaying(!isPlaying);
     } else if (activeTab === "audio" && audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play().catch(() => {});
+        setIsLoading(true);
+        audioRef.current
+          .play()
+          .then(() => setIsLoading(false))
+          .catch(() => {
+            setIsLoading(false);
+            setHasError(true);
+            setErrorMessage("Failed to start audio playback.");
+          });
       }
       setIsPlaying(!isPlaying);
     }
@@ -78,6 +109,7 @@ export function SermonMediaPlayer({
   };
 
   const handleLoadedMetadata = () => {
+    setIsLoading(false);
     if (activeTab === "video" && videoRef.current) {
       setDuration(videoRef.current.duration || 0);
     } else if (activeTab === "audio" && audioRef.current) {
@@ -102,6 +134,17 @@ export function SermonMediaPlayer({
     if (audioRef.current) audioRef.current.volume = val;
   };
 
+  const handleRetry = () => {
+    setHasError(false);
+    setErrorMessage(null);
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+    if (audioRef.current) {
+      audioRef.current.load();
+    }
+  };
+
   const formatTime = (secs: number) => {
     if (isNaN(secs)) return "00:00";
     const minutes = Math.floor(secs / 60);
@@ -111,8 +154,8 @@ export function SermonMediaPlayer({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/60 backdrop-blur-glass shadow-glass flex flex-col w-full">
-      {/* Player Header Tabs */}
-      <div className="flex border-b border-border/20 bg-slate-950/20 p-2 justify-between items-center">
+      {/* Player Header Tabs & Quality Selector */}
+      <div className="flex border-b border-border/20 bg-slate-950/20 p-2 justify-between items-center relative">
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("video")}
@@ -139,26 +182,90 @@ export function SermonMediaPlayer({
             Listen Audio
           </button>
         </div>
-        <span className="text-[10px] font-mono text-muted-foreground mr-2 select-none">
-          {isPlaying ? "PLAYING" : "PAUSED"}
-        </span>
+
+        <div className="flex items-center gap-3">
+          {activeTab === "video" && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowQualityMenu(!showQualityMenu)}
+                className="flex items-center gap-1.5 rounded-lg border border-border/40 bg-slate-900/60 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-white transition-all"
+              >
+                <Settings className="h-3 w-3 text-indigo-400" />
+                <span>{selectedQuality}</span>
+              </button>
+              {showQualityMenu && (
+                <div className="absolute right-0 top-8 z-50 w-28 rounded-xl border border-border/60 bg-slate-900/95 p-1 shadow-xl backdrop-blur-md">
+                  {["Auto", "720p", "480p", "360p"].map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => {
+                        setSelectedQuality(q);
+                        setShowQualityMenu(false);
+                      }}
+                      className={cn(
+                        "block w-full rounded-lg px-3 py-1.5 text-left text-xs transition-colors",
+                        selectedQuality === q
+                          ? "bg-indigo-500/20 font-bold text-indigo-300"
+                          : "text-muted-foreground hover:bg-slate-800 hover:text-white"
+                      )}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <span className="text-[10px] font-mono text-muted-foreground mr-2 select-none">
+            {isPlaying ? "PLAYING" : "PAUSED"}
+          </span>
+        </div>
       </div>
 
       {/* Media Player Viewport */}
       <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
         {activeTab === "video" ? (
-          videoUrl ? (
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onEnded={() => setIsPlaying(false)}
-              className="h-full w-full object-contain"
-              onClick={handlePlayPause}
-            />
+          activeStreamUrl ? (
+            <>
+              <video
+                ref={videoRef}
+                src={activeStreamUrl}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onWaiting={() => setIsLoading(true)}
+                onPlaying={() => setIsLoading(false)}
+                onError={() => {
+                  setIsLoading(false);
+                  setHasError(true);
+                  setErrorMessage("Stream loading error. Retry playback.");
+                }}
+                onEnded={() => setIsPlaying(false)}
+                className="h-full w-full object-contain"
+                onClick={handlePlayPause}
+              />
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
+                  <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+                </div>
+              )}
+              {hasError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4 space-y-3 z-30">
+                  <AlertCircle className="h-8 w-8 text-red-400" />
+                  <p className="text-xs text-muted-foreground text-center max-w-xs">{errorMessage || "Playback error encountered."}</p>
+                  <button
+                    type="button"
+                    onClick={handleRetry}
+                    className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-all"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Retry Playback
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="text-center text-muted-foreground">No Video Link Available</div>
+            <div className="text-center text-muted-foreground text-xs">No Video Link Available</div>
           )
         ) : (
           /* Audio player interface with visualizer */
@@ -168,10 +275,16 @@ export function SermonMediaPlayer({
               src={audioUrl}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
+              onWaiting={() => setIsLoading(true)}
+              onPlaying={() => setIsLoading(false)}
+              onError={() => {
+                setIsLoading(false);
+                setHasError(true);
+                setErrorMessage("Audio stream error.");
+              }}
               onEnded={() => setIsPlaying(false)}
               className="hidden"
             />
-            {/* cover image overlay behind visualizer */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={thumbnail}
@@ -179,7 +292,6 @@ export function SermonMediaPlayer({
               className="absolute inset-0 h-full w-full object-cover opacity-25 filter blur-md select-none pointer-events-none"
             />
             
-            {/* Equalizer animation */}
             <div className="flex items-end gap-1 h-16 w-32 justify-center z-10">
               {[...Array(9)].map((_, i) => (
                 <div
@@ -200,11 +312,25 @@ export function SermonMediaPlayer({
             <p className="text-xs text-muted-foreground text-center max-w-xs z-10 font-medium select-none">
               Streaming Audio Broadcast
             </p>
+
+            {hasError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4 space-y-3 z-30">
+                <AlertCircle className="h-8 w-8 text-red-400" />
+                <p className="text-xs text-muted-foreground text-center max-w-xs">{errorMessage}</p>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-all"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Retry Audio
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {/* Overlay Play/Pause Button on Hover */}
-        {!isPlaying && (
+        {!isPlaying && !isLoading && !hasError && (
           <button
             onClick={handlePlayPause}
             className="absolute flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600/90 text-white shadow-[0_0_24px_rgba(99,102,241,0.5)] transition-all hover:scale-105 hover:bg-indigo-500 z-10"
@@ -217,7 +343,6 @@ export function SermonMediaPlayer({
 
       {/* Player Custom Controls */}
       <div className="bg-slate-950/40 p-4 border-t border-border/20 space-y-3">
-        {/* Progress Slider */}
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-mono text-muted-foreground select-none">
             {formatTime(currentTime)}
@@ -235,7 +360,6 @@ export function SermonMediaPlayer({
           </span>
         </div>
 
-        {/* Action controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -254,7 +378,6 @@ export function SermonMediaPlayer({
             </button>
           </div>
 
-          {/* Volume controls */}
           <div className="flex items-center gap-2">
             <Volume2 className="h-4 w-4 text-muted-foreground" />
             <input

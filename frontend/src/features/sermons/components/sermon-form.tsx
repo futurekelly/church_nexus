@@ -4,9 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "framer-motion";
-import { Save, X, Sparkles } from "lucide-react";
+import { Save, X, Sparkles, UploadCloud, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useDirectUpload } from "../hooks/use-direct-upload";
 import {
   SERMON_CATEGORIES,
   SERMON_STATUSES,
@@ -101,6 +102,7 @@ export function SermonForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<SermonFormValues>({
     resolver: zodResolver(sermonFormSchema),
@@ -133,6 +135,20 @@ export function SermonForm({
           notes: `## Sermon Outline\n1. **First Point**\n   - Detail...\n\n2. **Second Point**\n   - Detail...\n\n### Reflection Questions\n1. Question...`,
           tagsString: "",
         },
+  });
+
+  const videoUploader = useDirectUpload({
+    onSuccess: (data) => {
+      const targetUrl = data.upload_url || data.storage_key || data.video_url;
+      if (targetUrl) setValue("video_url", targetUrl, { shouldValidate: true });
+    },
+  });
+
+  const audioUploader = useDirectUpload({
+    onSuccess: (data) => {
+      const targetUrl = data.upload_url || data.storage_key || data.audio_url;
+      if (targetUrl) setValue("audio_url", targetUrl, { shouldValidate: true });
+    },
   });
 
   const onFormSubmit = (data: SermonFormValues) => {
@@ -394,11 +410,60 @@ export function SermonForm({
 
           <fieldset className="rounded-2xl border border-border/50 bg-card/60 p-6 backdrop-blur-[16px] shadow-glass space-y-4">
             <legend className="text-sm font-semibold text-primary-foreground px-1 mb-2">
-              Media URLs (Simulated)
+              Media Assets &amp; Direct Uploads
             </legend>
             <p className="text-[10px] text-muted-foreground leading-normal mb-1">
-              Provide direct links to video (MP4) and audio (MP3) files to simulate playback within the page media player.
+              Upload video (MP4) or audio (MP3) files directly to storage, or provide direct links below.
             </p>
+
+            {/* Direct Video Upload Dropzone */}
+            <div className="rounded-xl border border-dashed border-indigo-500/30 bg-indigo-500/5 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-indigo-300 flex items-center gap-1.5 cursor-pointer">
+                  <UploadCloud className="h-4 w-4 text-indigo-400" /> Direct Video Upload (MP4)
+                </label>
+                {videoUploader.status === "completed" && (
+                  <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Uploaded &amp; Verified
+                  </span>
+                )}
+              </div>
+
+              <input
+                type="file"
+                accept="video/mp4,video/*"
+                disabled={videoUploader.isUploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) videoUploader.startUpload(file, "video", sermon?.id);
+                }}
+                className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
+              />
+
+              {videoUploader.isUploading && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] text-indigo-300 font-medium">
+                    <span>Uploading Video...</span>
+                    <span>{videoUploader.progress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-indigo-500 transition-all duration-300"
+                      style={{ width: `${videoUploader.progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {videoUploader.status === "error" && (
+                <div className="flex items-center justify-between text-xs text-red-400 bg-red-500/10 p-2 rounded-lg">
+                  <span className="flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5" /> {videoUploader.error}</span>
+                  <button type="button" onClick={videoUploader.retry} className="text-indigo-400 hover:underline flex items-center gap-1">
+                    <RefreshCw className="h-3 w-3" /> Retry
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div>
               <label htmlFor="video_url" className={labelClass}>
@@ -416,6 +481,55 @@ export function SermonForm({
                 <p className={errorClass} role="alert">
                   {errors.video_url.message}
                 </p>
+              )}
+            </div>
+
+            {/* Direct Audio Upload Dropzone */}
+            <div className="rounded-xl border border-dashed border-teal-500/30 bg-teal-500/5 p-4 space-y-2 mt-4">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-teal-300 flex items-center gap-1.5 cursor-pointer">
+                  <UploadCloud className="h-4 w-4 text-teal-400" /> Direct Audio Upload (MP3)
+                </label>
+                {audioUploader.status === "completed" && (
+                  <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Uploaded &amp; Verified
+                  </span>
+                )}
+              </div>
+
+              <input
+                type="file"
+                accept="audio/mp3,audio/*"
+                disabled={audioUploader.isUploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) audioUploader.startUpload(file, "audio", sermon?.id);
+                }}
+                className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-500 cursor-pointer"
+              />
+
+              {audioUploader.isUploading && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] text-teal-300 font-medium">
+                    <span>Uploading Audio...</span>
+                    <span>{audioUploader.progress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-teal-500 transition-all duration-300"
+                      style={{ width: `${audioUploader.progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {audioUploader.status === "error" && (
+                <div className="flex items-center justify-between text-xs text-red-400 bg-red-500/10 p-2 rounded-lg">
+                  <span className="flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5" /> {audioUploader.error}</span>
+                  <button type="button" onClick={audioUploader.retry} className="text-teal-400 hover:underline flex items-center gap-1">
+                    <RefreshCw className="h-3 w-3" /> Retry
+                  </button>
+                </div>
               )}
             </div>
 

@@ -75,6 +75,7 @@ AUTH_USER_MODEL = 'authentication.User'
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -159,6 +160,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -228,6 +230,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_ALWAYS_EAGER = env.bool('CELERY_TASK_ALWAYS_EAGER', default=False)
 
 # Celery Beat Schedule — Periodic Tasks
 from celery.schedules import crontab
@@ -254,6 +257,36 @@ SPECTACULAR_SETTINGS = {
 # Media files configuration
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Storage Abstraction Architecture (Phase 3A)
+USE_CLOUD_STORAGE = env.bool('USE_CLOUD_STORAGE', default=False)
+MEDIA_STORAGE_BACKEND = env(
+    'MEDIA_STORAGE_BACKEND',
+    default='storages.backends.s3boto3.S3Boto3Storage'
+)
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+if USE_CLOUD_STORAGE:
+    STORAGES["default"] = {
+        "BACKEND": MEDIA_STORAGE_BACKEND,
+        "OPTIONS": {
+            "access_key": env('AWS_ACCESS_KEY_ID', default=''),
+            "secret_key": env('AWS_SECRET_ACCESS_KEY', default=''),
+            "bucket_name": env(
+                'AWS_STORAGE_BUCKET_NAME', default='church-nexus-media'
+            ),
+            "endpoint_url": env('AWS_S3_ENDPOINT_URL', default=None),
+            "file_overwrite": False,
+        },
+    }
 
 # SEC-08: File upload security
 # Maximum allowed upload size: 10 MB (enforced in serializers and views)

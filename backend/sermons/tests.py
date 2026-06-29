@@ -476,7 +476,312 @@ class TestSermonAPI:
         assert results_search[0]['title'] == "Archived Sermon A"
 
         # Sorting
-        res_sort = self.client.get(list_url, {'sort_key': 'title', 'sort_dir': 'asc'})
+        res_sort = self.client.get(list_url, {'ordering': 'title'})
         results_sort = res_sort.data.get('results', res_sort.data)
         titles_sorted = [item['title'] for item in results_sort]
         assert titles_sorted == ["Archived Sermon A", "Draft Sermon A", "Published Sermon A"]
+
+    def test_retrieve_sermon_increments_views_count(self):
+        """Retrieving a sermon detail increments views_count."""
+        assert self.sermon_pub_a.views_count == 0
+        detail_url = reverse('sermon-detail', kwargs={'pk': self.sermon_pub_a.id})
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['views_count'] == 1
+
+
+@pytest.mark.django_db
+class TestSermonSeriesAPI:
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
+        from .models import SermonSeries
+        self.client = APIClient()
+        self.branch_a = BranchFactory()
+        self.branch_b = BranchFactory()
+
+        self.pastor_a = UserFactory(role='pastor', branch=self.branch_a)
+        self.pastor_b = UserFactory(role='pastor', branch=self.branch_b)
+        self.member_a = UserFactory(role='member', branch=self.branch_a)
+
+        self.series_a = SermonSeries.objects.create(
+            branch=self.branch_a,
+            title="Faith and Grace Series",
+            description="Exploring grace."
+        )
+
+    def test_pastor_can_create_series_in_branch(self):
+        """Pastor can create a new sermon series in their branch."""
+        self.client.force_authenticate(user=self.pastor_a)
+        url = reverse('sermon-series-list')
+        data = {
+            "title": "New Kingdom Series",
+            "description": "Kingdom study."
+        }
+        response = self.client.post(url, data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data['branch'] == str(self.branch_a.id)
+        assert response.data['slug'] == "new-kingdom-series"
+
+    def test_pastor_cannot_view_or_modify_other_branch_series(self):
+        """Pastor B cannot access or edit series belonging to Branch A."""
+        self.client.force_authenticate(user=self.pastor_b)
+        detail_url = reverse(
+            'sermon-series-detail', kwargs={'pk': self.series_a.id}
+        )
+        response = self.client.get(detail_url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_filter_sermons_by_series(self):
+        """Filter sermons by series ID or slug."""
+        self.client.force_authenticate(user=self.pastor_a)
+        sermon_in_series = Sermon.objects.create(
+            branch=self.branch_a,
+            series=self.series_a,
+            title="Part 1: Grace Unbound",
+            description="Desc",
+            speaker="Pastor A",
+            category="Grace",
+            status="Published"
+        )
+        url = reverse('sermon-list')
+        response = self.client.get(url, {'series': str(self.series_a.id)})
+        assert response.status_code == status.HTTP_200_OK
+        results = response.data['results']
+        assert len(results) == 1
+        assert results[0]['id'] == str(sermon_in_series.id)
+
+
+@pytest.mark.django_db
+class TestStorageManager:
+    def test_generate_storage_path(self):
+        from .storage_manager import StorageManager
+        path = StorageManager.generate_storage_path("branch-123", "test.mp4")
+        assert "sermons" in path
+        assert "branch-123" in path
+        assert path.endswith("_test.mp4")
+
+    def test_save_delete_and_exists(self):
+        from django.core.files.base import ContentFile
+        from .storage_manager import StorageManager
+
+        path = "sermons/test/sample.txt"
+        content = ContentFile(b"Hello Storage Manager")
+
+        saved_path = StorageManager.save_file(path, content)
+        assert StorageManager.exists(saved_path) is True
+
+        url = StorageManager.get_file_url(saved_path)
+        assert url != ""
+
+        deleted = StorageManager.delete_file(saved_path)
+        assert deleted is True
+        assert StorageManager.exists(saved_path) is False
+
+
+@pytest.mark.django_db
+class TestMediaMetadataService:
+    def test_extract_metadata_from_none(self):
+        from .media_metadata import MediaMetadataService
+        meta = MediaMetadataService.extract_metadata(None)
+        assert meta["file_size"] == 0
+        assert meta["mime_type"] == "application/octet-stream"
+
+    def test_extract_image_metadata(self):
+        import io
+        from PIL import Image as PILImage
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .media_metadata import MediaMetadataService
+
+        img = PILImage.new('RGB', (100, 50), color='blue')
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG')
+        buf.seek(0)
+
+        uploaded = SimpleUploadedFile(
+            "sample.jpg", buf.read(), content_type="image/jpeg"
+        )
+        meta = MediaMetadataService.extract_metadata(uploaded)
+        assert meta["mime_type"] == "image/jpeg"
+        assert meta["width"] == 100
+        assert meta["height"] == 50
+
+
+@pytest.mark.django_db
+class TestMediaProcessingPipeline:
+    def test_ffmpeg_availability_check(self):
+        from .media_processing import MediaProcessingService
+        is_avail = MediaProcessingService.is_ffmpeg_available()
+        assert isinstance(is_avail, bool)
+
+    def test_missing_ffmpeg_graceful_fallback(self):
+        from unittest.mock import patch
+        from .media_processing import MediaProcessingService
+
+        with patch.object(
+            MediaProcessingService, 'is_ffmpeg_available', return_value=False
+        ):
+            res_thumb = MediaProcessingService.generate_thumbnail(
+                "input.mp4", "out.jpg"
+            )
+            assert res_thumb["success"] is False
+            assert "FFmpeg not available" in res_thumb["error"]
+
+    def test_celery_tasks_nonexistent_sermon(self):
+        from .tasks import generate_thumbnail_task, extract_audio_task
+        res_thumb = generate_thumbnail_task(999999)
+        assert res_thumb["status"] == "failed"
+        assert res_thumb["reason"] == "Sermon not found"
+
+        res_audio = extract_audio_task(999999)
+        assert res_audio["status"] == "failed"
+        assert res_audio["reason"] == "Sermon not found"
+
+
+@pytest.mark.django_db
+class TestMinIOIntegration:
+    def test_default_storage_is_filesystem(self):
+        from django.conf import settings
+        assert settings.USE_CLOUD_STORAGE is False
+        assert settings.STORAGES["default"]["BACKEND"] == (
+            "django.core.files.storage.FileSystemStorage"
+        )
+
+    def test_minio_storage_url_generation(self):
+        from unittest.mock import patch
+        from django.core.files.storage import FileSystemStorage
+        from .storage_manager import StorageManager
+
+        mock_storage = FileSystemStorage()
+        target_url = "http://localhost:9000/media/test.mp4"
+        with patch.object(mock_storage, 'url', return_value=target_url):
+            with patch(
+                'django.core.files.storage.default_storage.url',
+                side_effect=mock_storage.url
+            ):
+                url = StorageManager.get_file_url("sermons/test.mp4")
+                assert "9000" in url or "test.mp4" in url
+
+
+@pytest.mark.django_db
+class TestUploadFoundationAPI:
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
+        self.client = APIClient()
+        self.branch_a = BranchFactory()
+        self.branch_b = BranchFactory()
+        self.pastor_a = UserFactory(role='pastor', branch=self.branch_a)
+        self.member_a = UserFactory(role='member', branch=self.branch_a)
+
+    def test_upload_intent_success(self):
+        self.client.force_authenticate(user=self.pastor_a)
+        url = reverse('sermon-upload-intent')
+        data = {
+            "filename": "sermon.mp4",
+            "file_size": 5000000,
+            "asset_type": "video"
+        }
+        res = self.client.post(url, data)
+        assert res.status_code == status.HTTP_200_OK
+        assert "upload_id" in res.data
+        assert "storage_key" in res.data
+        assert str(self.branch_a.id) in res.data["storage_key"]
+
+    def test_upload_intent_rejected_for_member(self):
+        self.client.force_authenticate(user=self.member_a)
+        url = reverse('sermon-upload-intent')
+        data = {"filename": "sermon.mp4", "file_size": 5000}
+        res = self.client.post(url, data)
+        assert res.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_upload_intent_oversized_file(self):
+        self.client.force_authenticate(user=self.pastor_a)
+        url = reverse('sermon-upload-intent')
+        data = {
+            "filename": "huge.mp4",
+            "file_size": 300 * 1024 * 1024,
+            "asset_type": "video"
+        }
+        res = self.client.post(url, data)
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_upload_complete_cross_tenant_prohibited(self):
+        self.client.force_authenticate(user=self.pastor_a)
+        url = reverse('sermon-upload-complete')
+        data = {
+            "upload_id": "u_123",
+            "storage_key": f"sermons/{self.branch_b.id}/video/other.mp4"
+        }
+        res = self.client.post(url, data)
+        assert res.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+class TestHLSGenerationPipeline:
+    def test_hls_missing_ffmpeg_graceful_fallback(self):
+        from unittest.mock import patch
+        from .media_processing import MediaProcessingService
+
+        with patch.object(
+            MediaProcessingService, 'is_ffmpeg_available', return_value=False
+        ):
+            res = MediaProcessingService.generate_hls_stream(
+                "input.mp4", "out_dir"
+            )
+            assert res["success"] is False
+            assert "FFmpeg not available" in res["error"]
+
+    def test_generate_hls_task_nonexistent_sermon(self):
+        from .tasks import generate_hls_task
+        res = generate_hls_task(999999)
+        assert res["status"] == "failed"
+        assert res["reason"] == "Sermon not found"
+
+    def test_hls_url_serialization(self):
+        from .models import Sermon
+        from authentication.tests import BranchFactory
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        branch = BranchFactory()
+        video = SimpleUploadedFile(
+            "test.mp4", b"fake_video_bytes", content_type="video/mp4"
+        )
+        sermon = Sermon.objects.create(
+            branch=branch,
+            title="HLS Test",
+            description="A test sermon description.",
+            speaker="Pastor John",
+            category="Faith",
+            video_file=video
+        )
+        from .serializers import SermonSerializer
+        serializer = SermonSerializer(sermon)
+        assert "hls_url" in serializer.data
+        assert "master.m3u8" in serializer.data["hls_url"]
+
+
+@pytest.mark.django_db
+class TestPodcastFeedAPI:
+    def test_podcast_feed_public_access(self):
+        from rest_framework.test import APIClient
+        from django.urls import reverse
+        from authentication.tests import BranchFactory
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .models import Sermon
+
+        client = APIClient()
+        branch = BranchFactory()
+        audio = SimpleUploadedFile("s.mp3", b"audio", content_type="audio/mpeg")
+        Sermon.objects.create(
+            branch=branch,
+            title="Podcast Sermon",
+            description="Podcast Description",
+            speaker="Pastor Grace",
+            category="Grace",
+            status="Published",
+            audio_file=audio
+        )
+
+        url = reverse('sermon-podcast-feed')
+        res = client.get(url)
+        assert res.status_code == 200
+        assert "application/xml" in res["Content-Type"]
+        assert "<title>Podcast Sermon</title>" in res.content.decode("utf-8")

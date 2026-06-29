@@ -102,13 +102,21 @@ export default function PublicEventDetailPage() {
               
               {/* Event Cover Image Card */}
               <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/60 backdrop-blur-glass shadow-glass">
-                <div className="relative h-64 w-full md:h-80 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={event.cover_image}
-                    alt={event.title}
-                    className="h-full w-full object-cover"
-                  />
+                <div className="relative h-64 w-full md:h-80 overflow-hidden bg-gradient-to-br from-indigo-900/40 via-purple-900/30 to-slate-950">
+                  {event.cover_image ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={event.cover_image}
+                      alt={event.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-slate-900">
+                      <span className="font-display text-4xl font-black text-white/10 select-none uppercase tracking-widest">
+                        {event.event_type}
+                      </span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
                   
                   <div className="absolute bottom-5 left-6 right-6">

@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type { Sermon, SermonFilters, SermonSortConfig } from "../types/sermon.types";
-import { apiGet, apiPost, apiPatch, isApiError } from "@/services/api-client";
+import { useState, useEffect, useCallback, useRef } from "react";
+import type {
+  Sermon,
+  SermonSeries,
+  SermonFilters,
+  SermonSortConfig
+} from "../types/sermon.types";
+import { apiGet, apiPost, apiPatch, apiDelete, isApiError } from "@/services/api-client";
 import { toast } from "sonner";
 
 /**
  * Mapper utility to normalize API responses to frontend TS types.
- * Resolves null or missing database values to safe defaults (e.g. empty strings).
+ * Resolves null or missing database values to safe defaults.
  */
 const mapSermonToFrontend = (s: any): Sermon => ({
   id: s.id,
   title: s.title,
-  description: s.description,
+  description: s.description || "",
   scripture_reference: s.scripture_reference || "",
   sermon_date: s.sermon_date,
   status: s.status,
@@ -22,11 +27,71 @@ const mapSermonToFrontend = (s: any): Sermon => ({
   speaker: s.speaker,
   category: s.category,
   featured: s.featured,
+  views_count: s.views_count || 0,
+  part_number: s.part_number || null,
+  series: s.series || null,
+  series_details: s.series_details || null,
   notes: s.notes || "",
   tags: s.tags || [],
   created_at: s.created_at,
   updated_at: s.updated_at,
 });
+
+/**
+ * Hook to manage Sermon Series data using backend APIs.
+ */
+export function useSermonSeries() {
+  const [seriesList, setSeriesList] = useState<SermonSeries[]>([]);
+  const [isLoadingSeries, setIsLoadingSeries] = useState<boolean>(true);
+
+  const fetchSeries = useCallback(async () => {
+    setIsLoadingSeries(true);
+    try {
+      let branchId = "";
+      try {
+        const stored = localStorage.getItem("church-settings-branches");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) branchId = parsed[0].id;
+        }
+      } catch {}
+      if (!branchId) branchId = "branch-001";
+
+      const response = await apiGet<any>(`/api/sermons/series/?branch=${branchId}`);
+      if (!isApiError(response)) {
+        const data = response.data;
+        const results = Array.isArray(data) ? data : data.results || [];
+        setSeriesList(results);
+      }
+    } catch (err) {
+      console.error("Failed to fetch sermon series:", err);
+    } finally {
+      setIsLoadingSeries(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSeries();
+  }, [fetchSeries]);
+
+  const createSeries = useCallback(async (newSeries: Partial<SermonSeries>) => {
+    try {
+      const response = await apiPost<any>("/api/sermons/series/", newSeries);
+      if (!isApiError(response)) {
+        toast.success("Sermon series created successfully.");
+        await fetchSeries();
+        return response.data as SermonSeries;
+      } else {
+        toast.error(`Failed to create series: ${response.message}`);
+      }
+    } catch (err: any) {
+      toast.error("Failed to create sermon series.");
+    }
+    return null;
+  }, [fetchSeries]);
+
+  return { seriesList, isLoadingSeries, refetchSeries: fetchSeries, createSeries };
+}
 
 /**
  * Hook to manage Sermons data using backend APIs.
@@ -43,7 +108,6 @@ export function useSermons(options?: {
   const [totalItems, setTotalItems] = useState<number>(0);
   const fetchedIds = useRef<Set<string>>(new Set());
 
-  // Stringify options to use as a stable dependency for useEffect
   const serializedOptions = JSON.stringify(options);
 
   const fetchSermons = useCallback(async () => {
@@ -51,7 +115,6 @@ export function useSermons(options?: {
     try {
       const params = new URLSearchParams();
 
-      // Attempt to resolve branch ID from local storage
       let branchId = "";
       try {
         const storedBranches = localStorage.getItem("church-settings-branches");
@@ -76,15 +139,21 @@ export function useSermons(options?: {
         params.append("page_size", String(options.pageSize));
       }
       if (options?.filters) {
-        const { search, category, status, speaker } = options.filters;
+        const { search, category, status, speaker, series, scripture, featured, date_from, date_to, ordering } = options.filters;
         if (search) params.append("search", search);
         if (category && category !== "all") params.append("category", category);
         if (status && status !== "all") params.append("status", status);
         if (speaker && speaker !== "all") params.append("speaker", speaker);
+        if (series && series !== "all") params.append("series", series);
+        if (scripture) params.append("scripture", scripture);
+        if (featured !== undefined) params.append("featured", String(featured));
+        if (date_from) params.append("date_from", date_from);
+        if (date_to) params.append("date_to", date_to);
+        if (ordering) params.append("ordering", ordering);
       }
-      if (options?.sortConfig) {
-        params.append("sort_key", options.sortConfig.key);
-        params.append("sort_dir", options.sortConfig.direction);
+      if (options?.sortConfig && !options.filters?.ordering) {
+        const prefix = options.sortConfig.direction === "desc" ? "-" : "";
+        params.append("ordering", `${prefix}${options.sortConfig.key}`);
       }
 
       const response = await apiGet<any>(`/api/sermons/?${params.toString()}`);
@@ -158,7 +227,6 @@ export function useSermons(options?: {
 
   const deleteSermon = useCallback(
     async (id: string) => {
-      // Soft-delete behavior matching localstorage logic
       await updateSermon(id, { status: "Archived", featured: false });
     },
     [updateSermon]
@@ -169,7 +237,6 @@ export function useSermons(options?: {
       const found = sermons.find((s) => s.id === id);
       if (found) return found;
 
-      // If not found and we haven't fetched it yet, fetch it from backend
       if (id && !fetchedIds.current.has(id)) {
         fetchedIds.current.add(id);
         apiGet<any>(`/api/sermons/${id}/`)
@@ -205,7 +272,6 @@ export function useSermons(options?: {
 
 /**
  * Helper hook to filter, search, sort, and paginate sermons from backend.
- * Now acts as a wrapper forwarding state to server-side paginated useSermons hook.
  */
 export function useFilteredSermons(
   filters: SermonFilters,
@@ -231,7 +297,6 @@ export function useFilteredSermons(
 
   const [featuredSermon, setFeaturedSermon] = useState<Sermon | null>(null);
 
-  // Fetch featured sermon separately to ensure it is always loaded correctly
   useEffect(() => {
     let branchId = "";
     try {
@@ -276,3 +341,4 @@ export function useFilteredSermons(
     refetch,
   };
 }
+

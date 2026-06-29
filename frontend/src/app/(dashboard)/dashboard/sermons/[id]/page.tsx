@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { CathedralCrossLoader } from "@/components/ui/cathedral-cross-loader";
 import {
   ArrowLeft,
   Calendar,
@@ -13,12 +15,14 @@ import {
   Pencil,
   Lock,
   Compass,
+  Download,
 } from "lucide-react";
 import {
   useSermons,
   SermonMediaPlayer,
   SermonNotesViewer,
   SermonStatusBadge,
+  SermonDownloadModal,
   SERMON_CATEGORY_LABELS,
 } from "@/features/sermons";
 import { useAppPermissions } from "@/hooks/use-app-permissions";
@@ -29,6 +33,7 @@ export default function SermonDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   
   const { getSermonById, isLoading } = useSermons();
   const { sermons: sermonPermissions } = useAppPermissions();
@@ -39,7 +44,7 @@ export default function SermonDetailPage() {
   if (isLoading && !sermon) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+        <CathedralCrossLoader text="Loading Sermon Broadcast..." />
       </div>
     );
   }
@@ -141,6 +146,14 @@ export default function SermonDetailPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsDownloadOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-300 transition-all hover:bg-indigo-500/20 hover:text-white"
+          >
+            <Download className="h-4 w-4 text-indigo-400" />
+            Download Options
+          </button>
           {canEdit && (
             <Link
               href={`/dashboard/sermons/${sermon.id}/edit`}
@@ -154,6 +167,15 @@ export default function SermonDetailPage() {
         </div>
       </motion.div>
 
+      <SermonDownloadModal
+        isOpen={isDownloadOpen}
+        onClose={() => setIsDownloadOpen(false)}
+        title={sermon.title}
+        videoUrl={sermon.video_url}
+        audioUrl={sermon.audio_url}
+        notes={sermon.notes}
+      />
+
       {/* Main details page content */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column (2/3) - Media Player & Overview */}
@@ -162,6 +184,7 @@ export default function SermonDetailPage() {
             videoUrl={sermon.video_url}
             audioUrl={sermon.audio_url}
             thumbnail={sermon.thumbnail}
+            hlsUrl={sermon.hls_url}
             initialTab={mediaTab}
           />
 

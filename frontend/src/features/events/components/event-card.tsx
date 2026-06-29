@@ -37,14 +37,22 @@ export function EventCard({ event, canEdit = false }: EventCardProps) {
       )}
     >
       {/* Event Cover Image */}
-      <div className="relative h-44 w-full overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={event.cover_image}
-          alt={event.title}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
+      <div className="relative h-44 w-full overflow-hidden bg-gradient-to-br from-indigo-900/40 via-purple-900/30 to-slate-950">
+        {event.cover_image ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={event.cover_image}
+            alt={event.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-slate-900">
+            <span className="font-display text-xl font-black text-white/10 select-none uppercase tracking-widest">
+              {event.event_type}
+            </span>
+          </div>
+        )}
         {/* Type pill */}
         <div className="absolute left-3 top-3 rounded-full bg-slate-950/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-400 backdrop-blur-sm border border-border/20">
           {event.event_type}

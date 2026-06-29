@@ -84,7 +84,7 @@ export default function PublicSermonsListPage() {
           {/* Search and Filters Bar */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-t border-border/10 pt-5">
             <SermonSearch
-              value={filters.search}
+              value={filters.search || ""}
               onChange={(val) => handleFilterUpdate("search", val)}
               className="w-full md:max-w-xs"
             />

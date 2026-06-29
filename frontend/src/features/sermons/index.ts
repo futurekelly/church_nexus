@@ -7,7 +7,9 @@ export { SermonNotesViewer } from "./components/sermon-notes-viewer";
 export { SermonCard } from "./components/sermon-card";
 export { SermonForm } from "./components/sermon-form";
 export { SermonPagination } from "./components/sermon-pagination";
+export { SermonDownloadModal } from "./components/sermon-download-modal";
 
-export { useSermons, useFilteredSermons } from "./hooks/use-sermons";
+export { useSermons, useFilteredSermons, useSermonSeries } from "./hooks/use-sermons";
+export { useDirectUpload } from "./hooks/use-direct-upload";
 
 export * from "./types/sermon.types";

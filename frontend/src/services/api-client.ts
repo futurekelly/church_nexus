@@ -119,7 +119,9 @@ export function getApiClient(): AxiosInstance {
       getAccessToken: () => {
         if (typeof window === "undefined") return null;
         try {
-          const stored = localStorage.getItem("auth-storage");
+          const stored =
+            localStorage.getItem("church-auth-storage") ||
+            localStorage.getItem("auth-storage");
           if (stored) {
             const parsed = JSON.parse(stored);
             return parsed.state?.tokens?.access_token || null;
