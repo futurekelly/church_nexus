@@ -24,4 +24,4 @@ export const API_ENDPOINTS = {
 } as const;
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://church-nexus-ivk9.onrender.com/";
