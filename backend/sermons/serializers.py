@@ -95,7 +95,28 @@ class SermonSerializer(serializers.ModelSerializer):
                         thumbnail_str.endswith(self.instance.thumbnail.name)):
                     data.pop('thumbnail', None)
                 else:
-                    data['thumbnail'] = None
+                    from django.core.files.storage import default_storage
+                    key = thumbnail_str
+                    if settings.MEDIA_URL in key:
+                        key = key.split(settings.MEDIA_URL)[-1]
+                    if '/media/' in key:
+                        key = key.split('/media/')[-1]
+                    if default_storage.exists(key):
+                        try:
+                            f = default_storage.open(key)
+                            data['thumbnail'] = ContentFile(f.read(), name=os.path.basename(key))
+                        except Exception:
+                            data['thumbnail'] = None
+                    else:
+                        data['thumbnail'] = None
+            else:
+                from django.core.files.storage import default_storage
+                if default_storage.exists(thumbnail_str):
+                    try:
+                        f = default_storage.open(thumbnail_str)
+                        data['thumbnail'] = ContentFile(f.read(), name=os.path.basename(thumbnail_str))
+                    except Exception:
+                        pass
 
         return super().to_internal_value(data)
 
