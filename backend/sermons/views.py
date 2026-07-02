@@ -144,6 +144,22 @@ class UploadIntentView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        # Handle local multipart file upload fallback
+        if 'file' in request.FILES and 'storage_key' in request.data:
+            uploaded_file = request.FILES['file']
+            storage_key = request.data.get('storage_key')
+            try:
+                saved_path = StorageManager.save_file(storage_key, uploaded_file)
+                return response.Response({
+                    "status": "success",
+                    "storage_key": saved_path
+                }, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return response.Response(
+                    {"detail": f"Failed to save file locally: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
         filename = request.data.get('filename')
         file_size = request.data.get('file_size')
         asset_type = request.data.get('asset_type', 'video')
