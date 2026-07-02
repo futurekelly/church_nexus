@@ -70,6 +70,7 @@ export function useDirectUpload(options?: DirectUploadOptions) {
         if (direct_upload && upload_url) {
           // PUT binary file to S3/MinIO presigned URL
           await client.put(upload_url, file, {
+            timeout: 0, // Disable timeout for large file uploads
             headers: { "Content-Type": file.type || "application/octet-stream" },
             onUploadProgress: (evt) => {
               if (evt.total) {
@@ -85,6 +86,7 @@ export function useDirectUpload(options?: DirectUploadOptions) {
           formData.append("storage_key", storage_key);
 
           await client.post("/api/sermons/upload-intent/", formData, {
+            timeout: 0, // Disable timeout for large file uploads
             headers: { "Content-Type": "multipart/form-data" },
             onUploadProgress: (evt) => {
               if (evt.total) {
