@@ -1,5 +1,7 @@
+import os
 import base64
 from django.core.files.base import ContentFile
+from django.conf import settings
 from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import Sermon, SermonSeries
