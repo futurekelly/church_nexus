@@ -36,7 +36,19 @@ export function SermonMediaPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const activeStreamUrl = (hlsUrl && hlsUrl.trim() !== "") ? hlsUrl : videoUrl;
+  const [useHls, setUseHls] = useState(false);
+
+  useEffect(() => {
+    if (hlsUrl && hlsUrl.trim() !== "") {
+      const video = document.createElement("video");
+      const nativeHls = video.canPlayType("application/vnd.apple.mpegurl") !== "";
+      setUseHls(nativeHls);
+    } else {
+      setUseHls(false);
+    }
+  }, [hlsUrl]);
+
+  const activeStreamUrl = useHls ? hlsUrl : videoUrl;
 
   // Stop playback and reset when switching tabs
   useEffect(() => {
