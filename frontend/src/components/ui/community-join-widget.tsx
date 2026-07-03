@@ -13,7 +13,7 @@ interface CommunityJoinWidgetProps {
 
 export function CommunityJoinWidget({
   whatsappUrl = "https://whatsapp.com",
-  telegramUrl = "https://t.me",
+  telegramUrl = "https://t.me/joinrightpath",
   className,
 }: CommunityJoinWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
