@@ -3,6 +3,14 @@ from django.core.exceptions import ValidationError
 
 
 def validate_thumbnail(file):
+    if not file or not getattr(file, 'name', None):
+        return
+    try:
+        if not file.size:
+            return
+    except (ValueError, FileNotFoundError):
+        return
+
     # Size limit: 5MB
     max_size = 5 * 1024 * 1024
     if file.size > max_size:
@@ -21,6 +29,14 @@ def validate_thumbnail(file):
 
 
 def validate_audio(file):
+    if not file or not getattr(file, 'name', None):
+        return
+    try:
+        if not file.size:
+            return
+    except (ValueError, FileNotFoundError):
+        return
+
     # Size limit: 50MB
     max_size = 50 * 1024 * 1024
     if file.size > max_size:
@@ -41,6 +57,14 @@ def validate_audio(file):
 
 
 def validate_video(file):
+    if not file or not getattr(file, 'name', None):
+        return
+    try:
+        if not file.size:
+            return
+    except (ValueError, FileNotFoundError):
+        return
+
     # Size limit: 250MB
     max_size = 250 * 1024 * 1024
     if file.size > max_size:

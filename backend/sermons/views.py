@@ -266,7 +266,7 @@ class UploadCompleteView(APIView):
                 thread.daemon = True
                 thread.start()
 
-                serializer = SermonSerializer(sermon)
+                serializer = SermonSerializer(sermon, context={'request': request})
                 return response.Response(
                     serializer.data, status=status.HTTP_200_OK
                 )
