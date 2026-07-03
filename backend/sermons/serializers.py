@@ -41,6 +41,7 @@ class SermonSerializer(serializers.ModelSerializer):
         source='series', read_only=True
     )
     hls_url = serializers.SerializerMethodField()
+    thumbnail = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = Sermon
@@ -81,7 +82,8 @@ class SermonSerializer(serializers.ModelSerializer):
                     try:
                         div = 'utf8,' if 'utf8,' in thumbnail_str else ';utf8,'
                         _, svg_content = thumbnail_str.split(div)
-                        decoded_file = svg_content.encode('utf-8')
+                        import urllib.parse
+                        decoded_file = urllib.parse.unquote(svg_content).encode('utf-8')
                         data['thumbnail'] = ContentFile(
                             decoded_file, name="thumbnail.svg"
                         )
