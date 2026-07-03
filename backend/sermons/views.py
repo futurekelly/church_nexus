@@ -261,7 +261,10 @@ class UploadCompleteView(APIView):
                 sermon._disable_processing = True
                 sermon.save()
 
-                process_sermon_media.delay(sermon.id)
+                import threading
+                thread = threading.Thread(target=process_sermon_media, args=(sermon.id,))
+                thread.daemon = True
+                thread.start()
 
                 serializer = SermonSerializer(sermon)
                 return response.Response(

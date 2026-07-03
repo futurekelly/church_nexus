@@ -13,12 +13,18 @@ def trigger_sermon_media_processing(sender, instance, created, **kwargs):
     disable = getattr(instance, "_disable_processing", False)
     if instance.video_file and not disable:
         if created:
-            process_sermon_media.delay(instance.id)
+            import threading
+            thread = threading.Thread(target=process_sermon_media, args=(instance.id,))
+            thread.daemon = True
+            thread.start()
         else:
             # For updates, only process if video_file itself has changed
             try:
                 old_instance = Sermon.objects.get(pk=instance.id)
                 if old_instance.video_file != instance.video_file:
-                    process_sermon_media.delay(instance.id)
+                    import threading
+                    thread = threading.Thread(target=process_sermon_media, args=(instance.id,))
+                    thread.daemon = True
+                    thread.start()
             except Sermon.DoesNotExist:
                 pass
