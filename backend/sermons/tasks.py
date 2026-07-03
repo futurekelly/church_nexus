@@ -28,6 +28,7 @@ def generate_thumbnail_task(self, sermon_id):
         if res.get("success") and os.path.exists(tmp_path):
             with open(tmp_path, "rb") as f:
                 name = f"thumb_{sermon.id}.jpg"
+                sermon._disable_processing = True
                 sermon.thumbnail.save(name, File(f), save=True)
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
@@ -61,6 +62,7 @@ def extract_audio_task(self, sermon_id):
         if res.get("success") and os.path.exists(tmp_path):
             with open(tmp_path, "rb") as f:
                 name = f"audio_{sermon.id}.mp3"
+                sermon._disable_processing = True
                 sermon.audio_file.save(name, File(f), save=True)
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
@@ -94,6 +96,7 @@ def optimize_video_task(self, sermon_id):
         if res.get("success") and os.path.exists(tmp_path):
             with open(tmp_path, "rb") as f:
                 name = os.path.basename(video_path)
+                sermon._disable_processing = True
                 sermon.video_file.save(name, File(f), save=True)
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)

@@ -12,5 +12,13 @@ def trigger_sermon_media_processing(sender, instance, created, **kwargs):
     """
     disable = getattr(instance, "_disable_processing", False)
     if instance.video_file and not disable:
-        # Dispatch asynchronously via Celery
-        process_sermon_media.delay(instance.id)
+        if created:
+            process_sermon_media.delay(instance.id)
+        else:
+            # For updates, only process if video_file itself has changed
+            try:
+                old_instance = Sermon.objects.get(pk=instance.id)
+                if old_instance.video_file != instance.video_file:
+                    process_sermon_media.delay(instance.id)
+            except Sermon.DoesNotExist:
+                pass
