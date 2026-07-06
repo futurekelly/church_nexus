@@ -10,7 +10,7 @@ import { SectionHeader } from "@/features/dashboard/components/widgets/section-h
 export default function EditSermonPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { getSermonById, updateSermon, isLoading } = useSermons();
+  const { getSermonById, updateSermon, isLoading, refetch } = useSermons();
   const { sermons: sermonPermissions } = useAppPermissions();
   const canEdit = sermonPermissions.canEdit;
 
@@ -96,7 +96,7 @@ export default function EditSermonPage() {
         />
       </div>
 
-      <SermonForm sermon={sermon} onSubmit={handleFormSubmit} />
+      <SermonForm sermon={sermon} onSubmit={handleFormSubmit} onUploadComplete={refetch} />
     </div>
   );
 }

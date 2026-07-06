@@ -24,6 +24,7 @@ const mapSermonToFrontend = (s: any): Sermon => ({
   thumbnail: s.thumbnail || "",
   video_url: s.video_url || "",
   audio_url: s.audio_url || "",
+  hls_url: s.hls_url || "",
   speaker: s.speaker,
   category: s.category,
   featured: s.featured,

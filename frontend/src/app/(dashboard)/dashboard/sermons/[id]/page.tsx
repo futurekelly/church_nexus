@@ -16,6 +16,7 @@ import {
   Lock,
   Compass,
   Download,
+  Trash2,
 } from "lucide-react";
 import {
   useSermons,
@@ -49,10 +50,12 @@ export default function SermonDetailPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  const { getSermonById, isLoading } = useSermons();
+  const { getSermonById, isLoading, deleteSermon } = useSermons();
   const { sermons: sermonPermissions } = useAppPermissions();
-  const { canEdit, canViewLibrary } = sermonPermissions;
+  const { canEdit, canDelete, canViewLibrary } = sermonPermissions;
 
   const sermon = getSermonById(id);
 
@@ -179,6 +182,17 @@ export default function SermonDetailPage() {
               Edit Sermon
             </Link>
           )}
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => setIsDeleteOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300 transition-all hover:bg-rose-500/20 hover:text-white"
+              aria-label="Archive Sermon"
+            >
+              <Trash2 className="h-4 w-4 text-rose-400" />
+              Archive Sermon
+            </button>
+          )}
         </div>
       </motion.div>
 
@@ -270,6 +284,58 @@ export default function SermonDetailPage() {
           />
         </div>
       </div>
+
+      {/* Archive Confirmation Modal */}
+      {isDeleteOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-border/50 bg-card/95 p-6 shadow-2xl backdrop-blur-md"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 animate-pulse">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <h4 className="text-base font-bold text-primary-foreground">Archive Sermon?</h4>
+                <p className="text-xs text-muted-foreground leading-normal">
+                  Are you sure you want to archive <strong>{sermon.title}</strong>? This will soft-delete the sermon from the catalog, but keep the record in the database for recovery.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3 border-t border-border/10 pt-4">
+              <button
+                type="button"
+                onClick={() => setIsDeleteOpen(false)}
+                disabled={isDeleting}
+                className="rounded-xl border border-border bg-card/60 px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-primary-foreground transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    await deleteSermon(sermon.id);
+                    setIsDeleteOpen(false);
+                    router.push("/dashboard/sermons");
+                  } catch {
+                    setIsDeleting(false);
+                  }
+                }}
+                disabled={isDeleting}
+                className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-500 transition-all disabled:opacity-50 shadow-[0_0_12px_rgba(239,68,68,0.2)]"
+              >
+                {isDeleting ? "Archiving..." : "Archive Sermon"}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

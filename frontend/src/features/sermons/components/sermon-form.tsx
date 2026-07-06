@@ -8,6 +8,8 @@ import { Save, X, Sparkles, UploadCloud, CheckCircle2, AlertCircle, RefreshCw } 
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useDirectUpload } from "../hooks/use-direct-upload";
+import { API_BASE_URL } from "@/constants/api-endpoints";
+
 import {
   SERMON_CATEGORIES,
   SERMON_STATUSES,
@@ -43,6 +45,8 @@ interface SermonFormProps {
   sermon?: Sermon; // Present when editing
   onSubmit: (values: Omit<Sermon, "id" | "created_at" | "updated_at">) => void;
   isLoading?: boolean;
+  /** Called after a media file upload completes so parent can refresh cached sermon data */
+  onUploadComplete?: () => void;
 }
 
 const inputClass = cn(
@@ -95,6 +99,7 @@ export function SermonForm({
   sermon,
   onSubmit,
   isLoading = false,
+  onUploadComplete,
 }: SermonFormProps) {
   const router = useRouter();
   const isEdit = !!sermon;
@@ -139,15 +144,24 @@ export function SermonForm({
 
   const videoUploader = useDirectUpload({
     onSuccess: (data) => {
-      const targetUrl = data.upload_url || data.storage_key || data.video_url;
+      // When sermon_id was provided, UploadCompleteView returns the full SermonSerializer
+      // response with an absolute video_url. When creating a new sermon (no sermon_id),
+      // the response only has storage_key — construct the absolute media URL from it.
+      const targetUrl =
+        data.video_url ||
+        (data.storage_key ? `${API_BASE_URL}/media/${data.storage_key}` : "");
       if (targetUrl) setValue("video_url", targetUrl, { shouldValidate: true });
+      onUploadComplete?.();
     },
   });
 
   const audioUploader = useDirectUpload({
     onSuccess: (data) => {
-      const targetUrl = data.upload_url || data.storage_key || data.audio_url;
+      const targetUrl =
+        data.audio_url ||
+        (data.storage_key ? `${API_BASE_URL}/media/${data.storage_key}` : "");
       if (targetUrl) setValue("audio_url", targetUrl, { shouldValidate: true });
+      onUploadComplete?.();
     },
   });
 

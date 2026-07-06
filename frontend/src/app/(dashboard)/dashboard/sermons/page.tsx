@@ -23,7 +23,7 @@ const SERMONS_PER_PAGE = 6;
 export default function SermonsListPage() {
   const [page, setPage] = useState(1);
   const { sermons: sermonPermissions } = useAppPermissions();
-  const { canCreate, canEdit, canViewLibrary } = sermonPermissions;
+  const { canCreate, canEdit, canDelete, canViewLibrary } = sermonPermissions;
 
   const [filters, setFilters] = useState<SermonFilters>({
     search: "",
@@ -164,6 +164,8 @@ export default function SermonsListPage() {
                         key={sermon.id}
                         sermon={sermon}
                         canEdit={canEdit}
+                        canDelete={canDelete}
+                        onDelete={() => deleteSermon(sermon.id)}
                         isDashboard={true}
                       />
                     ))}

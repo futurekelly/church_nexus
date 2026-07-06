@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { BookOpen, Calendar, User, ArrowRight, Pencil, Star } from "lucide-react";
+import { BookOpen, Calendar, User, ArrowRight, Pencil, Star, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { SermonStatusBadge } from "./sermon-status-badge";
@@ -10,10 +11,26 @@ import type { Sermon } from "../types/sermon.types";
 interface SermonCardProps {
   sermon: Sermon;
   canEdit?: boolean;
+  canDelete?: boolean;
+  onDelete?: () => void;
   isDashboard?: boolean;
 }
 
-export function SermonCard({ sermon, canEdit = false, isDashboard = true }: SermonCardProps) {
+export function SermonCard({
+  sermon,
+  canEdit = false,
+  canDelete = false,
+  onDelete,
+  isDashboard = true,
+}: SermonCardProps) {
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  useEffect(() => {
+    if (!isConfirming) return;
+    const timer = setTimeout(() => setIsConfirming(false), 3000);
+    return () => clearTimeout(timer);
+  }, [isConfirming]);
+
   const sermonDate = new Date(sermon.sermon_date);
   const formattedDate = sermonDate.toLocaleDateString(undefined, {
     month: "short",
@@ -115,15 +132,48 @@ export function SermonCard({ sermon, canEdit = false, isDashboard = true }: Serm
             Watch & Listen <ArrowRight className="h-3.5 w-3.5" />
           </Link>
 
-          {canEdit && isDashboard && (
-            <Link
-              href={editHref}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-border/50 bg-card hover:bg-indigo-500/10 text-muted-foreground hover:text-indigo-400 transition-colors"
-              title="Edit sermon"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+            {canEdit && isDashboard && (
+              <Link
+                href={editHref}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-border/50 bg-card hover:bg-indigo-500/10 text-muted-foreground hover:text-indigo-400 transition-colors"
+                title="Edit sermon"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Link>
+            )}
+
+            {canDelete && isDashboard && (
+              <div className="relative flex items-center">
+                {isConfirming ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onDelete?.();
+                      setIsConfirming(false);
+                    }}
+                    className="inline-flex h-7 px-2 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10 text-[10px] font-bold text-rose-400 hover:bg-rose-500/20 transition-all animate-pulse"
+                    title="Confirm archive"
+                  >
+                    Archive?
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsConfirming(true);
+                    }}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-border/50 bg-card hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 transition-colors"
+                    title="Archive sermon"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
