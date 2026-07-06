@@ -3,9 +3,8 @@
 import { useEffect, type ReactNode } from "react";
 import { API_ENDPOINTS } from "@/constants/api-endpoints";
 import {
-  apiPost,
   initializeApiClient,
-  isApiError,
+  getApiClient,
 } from "@/services/api-client";
 import { getAccessToken, useAuthStore } from "@/store/auth-store";
 import type { AuthTokens } from "@/types/user";
