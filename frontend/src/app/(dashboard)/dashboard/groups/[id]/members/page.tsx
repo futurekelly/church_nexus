@@ -140,7 +140,7 @@ export default function RosterManagementPage({ params }: PageProps) {
               <input
                 type="text"
                 required
-                placeholder="e.g. +254 711 222 333"
+                placeholder="e.g. +255 711 222 333"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full pl-3 pr-4 py-2 text-xs rounded-lg border border-border/40 bg-card/40 text-primary-foreground focus:outline-none focus:border-emerald-500/50"

@@ -18,11 +18,11 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 
 const recentTransactions = [
-  { id: 1, donor: "Grace Wanjiku", amount: "KSh 10,000", type: "Tithe", date: "Today, 10:22 AM" },
-  { id: 2, donor: "James Mwangi", amount: "KSh 5,000", type: "Offering", date: "Today, 9:14 AM" },
-  { id: 3, donor: "Mary Njeri", amount: "KSh 2,500", type: "Building Fund", date: "Today, 8:50 AM" },
-  { id: 4, donor: "Anonymous", amount: "KSh 1,000", type: "General", date: "Yesterday" },
-  { id: 5, donor: "David Kamau", amount: "KSh 15,000", type: "Tithe", date: "Yesterday" },
+  { id: 1, donor: "Neema Mushi", amount: "TSh 10,000", type: "Tithe", date: "Today, 10:22 AM" },
+  { id: 2, donor: "Juma Said", amount: "TSh 5,000", type: "Offering", date: "Today, 9:14 AM" },
+  { id: 3, donor: "Bahati Mtui", amount: "TSh 2,500", type: "Building Fund", date: "Today, 8:50 AM" },
+  { id: 4, donor: "Anonymous", amount: "TSh 1,000", type: "General", date: "Yesterday" },
+  { id: 5, donor: "Baraka Kishosha", amount: "TSh 15,000", type: "Tithe", date: "Yesterday" },
 ];
 
 const typeColors: Record<string, string> = {
@@ -75,20 +75,20 @@ export function TreasurerHome() {
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <ChartCard
             title="Revenue vs Target"
-            subtitle="Actual vs planned (KSh)"
+            subtitle="Actual vs planned (TSh)"
             data={revenueData}
             type="dual-bar"
             color="#14B8A6"
             color2="#8B5CF6"
-            valuePrefix="KSh "
+            valuePrefix="TSh "
           />
           <ChartCard
             title="Monthly Donation Trend"
-            subtitle="Total donations per month (KSh)"
+            subtitle="Total donations per month (TSh)"
             data={donationTrendData}
             type="area"
             color="#14B8A6"
-            valuePrefix="KSh "
+            valuePrefix="TSh "
           />
         </div>
       </section>

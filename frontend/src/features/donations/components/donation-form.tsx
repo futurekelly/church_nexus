@@ -437,13 +437,13 @@ export function DonationForm({ campaigns, onSubmit, isAdminEntry = false }: Dona
             <input
               id="phone_number"
               type="text"
-              placeholder="e.g. +254712345678"
+              placeholder="e.g. +255712345678"
               className={cn(inputClass, errors.phone_number && "border-rose-500")}
               {...register("phone_number", {
                 required: watchPaymentMethod === "Mobile Money" ? "Phone number is required for Mobile Money" : false,
                 pattern: {
                   value: E164_PHONE_REGEX,
-                  message: "Must be a valid E.164 phone number (e.g., +254712345678)"
+                  message: "Must be a valid E.164 phone number (e.g., +255712345678)"
                 }
               })}
             />

@@ -75,7 +75,7 @@ export function AttendeeDetailModal({
               <Phone className="h-4 w-4 text-emerald-400" />
               <span>Phone Contact</span>
             </div>
-            <span className="font-semibold text-white">{attendee.phone || "+254 700 000 000"}</span>
+            <span className="font-semibold text-white">{attendee.phone || "+255 700 000 000"}</span>
           </div>
 
           <div className="flex items-center justify-between rounded-xl border border-border/20 bg-card/40 p-3">

@@ -160,7 +160,7 @@ export function RegisterForm() {
                   id="first_name"
                   autoComplete="given-name"
                   className={inputClass(Boolean(errors.first_name))}
-                  placeholder="John"
+                  placeholder="Baraka"
                   {...register("first_name")}
                 />
               </AuthFormField>
@@ -173,7 +173,7 @@ export function RegisterForm() {
                   id="last_name"
                   autoComplete="family-name"
                   className={inputClass(Boolean(errors.last_name))}
-                  placeholder="Doe"
+                  placeholder="Said"
                   {...register("last_name")}
                 />
               </AuthFormField>

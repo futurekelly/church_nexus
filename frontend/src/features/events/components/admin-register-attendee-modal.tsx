@@ -125,7 +125,7 @@ export function AdminRegisterAttendeeModal({
             <div className="relative">
               <input
                 type="tel"
-                placeholder="e.g. +254 712 345 678"
+                placeholder="e.g. +255 712 345 678"
                 value={visitorPhone}
                 onChange={(e) => setVisitorPhone(e.target.value)}
                 className="w-full rounded-xl border border-border/50 bg-card/60 py-2.5 pl-9 pr-3 text-white placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-indigo-500"

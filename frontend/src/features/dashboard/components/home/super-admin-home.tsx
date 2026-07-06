@@ -75,11 +75,11 @@ export function SuperAdminHome() {
           />
           <ChartCard
             title="Donation Trends"
-            subtitle="Monthly total (KSh)"
+            subtitle="Monthly total (TSh)"
             data={donationTrendData}
             type="bar"
             color="#3B82F6"
-            valuePrefix="KSh "
+            valuePrefix="TSh "
           />
         </div>
       </section>

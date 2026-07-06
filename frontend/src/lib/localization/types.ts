@@ -8,10 +8,10 @@ export interface LocalizationProfile {
 }
 
 /**
- * Standard default localization profile for Church Nexus (defaulting to East Africa / Kenya).
+ * Standard default localization profile for Church Nexus (defaulting to East Africa / Tanzania).
  */
 export const DEFAULT_LOCALIZATION_PROFILE: LocalizationProfile = {
-  country_code: "KE",
-  currency: "KES",
-  language: "en",
+  country_code: "TZ",
+  currency: "TZS",
+  language: "sw",
 };

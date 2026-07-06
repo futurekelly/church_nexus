@@ -131,13 +131,13 @@ export function VisitorForm({ onSubmit, onCancel, isLoading = false }: VisitorFo
           <input
             id="phone_number"
             type="text"
-            placeholder="e.g. +254 712 345 678"
+            placeholder="e.g. +255 712 345 678"
             className={inputClass}
             {...register("phone_number", {
               required: "Phone number is required",
               pattern: {
                 value: E164_PHONE_REGEX,
-                message: "Must be a valid E.164 phone number (e.g., +254712345678)"
+                message: "Must be a valid E.164 phone number (e.g., +255712345678)"
               }
             })}
           />

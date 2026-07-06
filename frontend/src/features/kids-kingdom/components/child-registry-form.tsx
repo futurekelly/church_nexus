@@ -166,7 +166,7 @@ export function ChildRegistryForm({
               <input
                 id="first_name"
                 type="text"
-                placeholder="e.g. John"
+                placeholder="e.g. Baraka"
                 className={inputClass}
                 {...register("first_name")}
               />
@@ -179,7 +179,7 @@ export function ChildRegistryForm({
               <input
                 id="last_name"
                 type="text"
-                placeholder="e.g. Doe"
+                placeholder="e.g. Said"
                 className={inputClass}
                 {...register("last_name")}
               />

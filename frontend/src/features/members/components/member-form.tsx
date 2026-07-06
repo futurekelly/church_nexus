@@ -86,7 +86,7 @@ export function MemberForm({
               id="first_name"
               type="text"
               autoComplete="given-name"
-              placeholder="e.g. John"
+              placeholder="e.g. Baraka"
               className={inputClass}
               aria-required="true"
               aria-invalid={!!errors.first_name}
@@ -105,7 +105,7 @@ export function MemberForm({
               id="last_name"
               type="text"
               autoComplete="family-name"
-              placeholder="e.g. Mwangi"
+              placeholder="e.g. Said"
               className={inputClass}
               aria-required="true"
               aria-invalid={!!errors.last_name}
@@ -190,7 +190,7 @@ export function MemberForm({
               id="phone_number"
               type="tel"
               autoComplete="tel"
-              placeholder="e.g. +254 712 345 678"
+              placeholder="e.g. +255 712 345 678"
               className={inputClass}
               aria-required="true"
               aria-invalid={!!errors.phone_number}
@@ -198,7 +198,7 @@ export function MemberForm({
                 required: "Phone number is required",
                 pattern: {
                   value: E164_PHONE_REGEX,
-                  message: "Must be a valid E.164 phone number (e.g., +254712345678)"
+                  message: "Must be a valid E.164 phone number (e.g., +255712345678)"
                 }
               })}
             />

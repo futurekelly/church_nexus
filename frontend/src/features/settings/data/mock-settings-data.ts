@@ -88,7 +88,7 @@ export const MOCK_BRANCHES: Branch[] = [
     currency_code: "KES",
     timezone: "Africa/Nairobi",
     language: "en",
-    phone: "+254711000001",
+    phone: "+255711000001",
     email: "futurekelly360@gmail.com",
     address: {
       street_address: "Ngong Road, Adams Arcade",
@@ -104,7 +104,7 @@ export const MOCK_BRANCHES: Branch[] = [
       first_name: "John",
       last_name: "Njoroge",
       title: "Pastor",
-      phone: "+254711222333",
+      phone: "+255711222333",
       email: "futurekelly360@gmail.com"
     },
     financial_profile: {
@@ -170,7 +170,7 @@ export const MOCK_PAYMENT_ACCOUNTS: PaymentAccount[] = [
     branch_id: "branch-003",
     provider: "M-Pesa",
     account_name: "Nairobi Victory Lipa Na M-Pesa",
-    account_number: "+254711000001",
+    account_number: "+255711000001",
     paybill_number: "247247",
     merchant_code: "332211",
     status: "Active",
