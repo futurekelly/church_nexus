@@ -38,13 +38,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     getAccessToken,
     refreshTokens: async (): Promise<AuthTokens | null> => {
       try {
-        const response = await apiPost<{ access: string }>(
+        const apiClient = getApiClient();
+        const response = await apiClient.post<{ access: string }>(
           API_ENDPOINTS.AUTH.REFRESH,
           {},
           { skipAuth: true } as never,
         );
 
-        if (isApiError(response) || !response.data?.access) return null;
+        if (!response.data?.access) return null;
 
         const newTokens: AuthTokens = {
           access_token: response.data.access,
@@ -54,8 +55,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setTokens(newTokens);
         setAccessTokenCookie(newTokens.access_token);
         return newTokens;
-      } catch {
-        return null;
+      } catch (err: any) {
+        const status = err.response?.status;
+        if (status === 400 || status === 401) {
+          return null;
+        }
+        throw err;
       }
     },
     clearSession: () => {
@@ -73,13 +78,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async function performSilentRefresh() {
       if (isHydrated && isAuthenticated && !getAccessToken()) {
         try {
-          const response = await apiPost<{ access: string }>(
+          const apiClient = getApiClient();
+          const response = await apiClient.post<{ access: string }>(
             API_ENDPOINTS.AUTH.REFRESH,
             {},
             { skipAuth: true } as never,
           );
 
-          if (!isApiError(response) && response.data?.access) {
+          if (response.data?.access) {
             const newTokens: AuthTokens = {
               access_token: response.data.access,
               refresh_token: "",
@@ -95,6 +101,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     performSilentRefresh();
   }, [isHydrated, isAuthenticated, setTokens]);
+
+  // Periodic token refresh every 45 minutes to keep session alive during active use
+  useEffect(() => {
+    if (!isHydrated || !isAuthenticated) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const apiClient = getApiClient();
+        const response = await apiClient.post<{ access: string }>(
+          API_ENDPOINTS.AUTH.REFRESH,
+          {},
+          { skipAuth: true } as never,
+        );
+
+        if (response.data?.access) {
+          const newTokens: AuthTokens = {
+            access_token: response.data.access,
+            refresh_token: "",
+          };
+          setTokens(newTokens);
+          setAccessTokenCookie(newTokens.access_token);
+        }
+      } catch (err: any) {
+        const status = err.response?.status;
+        if (status === 400 || status === 401) {
+          clearAccessTokenCookie();
+          clearSession();
+        }
+      }
+    }, 45 * 60 * 1000); // 45 minutes
+
+    return () => clearInterval(intervalId);
+  }, [isHydrated, isAuthenticated, setTokens, clearSession]);
 
   useEffect(() => {
     if (isHydrated) {

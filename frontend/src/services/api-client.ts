@@ -30,7 +30,7 @@ function processRefreshQueue(token: string | null): void {
 function createAxiosInstance(config: ApiClientConfig): AxiosInstance {
   const instance = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 30_000,
+    timeout: 60_000,
     withCredentials: true,
     headers: {
       "Content-Type": "application/json",
@@ -63,7 +63,8 @@ function createAxiosInstance(config: ApiClientConfig): AxiosInstance {
         error.response?.status === 401 &&
         originalRequest &&
         !originalRequest._retry &&
-        !originalRequest.url?.includes(API_ENDPOINTS.AUTH.LOGIN)
+        !originalRequest.url?.includes(API_ENDPOINTS.AUTH.LOGIN) &&
+        !originalRequest.url?.includes(API_ENDPOINTS.AUTH.REFRESH)
       ) {
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
