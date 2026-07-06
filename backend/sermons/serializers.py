@@ -8,9 +8,7 @@ from .models import Sermon, SermonSeries
 
 
 class SermonSeriesSerializer(serializers.ModelSerializer):
-    sermons_count = serializers.IntegerField(
-        source='sermons.count', read_only=True
-    )
+    sermons_count = serializers.SerializerMethodField()
 
     class Meta:
         model = SermonSeries
@@ -19,6 +17,11 @@ class SermonSeriesSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'branch': {'required': False}
         }
+
+    def get_sermons_count(self, obj):
+        if hasattr(obj, 'sermons_count'):
+            return obj.sermons_count
+        return obj.sermons.count()
 
     def validate(self, attrs):
         request = self.context.get('request')

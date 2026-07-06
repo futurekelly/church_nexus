@@ -49,7 +49,9 @@ class SermonSeriesViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = SermonSeries.objects.all().select_related('branch')
+        queryset = SermonSeries.objects.all().select_related('branch').annotate(
+            sermons_count=models.Count('sermons')
+        )
 
         is_manager = False
         if user and user.is_authenticated:
@@ -93,7 +95,7 @@ class SermonViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Sermon.objects.all().select_related('series', 'branch')
+        queryset = Sermon.objects.all().select_related('series', 'branch', 'created_by')
 
         is_manager = False
         if user and user.is_authenticated:

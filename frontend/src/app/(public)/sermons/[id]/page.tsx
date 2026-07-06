@@ -19,11 +19,26 @@ import { PublicNavbar } from "@/features/landing/components/public-navbar";
 import { PublicFooter } from "@/features/landing/components/public-footer";
 import {
   useSermons,
-  SermonMediaPlayer,
   SermonNotesViewer,
   SermonDownloadModal,
   SERMON_CATEGORY_LABELS,
 } from "@/features/sermons";
+import dynamic from "next/dynamic";
+
+const SermonMediaPlayer = dynamic(
+  () =>
+    import("@/features/sermons/components/sermon-media-player").then(
+      (mod) => mod.SermonMediaPlayer
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="aspect-video w-full rounded-2xl bg-slate-900/60 animate-pulse flex items-center justify-center border border-border/40">
+        <span className="text-xs text-muted-foreground">Preparing player media...</span>
+      </div>
+    ),
+  }
+);
 
 export default function PublicSermonDetailPage() {
   const { id } = useParams<{ id: string }>();
