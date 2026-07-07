@@ -199,7 +199,6 @@ class SermonSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         request = self.context.get('request')
-        from django.conf import settings
 
         # Absolute URLs for thumbnail
         if ret.get('thumbnail') and not ret['thumbnail'].startswith('http') and request:
@@ -260,10 +259,9 @@ class SermonListSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         request = self.context.get('request')
-        from django.conf import settings
 
         # Absolute URLs for thumbnail
-        if ret.get('thumbnail') and not ret['thumbnail'].startswith('http' ) and request:
+        if ret.get('thumbnail') and not ret['thumbnail'].startswith('http') and request:
             ret['thumbnail'] = request.build_absolute_uri(ret['thumbnail'])
 
         # Absolute URLs for video_url if it's a storage path
