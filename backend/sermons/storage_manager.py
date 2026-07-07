@@ -19,7 +19,8 @@ class StorageManager:
         """
         unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
         branch_str = str(branch_id) if branch_id else "global"
-        return os.path.join("sermons", branch_str, subfolder, unique_filename)
+        path = os.path.join("sermons", branch_str, subfolder, unique_filename)
+        return path.replace("\\", "/")
 
     @staticmethod
     def save_file(storage_path, content):
@@ -28,7 +29,7 @@ class StorageManager:
         Returns the saved file path key.
         """
         saved_path = default_storage.save(storage_path, content)
-        return saved_path
+        return saved_path.replace("\\", "/")
 
     @staticmethod
     def delete_file(storage_path):
@@ -49,9 +50,10 @@ class StorageManager:
         if not storage_path:
             return ""
         try:
-            return default_storage.url(storage_path)
+            url = default_storage.url(storage_path)
         except Exception:
-            return os.path.join(settings.MEDIA_URL, storage_path)
+            url = os.path.join(settings.MEDIA_URL, storage_path)
+        return url.replace("\\", "/")
 
     @staticmethod
     def exists(storage_path):

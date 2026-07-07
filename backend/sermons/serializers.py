@@ -153,6 +153,32 @@ class SermonSerializer(serializers.ModelSerializer):
             else:
                 self.instance._bypass_branch_immutable = True
 
+        # Check if video_url points to a local file and set video_file accordingly
+        video_url = attrs.get('video_url')
+        if video_url:
+            key = video_url
+            if settings.MEDIA_URL in key:
+                key = key.split(settings.MEDIA_URL)[-1]
+            if '/media/' in key:
+                key = key.split('/media/')[-1]
+            key = key.replace('\\', '/').strip('/')
+            from django.core.files.storage import default_storage
+            if default_storage.exists(key):
+                attrs['video_file'] = key
+
+        # Same for audio_url
+        audio_url = attrs.get('audio_url')
+        if audio_url:
+            key = audio_url
+            if settings.MEDIA_URL in key:
+                key = key.split(settings.MEDIA_URL)[-1]
+            if '/media/' in key:
+                key = key.split('/media/')[-1]
+            key = key.replace('\\', '/').strip('/')
+            from django.core.files.storage import default_storage
+            if default_storage.exists(key):
+                attrs['audio_file'] = key
+
         # Run model clean validation
         if self.instance:
             temp_instance = Sermon.objects.get(pk=self.instance.pk)

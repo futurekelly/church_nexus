@@ -150,6 +150,8 @@ class UploadIntentView(APIView):
         if 'file' in request.FILES and 'storage_key' in request.data:
             uploaded_file = request.FILES['file']
             storage_key = request.data.get('storage_key')
+            if storage_key:
+                storage_key = storage_key.replace('\\', '/')
             try:
                 saved_path = StorageManager.save_file(storage_key, uploaded_file)
                 return response.Response({
@@ -225,14 +227,15 @@ class UploadCompleteView(APIView):
             )
 
         storage_key = request.data.get('storage_key')
+        if storage_key:
+            storage_key = storage_key.replace('\\', '/')
         sermon_id = request.data.get('sermon_id')
         asset_type = request.data.get('asset_type', 'video')
 
         if not storage_key:
-            return response.Response(
-                {"detail": "storage_key is required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return response.Response({
+                "detail": "storage_key is required."
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         if user.role != 'super_admin' and user.branch:
             if str(user.branch.id) not in storage_key:
