@@ -26,12 +26,16 @@ class SermonSeriesSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         request = self.context.get('request')
         user = request.user if (request and request.user) else None
-        if not attrs.get('branch') and user:
-            if user.role != 'super_admin':
-                attrs['branch'] = user.branch
-            else:
-                msg = "A branch assignment is required for Super Admins."
-                raise serializers.ValidationError({"branch": msg})
+        branch = attrs.get('branch')
+        if not branch:
+            if self.instance:
+                attrs['branch'] = self.instance.branch
+            elif user:
+                if user.role != 'super_admin':
+                    attrs['branch'] = user.branch
+                else:
+                    msg = "A branch assignment is required for Super Admins."
+                    raise serializers.ValidationError({"branch": msg})
         return attrs
 
 
@@ -136,12 +140,16 @@ class SermonSerializer(serializers.ModelSerializer):
         user = request.user if (request and request.user) else None
 
         # Populate branch automatically if not provided
-        if not attrs.get('branch') and user:
-            if user.role != 'super_admin':
-                attrs['branch'] = user.branch
-            else:
-                msg = "A branch assignment is required for Super Admins."
-                raise serializers.ValidationError({"branch": msg})
+        branch = attrs.get('branch')
+        if not branch:
+            if self.instance:
+                attrs['branch'] = self.instance.branch
+            elif user:
+                if user.role != 'super_admin':
+                    attrs['branch'] = user.branch
+                else:
+                    msg = "A branch assignment is required for Super Admins."
+                    raise serializers.ValidationError({"branch": msg})
 
         # Multi-tenant isolation: prevent mutation of branch ownership
         if (self.instance and 'branch' in attrs and
