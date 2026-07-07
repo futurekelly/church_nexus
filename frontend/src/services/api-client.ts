@@ -27,6 +27,21 @@ function processRefreshQueue(token: string | null): void {
   refreshQueue = [];
 }
 
+export function isTokenExpired(token: string | null): boolean {
+  if (!token) return true;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return true;
+    const payload = parts[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(base64));
+    if (!decoded.exp) return false;
+    return Date.now() >= decoded.exp * 1000;
+  } catch {
+    return true;
+  }
+}
+
 function createAxiosInstance(config: ApiClientConfig): AxiosInstance {
   const instance = axios.create({
     baseURL: API_BASE_URL,
@@ -44,7 +59,7 @@ function createAxiosInstance(config: ApiClientConfig): AxiosInstance {
 
     if (!skipAuth) {
       const token = config.getAccessToken();
-      if (token) {
+      if (token && !isTokenExpired(token)) {
         request.headers.Authorization = `Bearer ${token}`;
       }
     }
@@ -140,39 +155,48 @@ export function getApiClient(): AxiosInstance {
 }
 
 function formatApiError(error: unknown): ApiErrorResponse {
-  if (axios.isAxiosError(error) && error.response?.data) {
-    const data = error.response.data as any;
-    if (typeof data === "object" && data !== null) {
-      let msg = data.message || data.detail;
-      if ((!msg || msg === "Validation failed.") && data.errors && typeof data.errors === "object") {
-        const errObj = data.errors;
-        const keys = Object.keys(errObj);
-        if (keys.length > 0) {
-          const firstKey = keys[0];
-          const firstErr = Array.isArray(errObj[firstKey]) ? errObj[firstKey][0] : errObj[firstKey];
-          msg = firstKey === "error" || firstKey === "detail" ? String(firstErr) : `${firstKey}: ${typeof firstErr === 'object' ? JSON.stringify(firstErr) : firstErr}`;
-        }
-      }
-      if (!msg || msg === "Validation failed.") {
-        const keys = Object.keys(data);
-        if (keys.length > 0) {
-          const firstKey = keys[0];
-          const firstErr = Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
-          msg = `${firstKey}: ${typeof firstErr === 'object' ? JSON.stringify(firstErr) : firstErr}`;
-        } else {
-          msg = "An unexpected error occurred.";
-        }
-      }
+  if (axios.isAxiosError(error)) {
+    if (error.response?.status === 401) {
       return {
         success: false,
-        message: msg,
-        errors: data.errors || data,
+        message: "Your session has expired. Please sign in again.",
+        errors: error.response.data || {},
       };
-    } else if (typeof data === "string") {
-      return {
-        success: false,
-        message: data,
-      };
+    }
+    if (error.response?.data) {
+      const data = error.response.data as any;
+      if (typeof data === "object" && data !== null) {
+        let msg = data.message || data.detail;
+        if ((!msg || msg === "Validation failed.") && data.errors && typeof data.errors === "object") {
+          const errObj = data.errors;
+          const keys = Object.keys(errObj);
+          if (keys.length > 0) {
+            const firstKey = keys[0];
+            const firstErr = Array.isArray(errObj[firstKey]) ? errObj[firstKey][0] : errObj[firstKey];
+            msg = firstKey === "error" || firstKey === "detail" ? String(firstErr) : `${firstKey}: ${typeof firstErr === 'object' ? JSON.stringify(firstErr) : firstErr}`;
+          }
+        }
+        if (!msg || msg === "Validation failed.") {
+          const keys = Object.keys(data);
+          if (keys.length > 0) {
+            const firstKey = keys[0];
+            const firstErr = Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
+            msg = `${firstKey}: ${typeof firstErr === 'object' ? JSON.stringify(firstErr) : firstErr}`;
+          } else {
+            msg = "An unexpected error occurred.";
+          }
+        }
+        return {
+          success: false,
+          message: msg,
+          errors: data.errors || data,
+        };
+      } else if (typeof data === "string") {
+        return {
+          success: false,
+          message: data,
+        };
+      }
     }
   }
   return {

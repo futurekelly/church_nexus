@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from "@/constants/api-endpoints";
 import {
   initializeApiClient,
   getApiClient,
+  isTokenExpired,
 } from "@/services/api-client";
 import { getAccessToken, useAuthStore } from "@/store/auth-store";
 import type { AuthTokens } from "@/types/user";
@@ -75,7 +76,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Silent refresh on hydration / page reload
   useEffect(() => {
     async function performSilentRefresh() {
-      if (isHydrated && isAuthenticated && !getAccessToken()) {
+      const currentToken = getAccessToken();
+      const needsRefresh = !currentToken || isTokenExpired(currentToken);
+
+      if (isHydrated && isAuthenticated && needsRefresh) {
         try {
           const apiClient = getApiClient();
           const response = await apiClient.post<{ access: string }>(
