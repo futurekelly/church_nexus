@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { apiGet, isApiError } from "@/services/api-client";
+import type { Sermon } from "@/features/sermons/types/sermon.types";
 import { CathedralCrossLoader } from "@/components/ui/cathedral-cross-loader";
 import {
   ArrowLeft,
@@ -25,8 +27,6 @@ import {
   SermonDownloadModal,
   SERMON_CATEGORY_LABELS,
 } from "@/features/sermons";
-import { apiGet, isApiError } from "@/services/api-client";
-import type { Sermon } from "@/features/sermons/types/sermon.types";
 import dynamic from "next/dynamic";
 
 const SermonMediaPlayer = dynamic(
@@ -54,8 +54,12 @@ export default function SermonDetailPage() {
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const { deleteSermon } = useSermons();
+  const { sermons: sermonPermissions } = useAppPermissions();
+  const { canEdit, canDelete, canViewLibrary } = sermonPermissions;
 
-  // Directly fetch sermon by ID so newly created/edited sermons always display
+  // Directly fetch sermon by ID so newly created/edited/cross-branch sermons always display
   const [sermon, setSermon] = useState<Sermon | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -95,11 +99,6 @@ export default function SermonDetailPage() {
       .catch(() => setSermon(null))
       .finally(() => setIsLoading(false));
   }, [id]);
-
-  // deleteSermon still comes from useSermons hook for the action
-  const { deleteSermon } = useSermons();
-  const { sermons: sermonPermissions } = useAppPermissions();
-  const { canEdit, canDelete, canViewLibrary } = sermonPermissions;
 
   if (isLoading && !sermon) {
     return (

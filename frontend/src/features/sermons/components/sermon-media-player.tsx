@@ -3,34 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Play, Pause, RotateCcw, Volume2, Video, Headset,
-  Settings, RefreshCw, AlertCircle, Loader2, Youtube
+  Settings, RefreshCw, AlertCircle, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-/**
- * Detect if a URL is a YouTube link (watch, short URL, embed, or shorts).
- * Returns the video ID string, or null if not a YouTube URL.
- */
-function getYouTubeVideoId(url: string): string | null {
-  if (!url) return null;
-  try {
-    const u = new URL(url);
-    // youtu.be/VIDEO_ID
-    if (u.hostname === "youtu.be") {
-      return u.pathname.slice(1).split("?")[0] || null;
-    }
-    // youtube.com/watch?v=VIDEO_ID
-    if (u.hostname === "www.youtube.com" || u.hostname === "youtube.com") {
-      if (u.pathname === "/watch") return u.searchParams.get("v");
-      // youtube.com/embed/VIDEO_ID or youtube.com/shorts/VIDEO_ID
-      const match = u.pathname.match(/\/(embed|shorts)\/([^/?]+)/);
-      if (match) return match[2];
-    }
-  } catch {
-    // not a valid URL — not YouTube
-  }
-  return null;
-}
 
 interface SermonMediaPlayerProps {
   videoUrl: string;
@@ -38,6 +13,43 @@ interface SermonMediaPlayerProps {
   thumbnail: string;
   hlsUrl?: string;
   initialTab?: "video" | "audio";
+}
+
+function getEmbedUrl(url: string | undefined): { type: "youtube" | "vimeo" | "direct"; url: string } | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+
+  // YouTube checks
+  if (trimmed.includes("youtube.com") || trimmed.includes("youtu.be")) {
+    let videoId = "";
+    if (trimmed.includes("youtu.be/")) {
+      videoId = trimmed.split("youtu.be/")[1]?.split(/[?#]/)[0];
+    } else if (trimmed.includes("youtube.com/embed/")) {
+      videoId = trimmed.split("youtube.com/embed/")[1]?.split(/[?#]/)[0];
+    } else if (trimmed.includes("v=")) {
+      videoId = trimmed.split("v=")[1]?.split("&")[0]?.split(/[?#]/)[0];
+    }
+    if (videoId) {
+      return { type: "youtube", url: `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1` };
+    }
+  }
+
+  // Vimeo checks
+  if (trimmed.includes("vimeo.com")) {
+    let videoId = "";
+    if (trimmed.includes("vimeo.com/video/")) {
+      videoId = trimmed.split("vimeo.com/video/")[1]?.split(/[?#]/)[0];
+    } else if (trimmed.includes("player.vimeo.com/video/")) {
+      videoId = trimmed.split("player.vimeo.com/video/")[1]?.split(/[?#]/)[0];
+    } else {
+      videoId = trimmed.split("vimeo.com/")[1]?.split(/[?#]/)[0];
+    }
+    if (videoId) {
+      return { type: "vimeo", url: `https://player.vimeo.com/video/${videoId}?autoplay=1` };
+    }
+  }
+
+  return { type: "direct", url: trimmed };
 }
 
 export function SermonMediaPlayer({
@@ -74,13 +86,8 @@ export function SermonMediaPlayer({
   }, [hlsUrl]);
 
   const activeStreamUrl = useHls ? hlsUrl : videoUrl;
-
-  // YouTube detection — if video_url is a YouTube link, embed via iframe instead
-  const youtubeVideoId = getYouTubeVideoId(videoUrl);
-  const isYouTube = activeTab === "video" && !!youtubeVideoId;
-  const youtubeEmbedUrl = youtubeVideoId
-    ? `https://www.youtube-nocookie.com/embed/${youtubeVideoId}?rel=0&modestbranding=1`
-    : null;
+  const embed = getEmbedUrl(activeStreamUrl);
+  const isEmbed = embed && (embed.type === "youtube" || embed.type === "vimeo");
 
   // Stop playback and reset when switching tabs
   useEffect(() => {
@@ -271,63 +278,52 @@ export function SermonMediaPlayer({
       {/* Media Player Viewport */}
       <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
         {activeTab === "video" ? (
-          isYouTube && youtubeEmbedUrl ? (
-            /* ─── YouTube iframe embed ─── */
-            <>
+          activeStreamUrl ? (
+            isEmbed ? (
               <iframe
-                src={youtubeEmbedUrl}
-                title="YouTube sermon video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
+                src={embed.url}
                 className="h-full w-full border-0"
-                onLoad={() => setIsLoading(false)}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
               />
-              {isLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-20 gap-3">
-                  <Youtube className="h-10 w-10 text-red-500 animate-pulse" />
-                  <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
-                  <p className="text-xs text-muted-foreground">Loading YouTube stream…</p>
-                </div>
-              )}
-            </>
-          ) : activeStreamUrl ? (
-            /* ─── Native HTML5 video player ─── */
-            <>
-              <video
-                ref={videoRef}
-                src={activeStreamUrl}
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-                onWaiting={() => setIsLoading(true)}
-                onPlaying={() => setIsLoading(false)}
-                onError={() => {
-                  setIsLoading(false);
-                  setHasError(true);
-                  setErrorMessage("Stream loading error. Retry playback.");
-                }}
-                onEnded={() => setIsPlaying(false)}
-                className="h-full w-full object-contain"
-                onClick={handlePlayPause}
-              />
-              {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
-                  <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
-                </div>
-              )}
-              {hasError && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4 space-y-3 z-30">
-                  <AlertCircle className="h-8 w-8 text-red-400" />
-                  <p className="text-xs text-muted-foreground text-center max-w-xs">{errorMessage || "Playback error encountered."}</p>
-                  <button
-                    type="button"
-                    onClick={handleRetry}
-                    className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-all"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" /> Retry Playback
-                  </button>
-                </div>
-              )}
-            </>
+            ) : (
+              <>
+                <video
+                  ref={videoRef}
+                  src={activeStreamUrl}
+                  onTimeUpdate={handleTimeUpdate}
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onWaiting={() => setIsLoading(true)}
+                  onPlaying={() => setIsLoading(false)}
+                  onError={() => {
+                    setIsLoading(false);
+                    setHasError(true);
+                    setErrorMessage("Stream loading error. Retry playback.");
+                  }}
+                  onEnded={() => setIsPlaying(false)}
+                  className="h-full w-full object-contain"
+                  onClick={handlePlayPause}
+                />
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+                  </div>
+                )}
+                {hasError && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4 space-y-3 z-30">
+                    <AlertCircle className="h-8 w-8 text-red-400" />
+                    <p className="text-xs text-muted-foreground text-center max-w-xs">{errorMessage || "Playback error encountered."}</p>
+                    <button
+                      type="button"
+                      onClick={handleRetry}
+                      className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-all"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" /> Retry Playback
+                    </button>
+                  </div>
+                )}
+              </>
+            )
           ) : (
             <div className="text-center text-muted-foreground text-xs">No Video Link Available</div>
           )
@@ -393,8 +389,8 @@ export function SermonMediaPlayer({
           </div>
         )}
 
-        {/* Overlay Play/Pause Button — hidden when YouTube iframe is active */}
-        {!isYouTube && !isPlaying && !isLoading && !hasError && (
+        {/* Overlay Play/Pause Button on Hover */}
+        {!isEmbed && !isPlaying && !isLoading && !hasError && (
           <button
             onClick={handlePlayPause}
             className="absolute flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600/90 text-white shadow-[0_0_24px_rgba(99,102,241,0.5)] transition-all hover:scale-105 hover:bg-indigo-500 z-10"
@@ -405,57 +401,59 @@ export function SermonMediaPlayer({
         )}
       </div>
 
-      {/* Player Custom Controls — hidden when YouTube iframe manages its own controls */}
-      {!isYouTube && <div className="bg-slate-950/40 p-4 border-t border-border/20 space-y-3">
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-mono text-muted-foreground select-none">
-            {formatTime(currentTime)}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={duration || 100}
-            value={currentTime}
-            onChange={handleSeek}
-            className="flex-1 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none"
-          />
-          <span className="text-[10px] font-mono text-muted-foreground select-none">
-            {formatTime(duration)}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleRewind}
-              className="text-muted-foreground hover:text-primary-foreground transition-colors"
-              title="Rewind 10s"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handlePlayPause}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500 hover:text-white transition-all"
-              title={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current translate-x-0.5" />}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Volume2 className="h-4 w-4 text-muted-foreground" />
+      {/* Player Custom Controls */}
+      {(!isEmbed || activeTab === "audio") && (
+        <div className="bg-slate-950/40 p-4 border-t border-border/20 space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-mono text-muted-foreground select-none">
+              {formatTime(currentTime)}
+            </span>
             <input
               type="range"
               min={0}
-              max={1}
-              step={0.05}
-              value={volume}
-              onChange={handleVolumeChange}
-              className="w-16 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              max={duration || 100}
+              value={currentTime}
+              onChange={handleSeek}
+              className="flex-1 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none"
             />
+            <span className="text-[10px] font-mono text-muted-foreground select-none">
+              {formatTime(duration)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleRewind}
+                className="text-muted-foreground hover:text-primary-foreground transition-colors"
+                title="Rewind 10s"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handlePlayPause}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500 hover:text-white transition-all"
+                title={isPlaying ? "Pause" : "Play"}
+              >
+                {isPlaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current translate-x-0.5" />}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4 text-muted-foreground" />
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={volume}
+                onChange={handleVolumeChange}
+                className="w-16 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              />
+            </div>
           </div>
         </div>
-      </div>}
+      )}
     </div>
   );
 }
