@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -25,6 +25,8 @@ import {
   SermonDownloadModal,
   SERMON_CATEGORY_LABELS,
 } from "@/features/sermons";
+import { apiGet, isApiError } from "@/services/api-client";
+import type { Sermon } from "@/features/sermons/types/sermon.types";
 import dynamic from "next/dynamic";
 
 const SermonMediaPlayer = dynamic(
@@ -52,12 +54,52 @@ export default function SermonDetailPage() {
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  const { getSermonById, isLoading, deleteSermon } = useSermons();
+
+  // Directly fetch sermon by ID so newly created/edited sermons always display
+  const [sermon, setSermon] = useState<Sermon | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    setIsLoading(true);
+    apiGet<any>(`/api/sermons/${id}/`)
+      .then((res) => {
+        if (!isApiError(res) && res.data) {
+          setSermon({
+            id: res.data.id,
+            title: res.data.title,
+            description: res.data.description || "",
+            scripture_reference: res.data.scripture_reference || "",
+            sermon_date: res.data.sermon_date,
+            status: res.data.status,
+            thumbnail: res.data.thumbnail || "",
+            video_url: res.data.video_url || "",
+            audio_url: res.data.audio_url || "",
+            hls_url: res.data.hls_url || "",
+            speaker: res.data.speaker,
+            category: res.data.category,
+            featured: res.data.featured,
+            views_count: res.data.views_count || 0,
+            part_number: res.data.part_number || null,
+            series: res.data.series || null,
+            series_details: res.data.series_details || null,
+            notes: res.data.notes || "",
+            tags: res.data.tags || [],
+            created_at: res.data.created_at,
+            updated_at: res.data.updated_at,
+          });
+        } else {
+          setSermon(null);
+        }
+      })
+      .catch(() => setSermon(null))
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  // deleteSermon still comes from useSermons hook for the action
+  const { deleteSermon } = useSermons();
   const { sermons: sermonPermissions } = useAppPermissions();
   const { canEdit, canDelete, canViewLibrary } = sermonPermissions;
-
-  const sermon = getSermonById(id);
 
   if (isLoading && !sermon) {
     return (

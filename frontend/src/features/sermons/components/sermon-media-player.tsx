@@ -3,9 +3,34 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Play, Pause, RotateCcw, Volume2, Video, Headset,
-  Settings, RefreshCw, AlertCircle, Loader2
+  Settings, RefreshCw, AlertCircle, Loader2, Youtube
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/**
+ * Detect if a URL is a YouTube link (watch, short URL, embed, or shorts).
+ * Returns the video ID string, or null if not a YouTube URL.
+ */
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    // youtu.be/VIDEO_ID
+    if (u.hostname === "youtu.be") {
+      return u.pathname.slice(1).split("?")[0] || null;
+    }
+    // youtube.com/watch?v=VIDEO_ID
+    if (u.hostname === "www.youtube.com" || u.hostname === "youtube.com") {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      // youtube.com/embed/VIDEO_ID or youtube.com/shorts/VIDEO_ID
+      const match = u.pathname.match(/\/(embed|shorts)\/([^/?]+)/);
+      if (match) return match[2];
+    }
+  } catch {
+    // not a valid URL — not YouTube
+  }
+  return null;
+}
 
 interface SermonMediaPlayerProps {
   videoUrl: string;
@@ -49,6 +74,13 @@ export function SermonMediaPlayer({
   }, [hlsUrl]);
 
   const activeStreamUrl = useHls ? hlsUrl : videoUrl;
+
+  // YouTube detection — if video_url is a YouTube link, embed via iframe instead
+  const youtubeVideoId = getYouTubeVideoId(videoUrl);
+  const isYouTube = activeTab === "video" && !!youtubeVideoId;
+  const youtubeEmbedUrl = youtubeVideoId
+    ? `https://www.youtube-nocookie.com/embed/${youtubeVideoId}?rel=0&modestbranding=1`
+    : null;
 
   // Stop playback and reset when switching tabs
   useEffect(() => {
@@ -239,7 +271,27 @@ export function SermonMediaPlayer({
       {/* Media Player Viewport */}
       <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
         {activeTab === "video" ? (
-          activeStreamUrl ? (
+          isYouTube && youtubeEmbedUrl ? (
+            /* ─── YouTube iframe embed ─── */
+            <>
+              <iframe
+                src={youtubeEmbedUrl}
+                title="YouTube sermon video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="h-full w-full border-0"
+                onLoad={() => setIsLoading(false)}
+              />
+              {isLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-20 gap-3">
+                  <Youtube className="h-10 w-10 text-red-500 animate-pulse" />
+                  <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
+                  <p className="text-xs text-muted-foreground">Loading YouTube stream…</p>
+                </div>
+              )}
+            </>
+          ) : activeStreamUrl ? (
+            /* ─── Native HTML5 video player ─── */
             <>
               <video
                 ref={videoRef}
@@ -341,8 +393,8 @@ export function SermonMediaPlayer({
           </div>
         )}
 
-        {/* Overlay Play/Pause Button on Hover */}
-        {!isPlaying && !isLoading && !hasError && (
+        {/* Overlay Play/Pause Button — hidden when YouTube iframe is active */}
+        {!isYouTube && !isPlaying && !isLoading && !hasError && (
           <button
             onClick={handlePlayPause}
             className="absolute flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600/90 text-white shadow-[0_0_24px_rgba(99,102,241,0.5)] transition-all hover:scale-105 hover:bg-indigo-500 z-10"
@@ -353,8 +405,8 @@ export function SermonMediaPlayer({
         )}
       </div>
 
-      {/* Player Custom Controls */}
-      <div className="bg-slate-950/40 p-4 border-t border-border/20 space-y-3">
+      {/* Player Custom Controls — hidden when YouTube iframe manages its own controls */}
+      {!isYouTube && <div className="bg-slate-950/40 p-4 border-t border-border/20 space-y-3">
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-mono text-muted-foreground select-none">
             {formatTime(currentTime)}
@@ -403,7 +455,7 @@ export function SermonMediaPlayer({
             />
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
