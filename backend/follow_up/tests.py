@@ -84,10 +84,12 @@ class TestFollowUpModels:
         assert ticket.status == 'Contacted'
         assert ticket.is_completed is False
 
-        # Contacted -> Integrated is invalid (must go to Following Up first)
+        # Contacted -> Integrated is valid
         ticket.status = 'Integrated'
-        with pytest.raises(ValidationError):
-            ticket.clean()
+        ticket.clean()
+        
+        # Reset back to Contacted for the rest of the test
+        ticket.status = 'Contacted'
 
         # Contacted -> Following Up is valid
         ticket.status = 'Following Up'

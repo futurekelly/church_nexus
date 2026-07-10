@@ -136,8 +136,8 @@ class FollowUpTicket(models.Model):
                 
                 # Transition rules mapping
                 valid_transitions = {
-                    'New': ['Contacted', 'Inactive'],
-                    'Contacted': ['Following Up', 'Inactive'],
+                    'New': ['Contacted', 'Inactive', 'Integrated'],
+                    'Contacted': ['Following Up', 'Inactive', 'Integrated'],
                     'Following Up': ['Integrated', 'Inactive', 'Contacted'],
                     'Inactive': ['New', 'Contacted'],
                 }
