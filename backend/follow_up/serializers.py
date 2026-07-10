@@ -28,7 +28,11 @@ class VisitorProfileSerializer(serializers.ModelSerializer):
         if not attrs.get('branch') and user:
             if user.role != 'super_admin':
                 attrs['branch'] = user.branch
+            elif self.instance:
+                # On updates, fall back to the existing record's branch for super_admin
+                attrs['branch'] = self.instance.branch
             else:
+                # Creating new visitor as super_admin without specifying a branch
                 raise serializers.ValidationError({"branch": "A branch assignment is required for Super Admins."})
                 
         email = attrs.get('email')
@@ -68,7 +72,11 @@ class FollowUpTicketSerializer(serializers.ModelSerializer):
         if not attrs.get('branch') and user:
             if user.role != 'super_admin':
                 attrs['branch'] = user.branch
+            elif self.instance:
+                # On updates, fall back to the existing record's branch for super_admin
+                attrs['branch'] = self.instance.branch
             else:
+                # Creating new ticket as super_admin without specifying a branch
                 raise serializers.ValidationError({"branch": "A branch assignment is required for Super Admins."})
 
         # We need to run model validation (for FSM and branch checks)

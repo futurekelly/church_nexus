@@ -26,6 +26,9 @@ export function useAppPermissions() {
     userRole: role,
     userEmail: user?.email,
     userName: user ? `${user.first_name} ${user.last_name}` : "Guest",
+    isSuperAdmin,
+    isChurchAdmin,
+    isPastor,
 
     members: {
       canView: isSuperAdmin || isChurchAdmin || isPastor || isTreasurer || isMediaTeam || isMember,

@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { KanbanBoard, useFollowUp, type FollowUpStatus } from "@/features/follow-up";
+import { motion, AnimatePresence } from "framer-motion";
+import { KanbanBoard, useFollowUp, VisitorForm, type FollowUpStatus } from "@/features/follow-up";
 import { useAppPermissions } from "@/hooks/use-app-permissions";
+import { useAuth } from "@/hooks/use-auth";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterSelect } from "@/components/ui/filter-select";
-import { Lock, RefreshCw, BarChart2, CheckCircle, AlertCircle, Users, Clock } from "lucide-react";
+import {
+  Lock, RefreshCw, BarChart2, CheckCircle, AlertCircle, Users, Clock, UserPlus, X,
+} from "lucide-react";
 import { apiGet, isApiError } from "@/services/api-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -22,26 +25,56 @@ interface AnalyticsKPIs {
   tickets_by_pastor: Array<{ pastor_name: string; ticket_count: number }>;
 }
 
+interface BranchOption {
+  id: string;
+  branch_name: string;
+}
+
 export default function FollowUpDashboardPage() {
   const {
     tickets,
     isLoading: isBoardLoading,
+    addVisitor,
     updateTicketStatus,
     convertToActiveMember,
     importAttendanceTickets,
   } = useFollowUp();
 
-  const { followUp: followUpPermissions } = useAppPermissions();
+  const { followUp: followUpPermissions, isSuperAdmin } = useAppPermissions();
   const { canManage, canViewFollowUp } = followUpPermissions;
-  
+  const { user } = useAuth();
+
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
-  
+
   const [analytics, setAnalytics] = useState<AnalyticsKPIs | null>(null);
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState<boolean>(false);
 
+  // Add Visitor slide-over state
+  const [showAddVisitor, setShowAddVisitor] = useState(false);
+  const [branches, setBranches] = useState<BranchOption[]>([]);
+
+  // Fetch branches once (needed for super_admin branch selector)
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+    let active = true;
+    async function loadBranches() {
+      try {
+        const res = await apiGet<any>("/api/branches/");
+        if (res.success && active) {
+          const list = Array.isArray(res.data) ? res.data : (res.data?.results ?? []);
+          setBranches(list);
+        }
+      } catch (err) {
+        console.error("Failed to load branches:", err);
+      }
+    }
+    loadBranches();
+    return () => { active = false; };
+  }, [isSuperAdmin]);
+
   // Fetch KPI data from backend
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     if (!canViewFollowUp) return;
     setIsAnalyticsLoading(true);
     try {
@@ -54,7 +87,7 @@ export default function FollowUpDashboardPage() {
     } finally {
       setIsAnalyticsLoading(false);
     }
-  };
+  }, [canViewFollowUp]);
 
   // Run initial fetch on mount
   useEffect(() => {
@@ -62,7 +95,7 @@ export default function FollowUpDashboardPage() {
       importAttendanceTickets();
       fetchAnalytics();
     }
-  }, [importAttendanceTickets, canViewFollowUp]);
+  }, [importAttendanceTickets, canViewFollowUp, fetchAnalytics]);
 
   // Filter tickets for board
   const filteredTickets = useMemo(() => {
@@ -99,6 +132,15 @@ export default function FollowUpDashboardPage() {
   const handleRefresh = async () => {
     await importAttendanceTickets();
     await fetchAnalytics();
+  };
+
+  const handleAddVisitorSubmit = async (values: any) => {
+    const { notes, branch, ...profile } = values;
+    const payload: any = { ...profile };
+    if (branch) payload.branch = branch;
+    await addVisitor(payload, notes || "");
+    setShowAddVisitor(false);
+    fetchAnalytics();
   };
 
   // 1. Restricted view
@@ -141,6 +183,18 @@ export default function FollowUpDashboardPage() {
             <RefreshCw className={cn("h-4 w-4", (isBoardLoading || isAnalyticsLoading) && "animate-spin")} />
             <span>Sync Board</span>
           </button>
+
+          {canManage && (
+            <button
+              type="button"
+              id="add-visitor-btn"
+              onClick={() => setShowAddVisitor(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition-all shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Add Visitor</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -348,6 +402,57 @@ export default function FollowUpDashboardPage() {
           canManage={canManage}
         />
       )}
+
+      {/* Add Visitor Slide-over Panel */}
+      <AnimatePresence>
+        {showAddVisitor && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAddVisitor(false)}
+              className="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm"
+            />
+
+            {/* Slide-over panel */}
+            <motion.div
+              key="panel"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed top-0 right-0 z-50 h-full w-full max-w-lg overflow-y-auto border-l border-border/50 bg-slate-950/95 shadow-2xl backdrop-blur-glass p-6"
+            >
+              {/* Panel Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-base font-bold text-primary-foreground font-display">Register New Visitor</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Create a profile and auto-open a follow-up ticket</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddVisitor(false)}
+                  className="rounded-xl border border-border/50 bg-card/40 p-2 text-muted-foreground hover:text-primary-foreground hover:bg-slate-900 transition-all"
+                  aria-label="Close add visitor panel"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <VisitorForm
+                onSubmit={handleAddVisitorSubmit}
+                onCancel={() => setShowAddVisitor(false)}
+                isLoading={isBoardLoading}
+                isSuperAdmin={isSuperAdmin}
+                branches={branches}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,11 +1,16 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Save, ClipboardList, HelpCircle } from "lucide-react";
+import { Save, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { VisitorProfile } from "../types/follow-up.types";
 import { E164_PHONE_REGEX } from "@/lib/localization";
 import { INVITED_BY_OPTIONS, SPIRITUAL_BACKGROUND_OPTIONS } from "../types/follow-up.types";
+
+interface BranchOption {
+  id: string;
+  branch_name: string;
+}
 
 interface VisitorFormValues {
   first_name: string;
@@ -19,12 +24,17 @@ interface VisitorFormValues {
   spiritual_background: string;
   prayer_request: string;
   notes: string;
+  branch?: string;
 }
 
 interface VisitorFormProps {
   onSubmit: (values: VisitorFormValues) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  /** Pass true when the logged-in user is a super_admin — reveals the branch selector */
+  isSuperAdmin?: boolean;
+  /** List of available branches to select from */
+  branches?: BranchOption[];
 }
 
 const inputClass = cn(
@@ -37,7 +47,7 @@ const inputClass = cn(
 const labelClass = "block text-xs font-semibold text-muted-foreground mb-1.5";
 const errorClass = "mt-1 text-xs text-red-400";
 
-export function VisitorForm({ onSubmit, onCancel, isLoading = false }: VisitorFormProps) {
+export function VisitorForm({ onSubmit, onCancel, isLoading = false, isSuperAdmin = false, branches = [] }: VisitorFormProps) {
   const {
     register,
     handleSubmit,
@@ -55,6 +65,7 @@ export function VisitorForm({ onSubmit, onCancel, isLoading = false }: VisitorFo
       spiritual_background: "Prefer Not To Say",
       prayer_request: "",
       notes: "",
+      branch: "",
     },
   });
 
@@ -64,6 +75,28 @@ export function VisitorForm({ onSubmit, onCancel, isLoading = false }: VisitorFo
         <ClipboardList className="h-5 w-5" />
         <h3 className="text-sm font-bold uppercase tracking-wider">Visitor Details</h3>
       </div>
+
+      {/* Branch selector — only visible to super_admin */}
+      {isSuperAdmin && (
+        <div>
+          <label htmlFor="branch" className={labelClass}>
+            Branch Assignment *
+          </label>
+          <select
+            id="branch"
+            className={cn(inputClass, "cursor-pointer")}
+            {...register("branch", { required: isSuperAdmin ? "Please select a branch" : false })}
+          >
+            <option value="">— Select Branch —</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.branch_name}
+              </option>
+            ))}
+          </select>
+          {errors.branch && <p className={errorClass}>{errors.branch.message}</p>}
+        </div>
+      )}
 
       {/* Name row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
