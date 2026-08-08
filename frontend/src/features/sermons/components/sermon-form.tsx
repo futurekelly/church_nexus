@@ -145,10 +145,10 @@ export function SermonForm({
   const videoUploader = useDirectUpload({
     onSuccess: (data) => {
       // When sermon_id was provided, UploadCompleteView returns the full SermonSerializer
-      // response with an absolute video_url. When creating a new sermon (no sermon_id),
-      // the response only has storage_key — construct the absolute media URL from it.
+      // response. Check video_url, video_file, or construct from storage_key.
       let targetUrl =
         data.video_url ||
+        data.video_file ||
         (data.storage_key ? `${API_BASE_URL}/media/${data.storage_key}` : "");
       if (targetUrl) {
         targetUrl = targetUrl.replace(/\\/g, "/");
@@ -162,6 +162,7 @@ export function SermonForm({
     onSuccess: (data) => {
       let targetUrl =
         data.audio_url ||
+        data.audio_file ||
         (data.storage_key ? `${API_BASE_URL}/media/${data.storage_key}` : "");
       if (targetUrl) {
         targetUrl = targetUrl.replace(/\\/g, "/");

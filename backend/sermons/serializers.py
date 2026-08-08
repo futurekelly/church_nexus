@@ -238,6 +238,12 @@ class SermonSerializer(serializers.ModelSerializer):
             if val and not val.startswith('http') and request:
                 ret[field] = request.build_absolute_uri(val)
 
+        # Fallback video_url/audio_url to video_file/audio_file if missing
+        if not ret.get('video_url') and ret.get('video_file'):
+            ret['video_url'] = ret['video_file']
+        if not ret.get('audio_url') and ret.get('audio_file'):
+            ret['audio_url'] = ret['audio_file']
+
         return ret
 
 
@@ -297,5 +303,11 @@ class SermonListSerializer(serializers.ModelSerializer):
             val = ret.get(field)
             if val and not val.startswith('http') and request:
                 ret[field] = request.build_absolute_uri(val)
+
+        # Fallback video_url/audio_url to video_file/audio_file if missing
+        if not ret.get('video_url') and ret.get('video_file'):
+            ret['video_url'] = ret['video_file']
+        if not ret.get('audio_url') and ret.get('audio_file'):
+            ret['audio_url'] = ret['audio_file']
 
         return ret
